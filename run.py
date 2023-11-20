@@ -1,4 +1,5 @@
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 import data_utils
 import plot
 import truncated_normal
@@ -10,8 +11,9 @@ if __name__ == '__main__':
     data = scaler(data)
     
     # model
-    clf = LogisticRegression(random_state=0).fit(data['X'], data['y'])
-    clf = train.get_model(data)
+    # clf = LogisticRegression(random_state=0).fit(data['X'], data['y'])
+    clf = SVC(random_state=0, probability=True, kernel='linear').fit(data['X'], data['y'])
+    # clf = train.get_model(data)
 
 
     ax, _ = plot._get_axes(None)
