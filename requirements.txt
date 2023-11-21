@@ -5,3 +5,6 @@ notebook
 scipy
 torch
 tqdm
+# plotly
+# chart_studio
+ipywidgets
