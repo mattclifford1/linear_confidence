@@ -15,6 +15,33 @@ ticks_size = 24
 ticks_size_small = 20
 
 
+def plot_projection(data, means, ax=None):
+    ax, show = _get_axes(ax)
+
+    # ax.scatter(decision_projected, np.zeros_like(
+    #     decision_projected), c='k', s=50, marker='x')
+
+    # data points
+    xp1 = np.array([p for i, p in enumerate(data['X']) if data['y'][i] == 0])
+    xp2 = np.array([p for i, p in enumerate(data['X']) if data['y'][i] == 1])
+    ax.scatter(xp1,np.zeros_like(xp1),c='b',s=10, label='Class 1')
+    ax.scatter(xp2, np.zeros_like(xp2), c='r', s=10, label='Class 2')
+    # empirical means
+    emp_xp1 = np.mean(xp1)
+    emp_xp2 = np.mean(xp2)
+    ax.scatter(np.array([emp_xp1, emp_xp2]), [0, 0], c='k', s=200, 
+               marker='x', label='Empircal Means')
+    # expected means
+    ax.scatter(means['X'], [0, 0], c='k', s=100,
+               marker='o', label='Expected Means')
+    # supports
+    ax.scatter(data['supports'], [0, 0], c='k', s=100,
+               marker='+', label='Supports')
+
+    ax.legend()
+    return ax
+
+
 def plot_classes(data, ax=None, dim_reducer=None):
     '''
     plot classes in different colour on an axes, duplicate points in the data are enlarged for clarity

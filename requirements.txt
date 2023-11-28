@@ -8,3 +8,5 @@ tqdm
 # plotly
 # chart_studio
 ipywidgets
+jax[cpu]
+objax
