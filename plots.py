@@ -15,7 +15,7 @@ ticks_size = 24
 ticks_size_small = 20
 
 
-def plot_projection(data, means, ax=None):
+def plot_projection(data, means, R1_emp, R2_emp,  ax=None):
     ax, show = _get_axes(ax)
 
     # ax.scatter(decision_projected, np.zeros_like(
@@ -37,7 +37,12 @@ def plot_projection(data, means, ax=None):
     # supports
     ax.scatter(data['supports'], [0, 0], c='k', s=100,
                marker='+', label='Supports')
+    
+    # empirical estimates of Rs
+    ax.plot([means['X'][0]-R1_emp, means['X'][0]+R1_emp], [-0.1, -0.1], c='b', label='R1 empirical', marker='|')
+    ax.plot([means['X'][1]-R1_emp, means['X'][1]+R2_emp], [-0.1, -0.1], c='r', label='R2 empirical', marker='|')
 
+    ax.scatter([0], [-1], c='w')
     ax.legend()
     return ax
 
