@@ -24,3 +24,14 @@ def from_clf(data, clf, supports=False):
 def closest_node(node, nodes):
     return nodes[cdist([node], nodes).argmin()]
 
+def get_classes(data):
+    # data points
+    xp1 = np.array([p for i, p in enumerate(data['X']) if data['y'][i] == 0])
+    xp2 = np.array([p for i, p in enumerate(data['X']) if data['y'][i] == 1])
+    return xp1, xp2
+
+def get_emp_means(data):
+    xp1, xp2 = get_classes(data)
+    emp_xp1 = np.mean(xp1)
+    emp_xp2 = np.mean(xp2)
+    return emp_xp1, emp_xp2

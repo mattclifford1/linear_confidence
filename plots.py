@@ -5,6 +5,7 @@ from matplotlib.colors import ListedColormap
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.decomposition import PCA
 import numpy as np
+import projection
 
 # plot colours
 cm_bright = ListedColormap(["#0000FF", "#FF0000"])
@@ -15,20 +16,16 @@ ticks_size = 24
 ticks_size_small = 20
 
 
-def plot_projection(data, means, R1_emp, R2_emp,  ax=None):
+def plot_projection(data, means, R1_emp, R2_emp, R_est=False, ax=None):
     ax, show = _get_axes(ax)
 
     # ax.scatter(decision_projected, np.zeros_like(
     #     decision_projected), c='k', s=50, marker='x')
-
-    # data points
-    xp1 = np.array([p for i, p in enumerate(data['X']) if data['y'][i] == 0])
-    xp2 = np.array([p for i, p in enumerate(data['X']) if data['y'][i] == 1])
-    ax.scatter(xp1,np.zeros_like(xp1),c='b',s=10, label='Class 1')
+    xp1, xp2 = projection.get_classes(data)
+    ax.scatter(xp1, np.zeros_like(xp1), c='b', s=10, label='Class 1')
     ax.scatter(xp2, np.zeros_like(xp2), c='r', s=10, label='Class 2')
     # empirical means
-    emp_xp1 = np.mean(xp1)
-    emp_xp2 = np.mean(xp2)
+    emp_xp1, emp_xp2 = projection.get_emp_means(data)
     ax.scatter(np.array([emp_xp1, emp_xp2]), [0, 0], c='k', s=200, 
                marker='x', label='Empircal Means')
     # expected means
@@ -39,8 +36,14 @@ def plot_projection(data, means, R1_emp, R2_emp,  ax=None):
                marker='+', label='Supports')
     
     # empirical estimates of Rs
-    ax.plot([means['X'][0]-R1_emp, means['X'][0]+R1_emp], [-0.1, -0.1], c='b', label='R1 empirical', marker='|')
-    ax.plot([means['X'][1]-R1_emp, means['X'][1]+R2_emp], [-0.1, -0.1], c='r', label='R2 empirical', marker='|')
+    if R_est == True:
+        name = 'Estimate'
+    else:
+        name = 'Empirical'
+    ax.plot([emp_xp1-R1_emp, emp_xp1+R1_emp], [-0.1, -0.1],
+            c='b', label=f'R1 {name}', marker='|')
+    ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [-0.1, -0.1], 
+            c='r', label=f'R2 {name}', marker='|')
 
     ax.scatter([0], [-1], c='w')
     ax.legend()

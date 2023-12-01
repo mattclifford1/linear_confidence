@@ -17,12 +17,14 @@ def loss_one_delta(delta1, c1, c2, N1, N2, M_emp, R):
     delta2 = delta2_given_delta1(N1, N2, M_emp, delta1, R)
     return loss(c1, c2, delta1, delta2, N1, N2)
 
-def delta2_inside_bracket(N1, N2, M_emp, delta1, R):
+def delta2_inside_bracket(N1, N2, M_emp, delta1, R, two=False):
     # in eq. 9 and 10
     inner = np.sqrt((1/N1)+(1/N2))
     right = np.sqrt((2*np.log(1/delta1)) / N1)
-    both = (M_emp/(2*R)) - 2*inner - right
-    # both = (M_emp/(2*R)) - inner - right
+    if two == True:
+        both = (M_emp/(2*R)) - 2*inner - right
+    else:
+        both = (M_emp/(2*R)) - inner - right
     return both
 
 def delta2_given_delta1(N1, N2, M_emp, delta1, R):
