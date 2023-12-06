@@ -9,3 +9,6 @@ class normaliser:
         '''expect data as a dict with 'X', 'y' keys'''
         data['X'] = self.scaler.transform(data['X'])
         return data
+    
+    def transform_instance(self, X):
+        return self.scaler.transform([X])[0]
