@@ -3,10 +3,11 @@ numpy
 matplotlib
 notebook
 scipy
-torch
 tqdm
+ipywidgets
+cvxpy
+# torch
 # plotly
 # chart_studio
-ipywidgets
-jax[cpu]
-objax
+# jax[cpu]
+# objax

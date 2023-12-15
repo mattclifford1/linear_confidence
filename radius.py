@@ -1,7 +1,8 @@
 import numpy as np
+from misc import USE_TWO
 
 
-def R_upper_bound(R_emp, R_sup, N, delta, two=False):
+def R_upper_bound(R_emp, R_sup, N, delta, two=USE_TWO):
     # eq. 5
     if two == True:
         R_expt = R_emp + (2*(R_sup/np.sqrt(N))) * (2+(np.sqrt(2*np.log(1/delta))))
@@ -19,3 +20,5 @@ def supremum(X, x0=0):
     
     euclid = np.sqrt(np.sum(np.square(X - x0), axis=1))
     return np.max(euclid)
+
+
