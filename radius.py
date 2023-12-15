@@ -4,11 +4,14 @@ from misc import USE_TWO
 
 def R_upper_bound(R_emp, R_sup, N, delta, two=USE_TWO):
     # eq. 5
+    return R_emp + error_upper_bound(R_sup, N, delta, two)
+
+
+def error_upper_bound(R_sup, N, delta, two=USE_TWO):
+    error = (R_sup/np.sqrt(N)) * (2 + (np.sqrt( 2*np.log(1/delta) )))
     if two == True:
-        R_expt = R_emp + (2*(R_sup/np.sqrt(N))) * (2+(np.sqrt(2*np.log(1/delta))))
-    else:
-        R_expt = R_emp + ((R_sup/np.sqrt(N))) * (2+(np.sqrt(2*np.log(1/delta))))
-    return R_expt
+        error *= 2
+    return error
 
 def calc_emp_R(X_proj, mean_proj):
     euclid = np.sqrt(np.sum(np.square(X_proj - mean_proj), axis=1))
