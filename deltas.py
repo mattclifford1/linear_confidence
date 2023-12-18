@@ -78,6 +78,14 @@ def delta2_given_delta1_matt(N1, N2, M_emp, delta1, R):
     y = ( (x*np.sqrt(N2) - 2)**2 )/2
     return 1/(np.exp(y))
 
+
+def delta2_given_delta1_jonny(N1, N2, M_emp, delta1, R):
+    # eq.9 but re doing the maths - jonny
+    left = (np.sqrt(N2)*M_emp) / (2*R)
+    right = np.sqrt(N2/N1)*(2*np.sqrt(2*np.log(1/delta1)))
+    inner = left - right - 2
+    return np.exp(-(inner**2))
+
 def delta2_given_delta1_wolf(N1, N2, M, delta1, R):
     l = (1/delta1)**(-N2/N1)
     ll_brac = -(2*N2/N1) -((4*np.sqrt(N2))/np.sqrt(N1)) -((N2*(M**2))/(8*(R**2)))
