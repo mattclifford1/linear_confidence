@@ -53,21 +53,6 @@ def contraint_eq7(delta1, delta2, data_info):
     return equal_to_0
 
 
-def contraint_eq7_matt(delta1, delta2, data_info):
-    # eq. 8 in scipy contraint form that it equals 0
-    N1 = data_info['N1']
-    N2 = data_info['N2']
-    R1_emp = data_info['empirical R1']
-    R2_emp = data_info['empirical R2']
-    R = data_info['R all data']
-    D_emp = data_info['empirical D']
-
-    R1_est = radius.R_upper_bound(R1_emp, R, N1, delta1)
-    R2_est = radius.R_upper_bound(R2_emp, R, N2, delta2)
-    equal_to_0 = R1_est + R2_est - D_emp
-    return equal_to_0
-
-
 def contraint_eq8(delta1, delta2, data_info):
     # eq. 8 in scipy contraint form that it equals 0
     N1 = data_info['N1']
@@ -78,6 +63,7 @@ def contraint_eq8(delta1, delta2, data_info):
     equal_to_0 = radius.error_upper_bound(
         R, N1, delta1) + radius.error_upper_bound(R, N2, delta2) - M_emp
     return equal_to_0
+
 
 def inner_margin(N, delta):
     # inside of eq. 8
