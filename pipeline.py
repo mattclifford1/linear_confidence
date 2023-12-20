@@ -9,6 +9,7 @@ import normal
 import projection
 import radius
 import deltas
+import optimise_contraint
 
 
 def get_data_and_classifier(m1 = [1, 1],
@@ -108,11 +109,12 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         if delta1_from_delta2 != None:
             delta2 = delta1_from_delta2(delta1, data_info)
         else:
-            # need to actually get delta2 value that satisfies the contraint here ideally ...
-            delta2 = np.random.uniform()
-        deltas_init = tuple([delta1, delta2])
+            # get from the contraint function
+            delta1, delta2 = optimise_contraint.get_init_deltas(
+                contraint_func, data_info)
+        deltas_init = (delta1, delta2)
     else:
-        deltas_init = tuple([delta1]) 
+        deltas_init = (delta1) 
 
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
         use_grad = True
@@ -121,8 +123,13 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
 
     # set up contraints
     data_info['delta2_given_delta1_func'] = delta1_from_delta2
-    def contraint_wrapper(deltas):
-        return contraint_func(deltas, data_info)
+    if num_deltas == 2:
+        def contraint_wrapper(deltas):
+            return contraint_func(deltas[0], deltas[1], data_info)
+    else:
+        def contraint_wrapper(deltas):
+            delta2 = delta1_from_delta2(deltas[0])
+            return contraint_func(deltas[0], delta2, data_info)
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))

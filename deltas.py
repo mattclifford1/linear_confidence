@@ -11,8 +11,13 @@ def class_cost(c=1, delta=0.5, N=100):
     return c*((1-delta)*(1/(N+1)) + delta)
 
 
-def loss(c1, c2, delta1, delta2, N1, N2):
+def loss(delta1, delta2, data_info):
     # eq. 6
+    N1 = data_info['N1']
+    N2 = data_info['N2']
+    c1 = data_info['c1']
+    c2 = data_info['c2']
+
     J = class_cost(c1, delta1, N1) + \
         class_cost(c2, delta2, N2)
     return J
@@ -20,14 +25,11 @@ def loss(c1, c2, delta1, delta2, N1, N2):
 
 def loss_one_delta(delta1, data_info):
     # eq. 6 with delta2 calced from delta1
-    N1 = data_info['N1']
-    N2 = data_info['N2']
-    c1 = data_info['c1']
-    c2 = data_info['c2']
+    
     delta2_given_delta1_func = data_info['delta2_given_delta1_func']
 
     delta2 = delta2_given_delta1_func(delta1, data_info)
-    return loss(c1, c2, delta1, delta2, N1, N2)
+    return loss(delta1, delta2, data_info)
 
 
 def loss_one_delta_matt(delta1, c1, c2, N1, N2, M_emp, R):
@@ -36,7 +38,7 @@ def loss_one_delta_matt(delta1, c1, c2, N1, N2, M_emp, R):
     return loss(c1, c2, delta1, delta2, N1, N2)
 
 
-def contraint_eq7(delta1, data_info):
+def contraint_eq7(delta1, delta2, data_info):
     # eq. 8 in scipy contraint form that it equals 0
     N1 = data_info['N1']
     N2 = data_info['N2']
@@ -44,16 +46,14 @@ def contraint_eq7(delta1, data_info):
     R2_emp = data_info['empirical R2']
     R = data_info['R all data']
     D_emp = data_info['empirical D']
-    delta2_given_delta1_func = data_info['delta2_given_delta1_func']
 
-    delta2 = delta2_given_delta1_func(delta1, data_info)
     R1_est = radius.R_upper_bound(R1_emp, R, N1, delta1)
     R2_est = radius.R_upper_bound(R2_emp, R, N2, delta2)
     equal_to_0 = R1_est + R2_est - D_emp
     return equal_to_0
 
 
-def contraint_eq7_matt(delta1, data_info):
+def contraint_eq7_matt(delta1, delta2, data_info):
     # eq. 8 in scipy contraint form that it equals 0
     N1 = data_info['N1']
     N2 = data_info['N2']
@@ -61,24 +61,20 @@ def contraint_eq7_matt(delta1, data_info):
     R2_emp = data_info['empirical R2']
     R = data_info['R all data']
     D_emp = data_info['empirical D']
-    delta2_given_delta1_func = data_info['delta2_given_delta1_func']
 
-    delta2 = delta2_given_delta1_func(delta1, data_info)
     R1_est = radius.R_upper_bound(R1_emp, R, N1, delta1)
     R2_est = radius.R_upper_bound(R2_emp, R, N2, delta2)
     equal_to_0 = R1_est + R2_est - D_emp
     return equal_to_0
 
 
-def contraint_eq8(delta1, data_info):
+def contraint_eq8(delta1, delta2, data_info):
     # eq. 8 in scipy contraint form that it equals 0
     N1 = data_info['N1']
     N2 = data_info['N2']
     R = data_info['R all data']
     M_emp = data_info['empirical margin']
-    delta2_given_delta1_func = data_info['delta2_given_delta1_func']
 
-    delta2 = delta2_given_delta1_func(delta1, data_info)
     equal_to_0 = radius.error_upper_bound(
         R, N1, delta1) + radius.error_upper_bound(R, N2, delta2) - M_emp
     return equal_to_0
@@ -103,7 +99,7 @@ def delta2_given_delta1(delta1, data_info):
     N2 = data_info['N2']
     R = data_info['R all data']
     M_emp = data_info['empirical margin']
-    
+
     return np.exp((-N2/2) * np.square(delta2_inside_bracket(N1, N2, M_emp, delta1, R)))
 
 
