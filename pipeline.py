@@ -20,15 +20,20 @@ def get_data_and_classifier(m1 = [1, 1],
                             N2 = 10000,
                             scale = True,
                             model='Linear',
+                            test_nums=[10000, 10000],
                             _plot=True):
     data = normal.get_two_classes(means=[m1, m2],
                                   covs=[cov1, cov2],
                                   num_samples=[N1, N2])
+    data_test = normal.get_two_classes(means=[m1, m2],
+                                       covs=[cov1, cov2],
+                                       num_samples=[test_nums[0], test_nums[1]])
 
 
     scaler = data_utils.normaliser(data)
     if scale == True:
         data = scaler(data)
+        data_test = scaler(data_test)
         m1 = scaler.transform_instance(m1)
         m2 = scaler.transform_instance(m2)
 
@@ -43,7 +48,7 @@ def get_data_and_classifier(m1 = [1, 1],
         plots.plot_classes(data, ax=ax)
         plots.plot_decision_boundary(clf, data, ax=ax)
         plots.plt.show()
-    return {'data': data, 'clf': clf, 'mean1': m1, 'mean2': m2}
+    return {'data': data, 'clf': clf, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
 
 
 def data_project_and_info(data, m1, m2, clf, _plot=True, _print=True):
