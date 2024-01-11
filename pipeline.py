@@ -133,7 +133,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
             return contraint_func(deltas[0], deltas[1], data_info)
     else:
         def contraint_wrapper(deltas):
-            delta2 = delta1_from_delta2(deltas[0])
+            delta2 = delta1_from_delta2(deltas[0], data_info)
             return contraint_func(deltas[0], delta2, data_info)
 
     def contraint_real(deltas):
