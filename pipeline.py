@@ -2,6 +2,7 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds
+from sklearn.metrics import accuracy_score
 
 import data_utils
 import plots
@@ -51,11 +52,15 @@ def get_data_and_classifier(m1 = [1, 1],
     return {'data': data, 'clf': clf, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
 
 
-def data_project_and_info(data, m1, m2, clf, _plot=True, _print=True):
+def data_project_and_info(data, m1, m2, clf, data_test=None, _plot=True, _print=True):
     ''' calcualte info we need from data: R, M, D etc. 
     also project the data from the classfiier'''
     # get projections
     proj_data = projection.from_clf(data, clf, supports=True)
+    if data_test != None:
+        proj_data_test = projection.from_clf(data_test, clf, supports=True)
+    else:
+        proj_data_test = None
     proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, clf)
 
     # Empircal M
@@ -81,6 +86,7 @@ def data_project_and_info(data, m1, m2, clf, _plot=True, _print=True):
         print(f'R1 empirical: {R1_emp}\nR2 empirical: {R2_emp}')
 
     return {'projected_data': proj_data,
+            'projected_data_test': proj_data_test,
             'projected_means': proj_means,
             'empirical margin': M_emp,
             'R all data': R_sup,
@@ -131,6 +137,8 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if num_deltas == 2:
         def contraint_wrapper(deltas):
             return contraint_func(deltas[0], deltas[1], data_info)
+        print(
+            f'constraint init: {contraint_wrapper(deltas_init)} should equal 0')
     else:
         def contraint_wrapper(deltas):
             delta2 = delta1_from_delta2(deltas[0], data_info)
@@ -172,3 +180,55 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         print(f'R1_est : {R1_est} \nR2_est: {R2_est}')
         ax = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True)
     return delta1, delta2
+
+
+def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
+    # calculate each R upper bound
+    R1_est = radius.R_upper_bound(
+        data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
+    R2_est = radius.R_upper_bound(
+        data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta1)
+    Rs = {'R1': R1_est, 'R2': R2_est}
+    
+    # est data
+    if data_clf['data_test'] == None:
+        print('No test data found in data_clf!')
+        return
+    # projected test data
+    if data_info['projected_data_test'] == None:
+        print('No test data found in data_info!')
+        return
+    
+    # add error to min class and minus from max class
+    min_mean = np.argmin(data_info['projected_means']['X'])
+    max_mean = np.argmax(data_info['projected_means']['X'])
+    class_names = ['1', '2']
+    upper_min_class = data_info['projected_means'][f'X{class_names[min_mean]}'] + \
+        Rs[f'R{class_names[min_mean]}']
+    lower_max_class = data_info['projected_means'][f'X{class_names[max_mean]}'] - \
+        Rs[f'R{class_names[max_mean]}']
+    
+    # get average as the boundary
+    boundary = (upper_min_class + lower_max_class)/2
+    class_nums = [data_info['projected_means']['y'][min_mean], data_info['projected_means']['y'][max_mean]]
+    delta_clf = delta_adjusted_clf(boundary, class_nums)
+
+    # predict on both classifiers (original and delta adjusted)
+    y_clf = data_clf['clf'].predict(data_clf['data_test']['X'])
+    y_deltas = delta_clf.predict(data_info['projected_data_test']['X'])
+
+    print(f"original accuracy: {accuracy_score(data_clf['data_test']['y'], y_clf)}")
+    print(f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
+
+
+class delta_adjusted_clf:
+    ''' boundary to make decision in projected space '''
+    def __init__(self, boundary, class_nums):
+        self.boundary = boundary
+        self.class_nums = class_nums
+
+    def predict(self, X):
+        preds = np.zeros(X.shape)
+        preds[X <= self.boundary] = self.class_nums[0]
+        preds[X > self.boundary] = self.class_nums[1]
+        return preds
