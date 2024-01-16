@@ -34,7 +34,7 @@ def loss_one_delta(delta1, data_info):
 
 def loss_one_delta_matt(delta1, c1, c2, N1, N2, M_emp, R):
     # eq. 6 with delta2 calced from delta1
-    delta2 = delta2_given_delta1_wolf(N1, N2, M_emp, delta1, R)
+    delta2 = delta2_given_delta1_matt(N1, N2, M_emp, delta1, R)
     return loss(c1, c2, delta1, delta2, N1, N2)
 
 
@@ -49,6 +49,8 @@ def contraint_eq7(delta1, delta2, data_info):
 
     R1_est = radius.R_upper_bound(R1_emp, R, N1, delta1)
     R2_est = radius.R_upper_bound(R2_emp, R, N2, delta2)
+    # should now be equal to zero (ideally)
+
     equal_to_0 = R1_est + R2_est - D_emp
     return equal_to_0
 
@@ -89,11 +91,42 @@ def delta2_given_delta1(delta1, data_info):
     return np.exp((-N2/2) * np.square(delta2_inside_bracket(N1, N2, M_emp, delta1, R)))
 
 
-def delta2_given_delta1_matt(N1, N2, M_emp, delta1, R):
-    # eq.9 but re doing the maths
-    x = (1/np.sqrt(N1))*(2 + np.sqrt(2*np.log(1/delta1))) - (M_emp/(1*R))
-    y = ( (x*np.sqrt(N2) - 2)**2 )/2
-    return 1/(np.exp(y))
+def delta2_given_delta1_matt(delta1, data_info):
+    # eq.9 but re doing the maths - refer to notes for letters
+    N1 = data_info['N1']
+    N2 = data_info['N2']
+    R = data_info['R all data']
+    R1_emp = data_info['empirical R1']
+    R2_emp = data_info['empirical R2']
+    D_emp = data_info['empirical D']
+    
+    R1_est = radius.R_upper_bound(R1_emp, R, N1, delta1)
+    if USE_TWO == True:
+        factor = 2
+    else:
+        factor = 1
+    B = - (R1_est + R2_emp - D_emp)/(factor*(R/(np.sqrt(N2))))
+    exponent = (np.square((B-2))) / 2
+    delta2 = np.exp(-exponent)
+    # delta2 = 1/(np.exp(exponent))
+    return delta2
+
+def eq7_matt(delta1, delta2, data_info):
+    N1 = data_info['N1']
+    N2 = data_info['N2']
+    R = data_info['R all data']
+    R1_emp = data_info['empirical R1']
+    R2_emp = data_info['empirical R2']
+    D_emp = data_info['empirical D']
+
+    if USE_TWO == True:
+        factor = 2
+    else:
+        factor = 1
+        
+    R1_est = R1_emp + factor*(R/np.sqrt(N1))*(2 + np.sqrt(np.log(1/delta1)))
+    R2_est = R2_emp + factor*(R/np.sqrt(N2))*(2 + np.sqrt(np.log(1/delta2)))
+    return R1_est + R2_est - D_emp
 
 
 def delta2_given_delta1_jonny(N1, N2, M_emp, delta1, R):

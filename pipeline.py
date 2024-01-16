@@ -117,6 +117,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     # get initial deltas
     delta1 = np.random.uniform()
     if num_deltas == 2:
+        bounds = Bounds([0, 0], [1, 1])
         if delta1_from_delta2 != None:
             delta2 = delta1_from_delta2(delta1, data_info)
         else:
@@ -125,6 +126,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
                 contraint_func, data_info)
         deltas_init = (delta1, delta2)
     else:
+        bounds = Bounds([0], [1])
         deltas_init = (delta1) 
 
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
@@ -137,8 +139,8 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if num_deltas == 2:
         def contraint_wrapper(deltas):
             return contraint_func(deltas[0], deltas[1], data_info)
-        print(
-            f'constraint init: {contraint_wrapper(deltas_init)} should equal 0')
+        if _print == True:
+            print(f'constraint init: {contraint_wrapper(deltas_init)} should equal 0')
     else:
         def contraint_wrapper(deltas):
             delta2 = delta1_from_delta2(deltas[0], data_info)
@@ -156,7 +158,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
                    deltas_init,
                    (data_info), 
                    #    method='SLSQP',
-                   bounds=Bounds([0], [1]),
+                   bounds=bounds,
                    jac=use_grad,  # use gradient
                    constraints=contrs
                    )
@@ -177,7 +179,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
         R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta1)
-        print(f'R1_est : {R1_est} \nR2_est: {R2_est}')
+        print(f"R1_est : {R1_est} \nR2_est: {R2_est} \nD_emp: {data_info['empirical D']}")
         ax = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True)
     return delta1, delta2
 
