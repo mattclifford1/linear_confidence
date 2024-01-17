@@ -45,6 +45,8 @@ def plot_projection(data, means, R1_emp, R2_emp, R_est=False, ax=None):
     ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [-0.1, -0.1], 
             c='r', label=f'R2 {name}', marker='|')
 
+    # print(emp_xp2-emp_xp1)
+    # print(R1_emp+R2_emp)
     ax.scatter([0], [-1], c='w')
     ax.legend()
     return ax

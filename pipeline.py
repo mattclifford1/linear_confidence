@@ -9,7 +9,7 @@ import plots
 import normal
 import projection
 import radius
-import deltas
+import deltas as ds
 import optimise_contraint
 
 
@@ -147,8 +147,8 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
             return contraint_func(deltas[0], delta2, data_info)
     
     if _print == True:
-        print(
-            f'constraint init: {contraint_wrapper(deltas_init) <= 0}')
+        print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
+        print(f'constraint init: {contraint_wrapper(deltas_init) <= 0}')
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
@@ -176,7 +176,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         delta2 = deltas[1]
 
     if _print == True:
-        print('optimisation complete:')
+        print('\noptimisation complete:')
         print(f'    delta1 : {delta1} \n    delta2: {delta2}')
         print(f'    constraint satisfied: {contraint_wrapper(deltas)==0}')
     
