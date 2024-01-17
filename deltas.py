@@ -100,15 +100,17 @@ def delta2_given_delta1_matt(delta1, data_info):
     R2_emp = data_info['empirical R2']
     D_emp = data_info['empirical D']
     
-    R1_est = radius.R_upper_bound(R1_emp, R, N1, delta1)
     if USE_TWO == True:
         factor = 2
     else:
         factor = 1
-    B = - (R1_est + R2_emp - D_emp)/(factor*(R/(np.sqrt(N2))))
-    exponent = (np.square((B-2))) / 2
-    delta2 = np.exp(-exponent)
-    # delta2 = 1/(np.exp(exponent))
+
+    def error(R, N, d, f):
+        return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
+
+    B = D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
+    # delta2 = np.exp(-0.5*np.square((np.sqrt(N2)*B)/(factor*R) - 2))
+    delta2 = 1/np.exp(0.5*(np.square(((B*np.sqrt(N2))/(factor*R)) - 2)))
     return delta2
 
 def eq7_matt(delta1, delta2, data_info):

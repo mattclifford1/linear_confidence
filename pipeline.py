@@ -116,6 +116,7 @@ def print_params(data_info):
 def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_deltas=1, _print=True, _plot=True):
     # get initial deltas
     delta1 = np.random.uniform()
+    delta1 = 1   # use min error distance to give it the best chance to optimise correctly
     if num_deltas == 2:
         bounds = Bounds([0, 0], [1, 1])
         if delta1_from_delta2 != None:
@@ -127,7 +128,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         deltas_init = (delta1, delta2)
     else:
         bounds = Bounds([0], [1])
-        deltas_init = (delta1) 
+        deltas_init = (delta1, ) 
 
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
         use_grad = True
@@ -139,12 +140,15 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if num_deltas == 2:
         def contraint_wrapper(deltas):
             return contraint_func(deltas[0], deltas[1], data_info)
-        if _print == True:
-            print(f'constraint init: {contraint_wrapper(deltas_init)} should equal 0')
+        
     else:
         def contraint_wrapper(deltas):
             delta2 = delta1_from_delta2(deltas[0], data_info)
             return contraint_func(deltas[0], delta2, data_info)
+    
+    if _print == True:
+        print(
+            f'constraint init: {contraint_wrapper(deltas_init) <= 0}')
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
@@ -172,14 +176,15 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         delta2 = deltas[1]
 
     if _print == True:
-        print(f'delta1 : {delta1} \ndelta2: {delta2}')
-        print(f'constraint: {contraint_wrapper(deltas)} should equal 0')
+        print('optimisation complete:')
+        print(f'    delta1 : {delta1} \n    delta2: {delta2}')
+        print(f'    constraint satisfied: {contraint_wrapper(deltas)==0}')
     
     if _plot == True:
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
-        R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta1)
-        print(f"R1_est : {R1_est} \nR2_est: {R2_est} \nD_emp: {data_info['empirical D']}")
+        R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
+        # print(f"R1_est : {R1_est} \nR2_est: {R2_est} \nD_emp: {data_info['empirical D']}")
         ax = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True)
     return delta1, delta2
 
