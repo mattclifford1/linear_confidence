@@ -125,10 +125,10 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
             # get from the contraint function
             delta1, delta2 = optimise_contraint.get_init_deltas(
                 contraint_func, data_info)
-        deltas_init = (delta1, delta2)
+        deltas_init = [delta1, delta2]
     else:
         bounds = Bounds([0], [1])
-        deltas_init = (delta1, ) 
+        deltas_init = [delta1]
 
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
         use_grad = True
@@ -149,13 +149,14 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if _print == True:
         print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
         print(f'constraint init: {contraint_wrapper(deltas_init) <= 0}')
+        print(f'deltas init: {deltas_init}')
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
 
     contrs = [
         {'type':'eq', 'fun': contraint_wrapper},
-        {'type':'eq', 'fun': contraint_real},
+        # {'type':'eq', 'fun': contraint_real},
             ]
 
     res = minimize(loss_func,
@@ -176,7 +177,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         delta2 = deltas[1]
 
     if _print == True:
-        print('\noptimisation complete:')
+        print(res.message)
         print(f'    delta1 : {delta1} \n    delta2: {delta2}')
         print(f'    constraint satisfied: {contraint_wrapper(deltas)==0}')
     
