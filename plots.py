@@ -6,6 +6,7 @@ from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.decomposition import PCA
 import numpy as np
 import projection
+import radius
 
 # plot colours
 cm_bright = ListedColormap(["#0000FF", "#FF0000"])
@@ -16,23 +17,24 @@ ticks_size = 24
 ticks_size_small = 20
 
 
-def plot_projection(data, means, R1_emp, R2_emp, R_est=False, ax=None):
+def plot_projection(data, means, R1_emp, R2_emp, data_info=None, R_est=False, ax=None):
     ax, show = _get_axes(ax)
 
     # ax.scatter(decision_projected, np.zeros_like(
     #     decision_projected), c='k', s=50, marker='x')
     xp1, xp2 = projection.get_classes(data)
-    ax.scatter(xp1, np.zeros_like(xp1), c='b', s=10, label='Class 1')
-    ax.scatter(xp2, np.zeros_like(xp2), c='r', s=10, label='Class 2')
+    y = -0.1
+    ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10, label='Class 1')
+    ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, label='Class 2')
     # empirical means
     emp_xp1, emp_xp2 = projection.get_emp_means(data)
-    ax.scatter(np.array([emp_xp1, emp_xp2]), [0, 0], c='k', s=200, 
+    ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                marker='x', label='Empircal Means')
     # expected means
-    ax.scatter(means['X'], [0, 0], c='k', s=100,
+    ax.scatter(means['X'], [y, y], c='k', s=100,
                marker='o', label='Expected Means')
     # supports
-    ax.scatter(data['supports'], [0, 0], c='k', s=100,
+    ax.scatter(data['supports'], [y, y], c='k', s=100,
                marker='+', label='Supports')
     
     # empirical estimates of Rs
@@ -40,17 +42,31 @@ def plot_projection(data, means, R1_emp, R2_emp, R_est=False, ax=None):
         name = 'Estimate'
     else:
         name = 'Empirical'
-    ax.plot([emp_xp1-R1_emp, emp_xp1+R1_emp], [-0.1, -0.1],
+    y = -0.2
+    ax.plot([emp_xp1-R1_emp, emp_xp1+R1_emp], [y, y],
             c='b', label=f'R1 {name}', marker='|')
-    ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [-0.1, -0.1], 
+    ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [y, y], 
             c='r', label=f'R2 {name}', marker='|')
-
-    # print(emp_xp2-emp_xp1)
-    # print(R1_emp+R2_emp)
-    ax.scatter([0], [-1], c='w')
+    
+    # plot R error estimates if given the data
+    if data_info != None:
+        for d in [1, 0.5, 0.1, 0.001]:
+            R_ests = get_R_estimates(data_info, deltas=[d, d])
+            ax.plot([emp_xp1-R_ests[0], emp_xp1+R_ests[0]], [d, d],
+                    c='b', marker='|', linestyle='dashed')
+            ax.plot([emp_xp2-R_ests[1], emp_xp2+R_ests[1]], [d, d],
+                    c='r', marker='|', linestyle='dashed')
+        ax.set_ylabel('deltas (dashed)')
+            
+    # to make plot scale nice
+    ax.plot([0], [-1.5], c='w')
     ax.legend()
     return ax
 
+def get_R_estimates(data_info, deltas=[1, 1]):
+    R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], deltas[0])
+    R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], deltas[1])
+    return R1_est, R2_est
 
 def plot_classes(data, ax=None, dim_reducer=None):
     '''

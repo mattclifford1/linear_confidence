@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 import data_utils
 import plots
@@ -78,26 +79,29 @@ def data_project_and_info(data, m1, m2, clf, data_test=None, _plot=True, _print=
     # Empirical D
     D_emp = np.abs(emp_xp1 - emp_xp2)
 
+    data_info = {'projected_data': proj_data,
+                 'projected_data_test': proj_data_test,
+                 'projected_means': proj_means,
+                 'empirical margin': M_emp,
+                 'R all data': R_sup,
+                 'projected_data 1': xp1,
+                 'projected_data 2': xp2,
+                 'empirical_projected_mean 1': emp_xp1,
+                 'empirical_projected_mean 2': emp_xp2,
+                 'empirical R1': R1_emp,
+                 'empirical R2': R2_emp,
+                 'empirical D': D_emp,
+                 'N1': (data['y']==0).sum(),
+                 'N2': (data['y']==1).sum(),
+                 }
     # plot
     if _plot == True:
-        ax = plots.plot_projection(proj_data, proj_means, R1_emp, R2_emp)
-
+        _ = plots.plot_projection(proj_data, proj_means, R1_emp, R2_emp, data_info=data_info)
+    
     if _print == True:
         print(f'R1 empirical: {R1_emp}\nR2 empirical: {R2_emp}')
 
-    return {'projected_data': proj_data,
-            'projected_data_test': proj_data_test,
-            'projected_means': proj_means,
-            'empirical margin': M_emp,
-            'R all data': R_sup,
-            'projected_data 1': xp1,
-            'projected_data 2': xp2,
-            'empirical_projected_mean 1': emp_xp1,
-            'empirical_projected_mean 2': emp_xp2,
-            'empirical R1': R1_emp,
-            'empirical R2': R2_emp,
-            'empirical D': D_emp,
-            }
+    return data_info
 
 def print_params(data_info):
     print(
@@ -113,7 +117,7 @@ def print_params(data_info):
         C2: {data_info['c2']}""")
 
 
-def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_deltas=1, _print=True, _plot=True):
+def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_deltas=1, grid_search=False,_print=True, _plot=True):
     # get initial deltas
     delta1 = np.random.uniform()
     delta1 = 1   # use min error distance to give it the best chance to optimise correctly
@@ -126,9 +130,14 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
             delta1, delta2 = optimise_contraint.get_init_deltas(
                 contraint_func, data_info)
         deltas_init = [delta1, delta2]
+        if _print == True:
+            print(f'deltas init: {deltas_init}')
     else:
         bounds = Bounds([0], [1])
         deltas_init = [delta1]
+        if _print == True:
+            print(
+                f'deltas init: {[deltas_init[0], delta1_from_delta2(deltas_init[0], data_info)]}')
 
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
         use_grad = True
@@ -149,26 +158,33 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if _print == True:
         print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
         print(f'constraint init: {contraint_wrapper(deltas_init) <= 0}')
-        print(f'deltas init: {deltas_init}')
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
 
     contrs = [
         {'type':'eq', 'fun': contraint_wrapper},
-        # {'type':'eq', 'fun': contraint_real},
+        # {'type':'eq', 'fun': contraint_real},  # more equality contraints that independaent variables
             ]
+    if grid_search == True:
+        # line search for optimal value - only works for one delta atm
+        resolution = 1000
+        delta1s = np.linspace(0.000000000000001, 1, resolution)
+        J = loss_func(delta1s, data_info)
+        deltas = [delta1s[np.argmin(J)]]
+        optim_msg = 'Grid Search Optimisation Complete'
+    else:
+        res = minimize(loss_func,
+                    deltas_init,
+                    (data_info), 
+                    #    method='SLSQP',
+                    bounds=bounds,
+                    jac=use_grad,  # use gradient
+                    constraints=contrs
+                    )
+        deltas = res.x
+        optim_msg = res.message
 
-    res = minimize(loss_func,
-                   deltas_init,
-                   (data_info), 
-                   #    method='SLSQP',
-                   bounds=bounds,
-                   jac=use_grad,  # use gradient
-                   constraints=contrs
-                   )
-
-    deltas = res.x
     if len(deltas) == 1:
         delta1 = deltas[0]
         delta2 = delta1_from_delta2(delta1, data_info)
@@ -177,16 +193,26 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         delta2 = deltas[1]
 
     if _print == True:
-        print(res.message)
+        print(optim_msg)
         print(f'    delta1 : {delta1} \n    delta2: {delta2}')
         print(f'    constraint satisfied: {contraint_wrapper(deltas)==0}')
     
     if _plot == True:
+        # plot loss function
+        if num_deltas == 1:
+            delta1s = np.linspace(0.000000000001, 1, 1000)
+            J = loss_func(delta1s, data_info)
+            _, ax = plt.subplots(1, 1)
+            ax.plot(delta1s, J)
+            ax.set_xlabel('delta1')
+            ax.set_ylabel('Loss')
+
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
         R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
         # print(f"R1_est : {R1_est} \nR2_est: {R2_est} \nD_emp: {data_info['empirical D']}")
-        ax = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True)
+        _, ax = plt.subplots(1, 1)
+        _ = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True, ax=ax)
     return delta1, delta2
 
 

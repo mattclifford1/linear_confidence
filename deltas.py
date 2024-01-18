@@ -109,7 +109,6 @@ def delta2_given_delta1_matt(delta1, data_info):
         return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
 
     B = D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
-    # delta2 = np.exp(-0.5*np.square((np.sqrt(N2)*B)/(factor*R) - 2))
     delta2 = 1/np.exp(0.5*(np.square(((B*np.sqrt(N2))/(factor*R)) - 2)))
     return delta2
 
@@ -126,8 +125,8 @@ def eq7_matt(delta1, delta2, data_info):
     else:
         factor = 1
         
-    R1_est = R1_emp + factor*(R/np.sqrt(N1))*(2 + np.sqrt(np.log(1/delta1)))
-    R2_est = R2_emp + factor*(R/np.sqrt(N2))*(2 + np.sqrt(np.log(1/delta2)))
+    R1_est = R1_emp + factor*(R/np.sqrt(N1))*(2 + np.sqrt(2*np.log(1/delta1)))
+    R2_est = R2_emp + factor*(R/np.sqrt(N2))*(2 + np.sqrt(2*np.log(1/delta2)))
     return R1_est + R2_est - D_emp
 
 
