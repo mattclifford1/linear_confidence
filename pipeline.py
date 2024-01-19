@@ -171,6 +171,11 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         resolution = 1000
         delta1s = np.linspace(0.000000000000001, 1, resolution)
         J = loss_func(delta1s, data_info)
+        # eliminate any deltas which don't satisfy the constraint
+        tol = 1e-5
+        constraints = np.array([contraint_wrapper([d]) for d in delta1s])
+        J[constraints>tol] = np.max(J)
+        J[constraints<-tol] = np.max(J)
         deltas = [delta1s[np.argmin(J)]]
         optim_msg = 'Grid Search Optimisation Complete'
     else:
@@ -200,12 +205,16 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if _plot == True:
         # plot loss function
         if num_deltas == 1:
-            delta1s = np.linspace(0.000000000001, 1, 1000)
-            J = loss_func(delta1s, data_info)
+            if grid_search != True:
+                delta1s = np.linspace(0.000000000001, 1, 1000)
+                J = loss_func(delta1s, data_info)
+                constraints = [contraint_wrapper([d]) for d in delta1s]
             _, ax = plt.subplots(1, 1)
-            ax.plot(delta1s, J)
+            ax.plot(delta1s, J, label='Loss')
+            ax.plot(delta1s, constraints, label='constraint')
             ax.set_xlabel('delta1')
-            ax.set_ylabel('Loss')
+            # ax.set_ylabel('Loss')
+            ax.legend()
 
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
