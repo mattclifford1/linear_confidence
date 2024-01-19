@@ -261,7 +261,8 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
     y_deltas = delta_clf.predict(data_info['projected_data_test']['X'])
 
     print(f"original accuracy: {accuracy_score(data_clf['data_test']['y'], y_clf)}")
-    print(f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
+    print(
+        f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
 
 
 class delta_adjusted_clf:
