@@ -43,7 +43,9 @@ def get_data_and_classifier(m1 = [1, 1],
         clf = SVC(random_state=0, probability=True,
                 kernel='linear').fit(data['X'], data['y'])
     elif model == 'Linear':
-        clf = LogisticRegression().fit(data['X'], data['y'])
+        w = None
+        # w = 'balanced'
+        clf = LogisticRegression(class_weight=w).fit(data['X'], data['y'])
 
     if _plot == True:
         ax, _ = plots._get_axes(None)
@@ -60,6 +62,7 @@ def data_project_and_info(data, m1, m2, clf, data_test=None, _plot=True, _print=
     proj_data = projection.from_clf(data, clf, supports=True)
     if data_test != None:
         proj_data_test = projection.from_clf(data_test, clf, supports=True)
+        proj_data_test['y'] = data_test['y']   # DON'T USE THE CLF PREDS!!!
     else:
         proj_data_test = None
     proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, clf)
@@ -219,7 +222,6 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
         R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
-        # print(f"R1_est : {R1_est} \nR2_est: {R2_est} \nD_emp: {data_info['empirical D']}")
         _, ax = plt.subplots(1, 1)
         _ = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True, ax=ax)
     return delta1, delta2
@@ -230,16 +232,14 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
     R1_est = radius.R_upper_bound(
         data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
     R2_est = radius.R_upper_bound(
-        data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta1)
+        data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
     Rs = {'R1': R1_est, 'R2': R2_est}
     
     # est data
     if data_clf['data_test'] == None:
-        print('No test data found in data_clf!')
         return
     # projected test data
     if data_info['projected_data_test'] == None:
-        print('No test data found in data_info!')
         return
     
     # add error to min class and minus from max class
@@ -260,9 +260,84 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
     y_clf = data_clf['clf'].predict(data_clf['data_test']['X'])
     y_deltas = delta_clf.predict(data_info['projected_data_test']['X'])
 
-    print(f"original accuracy: {accuracy_score(data_clf['data_test']['y'], y_clf)}")
-    print(
-        f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
+    if _print == True:
+        print(f"original accuracy: {accuracy_score(data_clf['data_test']['y'], y_clf)}")
+        print(
+            f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
+
+    if _plot == True:
+        # TODO: make this shode a loop
+        _, ax = plt.subplots(1, 1)
+
+        # clf points
+        # data = data_clf['data_test']
+        # data_projected = projection.from_clf(
+        #     data_clf['data_test'], data_clf['clf'])
+        # data_projected['y'] = data_clf['data_test']['y']
+        # xp1, xp2 = projection.get_classes(data_projected)
+        # y = 0
+        # ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
+        #            label='proj 1', marker='o')
+        # ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, 
+        #            label='proj 2', marker='o')
+        
+        proj_data = {'X': data_info['projected_data_test']['X'], 'y': y_clf}
+
+        X = data_clf['data_test']['X']
+        proj_data['y'] = y_clf
+        xp1, xp2 = projection.get_classes(proj_data)
+        y = -0.1
+        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
+                   label='Clf pred 1', marker='o')
+        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, 
+                   label='Clf pred 2', marker='o')
+        # clf points - linspace
+        X, y = plots.get_grid_pred(
+            data_clf['clf'], data_clf['data_test'], probs=False, flat=True)
+        data = {'X': X, 'y': y}
+        data_projected = projection.from_clf(data, data_clf['clf'])
+        xp1, xp2 = projection.get_classes(data_projected)
+        y = -0.2
+        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10, label='Original clf 1', marker='x')
+        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, marker='x')
+
+        # deltas points
+        # data = data_info['projected_data_test']
+        # xp1, xp2 = projection.get_classes(data)
+        # y = -0.4
+        # ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
+        #            label='proj 1', marker='o')
+        # ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10,
+        #            label='proj 2', marker='o')
+        
+        proj_data = {'X': data_clf['data_test'], 'y': y_deltas}
+        proj_data = {'X': data_info['projected_data_test']['X'], 'y': y_deltas}
+        xp1, xp2 = projection.get_classes(proj_data)
+        y = -0.5
+        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
+                   label='Deltas pred 1', marker='o')
+        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10,
+                   label='Deltas pred 2', marker='o')
+        # deltas points - linspace
+        deltas_preds = delta_clf.predict(data_projected['X'])
+        xp1, xp2 = projection.get_classes({'X': data_projected['X'], 'y': deltas_preds})
+        y = -0.6
+        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=20,
+                   label='Deltas clf 1', marker='+')
+        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=20, marker='+')
+
+
+        ax.legend()
+        ax.plot([0], [-1.5], c='w')
+        ax.set_title('original vs deltas on test dataset')
+
+        # plot in original space
+        _, ax2 = plt.subplots(1, 1)
+        plots.plot_classes(data_clf['data_test'], ax=ax2)
+        plots.plot_decision_boundary(
+            data_clf['clf'], data_clf['data_test'], ax=ax2)
+        plots.plt.show()
+
 
 
 class delta_adjusted_clf:

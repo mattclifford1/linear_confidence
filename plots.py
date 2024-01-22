@@ -17,36 +17,41 @@ ticks_size = 24
 ticks_size_small = 20
 
 
-def plot_projection(data, means, R1_emp, R2_emp, data_info=None, R_est=False, ax=None):
+def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, calc_data=True):
     ax, show = _get_axes(ax)
 
-    # ax.scatter(decision_projected, np.zeros_like(
-    #     decision_projected), c='k', s=50, marker='x')
     xp1, xp2 = projection.get_classes(data)
     y = -0.1
     ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10, label='Class 1')
     ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, label='Class 2')
-    # empirical means
-    emp_xp1, emp_xp2 = projection.get_emp_means(data)
-    ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
-               marker='x', label='Empircal Means')
+
+    # data empircal results
+    if calc_data == True:
+        # empirical means
+        emp_xp1, emp_xp2 = projection.get_emp_means(data)
+        ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
+                marker='x', label='Empircal Means')
+        # supports
+        ax.scatter(data['supports'], [y, y], c='k', s=100,
+                marker='+', label='Supports')
+        
     # expected means
-    ax.scatter(means['X'], [y, y], c='k', s=100,
-               marker='o', label='Expected Means')
-    # supports
-    ax.scatter(data['supports'], [y, y], c='k', s=100,
-               marker='+', label='Supports')
-    
+    if means != None:
+        ax.scatter(means['X'], [y, y], c='k', s=100,
+                marker='o', label='Expected Means')
+        
     # empirical estimates of Rs
     if R_est == True:
         name = 'Estimate'
     else:
         name = 'Empirical'
     y = -0.2
-    ax.plot([emp_xp1-R1_emp, emp_xp1+R1_emp], [y, y],
-            c='b', label=f'R1 {name}', marker='|')
-    ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [y, y], 
-            c='r', label=f'R2 {name}', marker='|')
+    if R1_emp != None:
+        ax.plot([emp_xp1-R1_emp, emp_xp1+R1_emp], [y, y],
+                c='b', label=f'R1 {name}', marker='|')
+    if R2_emp != None:
+        ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [y, y], 
+                c='r', label=f'R2 {name}', marker='|')
     
     # plot R error estimates if given the data
     if data_info != None:
@@ -58,7 +63,7 @@ def plot_projection(data, means, R1_emp, R2_emp, data_info=None, R_est=False, ax
                     c='r', marker='|', linestyle='dashed')
         ax.set_ylabel('deltas (dashed)')
             
-    # to make plot scale nice
+    # to make plot scale nice with a legend
     ax.plot([0], [-1.5], c='w')
     ax.legend()
     return ax
@@ -109,10 +114,37 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True):
     #     return
 
     ax, show = _get_axes(ax)
+    xgrids, zz = get_grid_pred(clf, data, probs=True, dim_reducer=dim_reducer)
+    # plot the grid of x, y and z values as a surface
+    c = ax.contourf(xgrids[0], xgrids[1], zz, cmap=cm,
+                    vmin=0, vmax=1, alpha=0.7)
+    c.set_clim(0, 1)
+
+    # add a legend, called a color bar
+    cbar = plt.colorbar(c, ticks=[0, 0.5, 1])
+    if labels == True:
+        cbar.ax.tick_params(labelsize=ticks_size)
+        cbar.ax.set_ylabel('Probability', size=ticks_size)
+
+    # set labels
+    # if labels == True:
+    #     if dim_reducer != None:
+    #         ax.set_xlabel('PCA Component 1', fontsize=font_size)
+    #         ax.set_ylabel('PCA Component 2', fontsize=font_size)
+    #     else:
+    #         ax.set_xlabel('Feature 1', fontsize=font_size)
+    #         ax.set_ylabel('Feature 2', fontsize=font_size)
+        ax.tick_params(axis='both', which='major', labelsize=ticks_size_small)
+
+    if show == True:
+        plt.show()
+
+def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False):
     # get X from data
     X = data['X']
     if dim_reducer != None:
         X = dim_reducer.transform(X)
+
     n_features = X.shape[1]
 
     # define bounds of the domain
@@ -142,38 +174,21 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True):
         flat_grid = dim_reducer.inverse_transform(flat_grid)
 
     # make predictions for the flat_grid
-    yhat = clf.predict_proba(flat_grid)
-    # keep just the probabilities for class 0
-    yhat = yhat[:, 0]
+    if probs == True:
+        yhat = clf.predict_proba(flat_grid)
+        # keep just the probabilities for class 0
+        yhat = yhat[:, 0]
+    else:
+        yhat = clf.predict(flat_grid)
 
     # yhat = clf.predict(flat_grid)
 
     # reshape the predictions back into a grid
-    zz = yhat.reshape(xgrids[0].shape)
-
-    # plot the grid of x, y and z values as a surface
-    c = ax.contourf(xgrids[0], xgrids[1], zz, cmap=cm,
-                    vmin=0, vmax=1, alpha=0.7)
-    c.set_clim(0, 1)
-
-    # add a legend, called a color bar
-    cbar = plt.colorbar(c, ticks=[0, 0.5, 1])
-    if labels == True:
-        cbar.ax.tick_params(labelsize=ticks_size)
-        cbar.ax.set_ylabel('Probability', size=ticks_size)
-
-    # set labels
-    # if labels == True:
-    #     if dim_reducer != None:
-    #         ax.set_xlabel('PCA Component 1', fontsize=font_size)
-    #         ax.set_ylabel('PCA Component 2', fontsize=font_size)
-    #     else:
-    #         ax.set_xlabel('Feature 1', fontsize=font_size)
-    #         ax.set_ylabel('Feature 2', fontsize=font_size)
-        ax.tick_params(axis='both', which='major', labelsize=ticks_size_small)
-
-    if show == True:
-        plt.show()
+    if flat == False:
+        zz = yhat.reshape(xgrids[0].shape)
+        return xgrids, zz
+    else:
+        return flat_grid, yhat
 
 
 def _get_axes(ax):
