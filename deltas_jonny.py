@@ -6,7 +6,7 @@ Jonny's workspace
 import numpy as np
 
 
-def delta2_given_delta1_jonny(delta1, data_info):
+def delta2_given_delta1(delta1, data_info):
     # eq.9 but re doing the maths - jonny
     N1 = data_info['N1']
     N2 = data_info['N2']
