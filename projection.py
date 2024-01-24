@@ -2,7 +2,10 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 def from_clf(data, clf, supports=False):
-    projected = np.dot(data['X'], clf.coef_.T)/np.linalg.norm(clf.coef_.T)
+    if hasattr(clf, 'get_projection'):
+        projected = clf.get_projection(data['X'])
+    else:
+        raise AttributeError(f"Classifier {clf} needs 'get_projection' method")
     # get supports
     xp1 = np.array([p for i, p in enumerate(projected) if data['y'][i] == 0])
     xp2 = np.array([p for i, p in enumerate(projected) if data['y'][i] == 1])

@@ -101,7 +101,7 @@ def plot_classes(data, ax=None, dim_reducer=None):
         plt.show()
 
 
-def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True):
+def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, probs=True):
     '''
     plot a decision boundary on axes
     input:
@@ -114,7 +114,7 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True):
     #     return
 
     ax, show = _get_axes(ax)
-    xgrids, zz = get_grid_pred(clf, data, probs=True, dim_reducer=dim_reducer)
+    xgrids, zz = get_grid_pred(clf, data, probs=probs, dim_reducer=dim_reducer)
     # plot the grid of x, y and z values as a surface
     c = ax.contourf(xgrids[0], xgrids[1], zz, cmap=cm,
                     vmin=0, vmax=1, alpha=0.7)
@@ -124,7 +124,11 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True):
     cbar = plt.colorbar(c, ticks=[0, 0.5, 1])
     if labels == True:
         cbar.ax.tick_params(labelsize=ticks_size)
-        cbar.ax.set_ylabel('Probability', size=ticks_size)
+        if probs == True:
+            cbar_label = 'Probability'
+        else:
+            cbar_label = 'Predicted Class'
+        cbar.ax.set_ylabel(cbar_label, size=ticks_size)
 
     # set labels
     # if labels == True:
