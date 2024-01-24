@@ -1,5 +1,3 @@
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
 import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds
 from sklearn.metrics import accuracy_score
@@ -12,6 +10,7 @@ import projection
 import radius
 import deltas as ds
 import optimise_contraint
+import models
 
 
 def get_data_and_classifier(m1 = [1, 1],
@@ -22,6 +21,7 @@ def get_data_and_classifier(m1 = [1, 1],
                             N2 = 10000,
                             scale = True,
                             model='Linear',
+                            balance_clf=False,
                             test_nums=[10000, 10000],
                             _plot=True):
     data = normal.get_two_classes(means=[m1, m2],
@@ -39,13 +39,14 @@ def get_data_and_classifier(m1 = [1, 1],
         m1 = scaler.transform_instance(m1)
         m2 = scaler.transform_instance(m2)
 
+    if balance_clf == True:
+        weights = 'balanced'
+    else:
+        weights = None
     if model == 'SVM':
-        clf = SVC(random_state=0, probability=True,
-                kernel='linear').fit(data['X'], data['y'])
+        clf = models.SVM(class_weight=weights).fit(data['X'], data['y'])
     elif model == 'Linear':
-        w = None
-        # w = 'balanced'
-        clf = LogisticRegression(class_weight=w).fit(data['X'], data['y'])
+        clf = models.linear(class_weight=weights).fit(data['X'], data['y'])
 
     if _plot == True:
         ax, _ = plots._get_axes(None)
@@ -333,9 +334,12 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
 
         # plot in original space
         _, ax2 = plt.subplots(1, 1)
-        plots.plot_classes(data_clf['data_test'], ax=ax2)
+        data = {'X': data_clf['data_test']['X'], 'y': data_clf['clf'].predict(
+            data_clf['data_test']['X'])}
+        # data = data_clf['data_test']
+        plots.plot_classes(data, ax=ax2)
         plots.plot_decision_boundary(
-            data_clf['clf'], data_clf['data_test'], ax=ax2)
+            data_clf['clf'], data_clf['data_test'], ax=ax2, probs=False)
         plots.plt.show()
 
 
