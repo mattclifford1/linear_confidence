@@ -47,6 +47,10 @@ def get_data_and_classifier(m1 = [1, 1],
         clf = models.SVM(class_weight=weights).fit(data['X'], data['y'])
     elif model == 'Linear':
         clf = models.linear(class_weight=weights).fit(data['X'], data['y'])
+    elif model == 'MLP':
+        clf = models.NN(class_weight=weights).fit(data['X'], data['y'])
+    else:
+        raise ValueError(f"model: {model} not in list of available models")
 
     if _plot == True:
         ax, _ = plots._get_axes(None)
