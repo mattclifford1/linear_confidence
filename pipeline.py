@@ -273,7 +273,7 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
             f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
 
     if _plot == True:
-        def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax):
+        def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
             proj_data = {'X': clf_projecter.get_projection(X),
                          'y': clf.predict(X)}
             xp1, xp2 = projection.get_classes(proj_data)
@@ -321,5 +321,5 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
             # data = data_clf['data_test']
             plots.plot_classes(data, ax=ax)
             plots.plot_decision_boundary(
-                data_clf['clf'], data_clf['data_test'], ax=ax, probs=False)
+                clf, data_clf['data_test'], ax=ax, probs=False)
             ax.set_title(title)
