@@ -6,6 +6,7 @@ scipy
 tqdm
 ipywidgets
 cvxpy
+imbalanced-learn
 # torch
 # plotly
 # chart_studio

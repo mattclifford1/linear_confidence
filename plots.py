@@ -143,7 +143,7 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, pr
     if show == True:
         plt.show()
 
-def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False):
+def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False, res=25):
     # get X from data
     X = data['X']
     if dim_reducer != None:
@@ -159,7 +159,6 @@ def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False):
         lims.append((min, max))
 
     # define the x and y scale
-    res = 25
     xranges = []
     for f in range(n_features):
         step = (lims[f][1] - lims[f][0]) / res

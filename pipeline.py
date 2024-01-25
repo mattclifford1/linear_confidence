@@ -13,17 +13,14 @@ import optimise_contraint
 import models
 
 
-def get_data_and_classifier(m1 = [1, 1],
-                            m2 = [10, 10],
-                            cov1 = [[1, 0], [0, 1]],
-                            cov2 = [[1, 0], [0, 1]],
-                            N1 = 10000,
-                            N2 = 10000,
-                            scale = True,
-                            model='Linear',
-                            balance_clf=False,
-                            test_nums=[10000, 10000],
-                            _plot=True):
+def get_data(m1 = [1, 1],
+             m2 = [10, 10],
+             cov1 = [[1, 0], [0, 1]],
+             cov2 = [[1, 0], [0, 1]],
+             N1 = 10000,
+             N2 = 10000,
+             scale = True,
+             test_nums=[10000, 10000]):
     data = normal.get_two_classes(means=[m1, m2],
                                   covs=[cov1, cov2],
                                   num_samples=[N1, N2])
@@ -31,13 +28,17 @@ def get_data_and_classifier(m1 = [1, 1],
                                        covs=[cov1, cov2],
                                        num_samples=[test_nums[0], test_nums[1]])
 
-
     scaler = data_utils.normaliser(data)
     if scale == True:
         data = scaler(data)
         data_test = scaler(data_test)
         m1 = scaler.transform_instance(m1)
         m2 = scaler.transform_instance(m2)
+    return {'data': data, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
+
+
+def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
+    data = data_clf['data']
 
     if balance_clf == True:
         weights = 'balanced'
@@ -57,7 +58,8 @@ def get_data_and_classifier(m1 = [1, 1],
         plots.plot_classes(data, ax=ax)
         plots.plot_decision_boundary(clf, data, ax=ax)
         plots.plt.show()
-    return {'data': data, 'clf': clf, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
+
+    return clf
 
 
 def data_project_and_info(data, m1, m2, clf, data_test=None, _plot=True, _print=True):
@@ -259,11 +261,11 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
     # get average as the boundary
     boundary = (upper_min_class + lower_max_class)/2
     class_nums = [data_info['projected_means']['y'][min_mean], data_info['projected_means']['y'][max_mean]]
-    delta_clf = delta_adjusted_clf(boundary, class_nums)
+    delta_clf = models.delta_adjusted_clf(boundary, class_nums, data_clf['clf'])
 
     # predict on both classifiers (original and delta adjusted)
     y_clf = data_clf['clf'].predict(data_clf['data_test']['X'])
-    y_deltas = delta_clf.predict(data_info['projected_data_test']['X'])
+    y_deltas = delta_clf.predict(data_clf['data_test']['X'])
 
     if _print == True:
         print(f"original accuracy: {accuracy_score(data_clf['data_test']['y'], y_clf)}")
@@ -271,91 +273,53 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
             f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
 
     if _plot == True:
-        # TODO: make this shode a loop
+        def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax):
+            proj_data = {'X': clf_projecter.get_projection(X),
+                         'y': clf.predict(X)}
+            xp1, xp2 = projection.get_classes(proj_data)
+            y_plot -= 0.1
+
+            if grid == True:
+                names = [f'{name} clf 1', None]
+                m ='x'
+            else:
+                names = [f'{name} pred 1', f'{name} pred 2']
+                m = 'o'
+            ax.scatter(xp1, np.ones_like(xp1)*y_plot, c='b', s=10,
+                       label=names[0], marker=m)
+            ax.scatter(xp2, np.ones_like(xp2)*y_plot, c='r', s=10,
+                       label=names[1], marker=m)
+            return y_plot
+
         _, ax = plt.subplots(1, 1)
+        y_plot = 0
+        for clf, name in zip([data_clf['clf'], delta_clf], ['Original', 'Deltas']):
+            # plot test data
+            X = data_clf['data_test']['X']
+            y_plot = _plot_projection_test_and_grid(
+                X, clf, data_clf['clf'], y_plot, name, False, ax)
+            
+            # plot linspace/grid
+            X, _ = plots.get_grid_pred(
+                clf, data_clf['data_test'], probs=False, flat=True, res=25)
+            y_plot = _plot_projection_test_and_grid(
+                X, clf, data_clf['clf'], y_plot, name, True, ax)
 
-        # clf points
-        # data = data_clf['data_test']
-        # data_projected = projection.from_clf(
-        #     data_clf['data_test'], data_clf['clf'])
-        # data_projected['y'] = data_clf['data_test']['y']
-        # xp1, xp2 = projection.get_classes(data_projected)
-        # y = 0
-        # ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
-        #            label='proj 1', marker='o')
-        # ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, 
-        #            label='proj 2', marker='o')
-        
-        proj_data = {'X': data_info['projected_data_test']['X'], 'y': y_clf}
-
-        X = data_clf['data_test']['X']
-        proj_data['y'] = y_clf
-        xp1, xp2 = projection.get_classes(proj_data)
-        y = -0.1
-        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
-                   label='Clf pred 1', marker='o')
-        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, 
-                   label='Clf pred 2', marker='o')
-        # clf points - linspace
-        X, y = plots.get_grid_pred(
-            data_clf['clf'], data_clf['data_test'], probs=False, flat=True)
-        data = {'X': X, 'y': y}
-        data_projected = projection.from_clf(data, data_clf['clf'])
-        xp1, xp2 = projection.get_classes(data_projected)
-        y = -0.2
-        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10, label='Original clf 1', marker='x')
-        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, marker='x')
-
-        # deltas points
-        # data = data_info['projected_data_test']
-        # xp1, xp2 = projection.get_classes(data)
-        # y = -0.4
-        # ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
-        #            label='proj 1', marker='o')
-        # ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10,
-        #            label='proj 2', marker='o')
-        
-        proj_data = {'X': data_clf['data_test'], 'y': y_deltas}
-        proj_data = {'X': data_info['projected_data_test']['X'], 'y': y_deltas}
-        xp1, xp2 = projection.get_classes(proj_data)
-        y = -0.5
-        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10,
-                   label='Deltas pred 1', marker='o')
-        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10,
-                   label='Deltas pred 2', marker='o')
-        # deltas points - linspace
-        deltas_preds = delta_clf.predict(data_projected['X'])
-        xp1, xp2 = projection.get_classes({'X': data_projected['X'], 'y': deltas_preds})
-        y = -0.6
-        ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=20,
-                   label='Deltas clf 1', marker='+')
-        ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=20, marker='+')
-
+            y_plot -= 0.2
 
         ax.legend()
         ax.plot([0], [-1.5], c='w')
         ax.set_title('original vs deltas on test dataset')
 
         # plot in original space
-        _, ax2 = plt.subplots(1, 1)
-        data = {'X': data_clf['data_test']['X'], 'y': data_clf['clf'].predict(
-            data_clf['data_test']['X'])}
-        # data = data_clf['data_test']
-        plots.plot_classes(data, ax=ax2)
-        plots.plot_decision_boundary(
-            data_clf['clf'], data_clf['data_test'], ax=ax2, probs=False)
-        plots.plt.show()
-
-
-
-class delta_adjusted_clf:
-    ''' boundary to make decision in projected space '''
-    def __init__(self, boundary, class_nums):
-        self.boundary = boundary
-        self.class_nums = class_nums
-
-    def predict(self, X):
-        preds = np.zeros(X.shape)
-        preds[X <= self.boundary] = self.class_nums[0]
-        preds[X > self.boundary] = self.class_nums[1]
-        return preds
+        _, axs = plt.subplots(1, 2)
+        titles = ['Original', 'Deltas']
+        clfs = [data_clf['clf'], delta_clf]
+        for title, ax, clf in zip(titles, axs, clfs):
+            clf_preds = clf.predict(data_clf['data_test']['X'])
+            data = {'X': data_clf['data_test']['X'], 'y': clf_preds}
+            # data = data_clf['data_test']
+            plots.plot_classes(data, ax=ax)
+            plots.plot_decision_boundary(
+                data_clf['clf'], data_clf['data_test'], ax=ax, probs=False)
+            ax.set_title(title)
