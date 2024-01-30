@@ -235,6 +235,73 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         _ = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True, ax=ax)
     return delta1, delta2
 
+def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
+    # using new class for deltas format
+
+
+    # predict on both classifiers (original and delta adjusted)
+    y_clf = original_clf.predict(test_data['X'])
+    y_deltas = delta_clf.predict(test_data['X'])
+
+    if _print == True:
+        print(
+            f"original accuracy: {accuracy_score(test_data['y'], y_clf)}")
+        print(
+            f"deltas   accuracy: {accuracy_score(test_data['y'], y_deltas)}")
+
+    if _plot == True:
+        def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
+            proj_data = {'X': clf_projecter.get_projection(X),
+                         'y': clf.predict(X)}
+            xp1, xp2 = projection.get_classes(proj_data)
+            y_plot -= 0.1
+
+            if grid == True:
+                names = [f'{name} clf 1', None]
+                m = 'x'
+            else:
+                names = [f'{name} pred 1', f'{name} pred 2']
+                m = 'o'
+            ax.scatter(xp1, np.ones_like(xp1)*y_plot, c='b', s=10,
+                       label=names[0], marker=m)
+            ax.scatter(xp2, np.ones_like(xp2)*y_plot, c='r', s=10,
+                       label=names[1], marker=m)
+            return y_plot
+
+        _, ax = plt.subplots(1, 1)
+        y_plot = 0
+        for clf, name in zip([original_clf, delta_clf], ['Original', 'Deltas']):
+            # plot test data
+            X = test_data['X']
+            y_plot = _plot_projection_test_and_grid(
+                X, clf, original_clf, y_plot, name, False, ax)
+
+            # plot linspace/grid
+            X, _ = plots.get_grid_pred(
+                clf, test_data, probs=False, flat=True, res=25)
+            y_plot = _plot_projection_test_and_grid(
+                X, clf, original_clf, y_plot, name, True, ax)
+
+            y_plot -= 0.2
+
+        ax.legend()
+        ax.plot([0], [-1.5], c='w')
+        ax.set_title('original vs deltas on test dataset')
+
+        # plot in original space
+        _, axs = plt.subplots(1, 2)
+        titles = ['Original', 'Deltas']
+        clfs = [original_clf, delta_clf]
+        for title, ax, clf in zip(titles, axs, clfs):
+            clf_preds = clf.predict(test_data['X'])
+            data = {'X': test_data['X'], 'y': clf_preds}
+            # data = test_data
+            plots.plot_classes(data, ax=ax)
+            plots.plot_decision_boundary(
+                clf, test_data, ax=ax, probs=False)
+            ax.set_title(title)
+
+
 
 def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
     # calculate each R upper bound

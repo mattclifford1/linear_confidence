@@ -37,9 +37,51 @@ class base_deltas:
                              _plot=_plot, 
                              _print=_print)
         self.delta1, self.delta2, self.solution_possible, self.solution_found = res
+
+        self._make_boundary()
+        # make boundary 
         self.is_fit = True
 
         return self
+    
+    def _make_boundary(self):
+        # calculate each R upper bound
+        R1_est = radius.R_upper_bound(
+            self.data_info['empirical R1'], self.data_info['R all data'], self.data_info['N1'], self.delta1)
+        R2_est = radius.R_upper_bound(
+            self.data_info['empirical R2'], self.data_info['R all data'], self.data_info['N2'], self.delta2)
+        Rs = {'R1': R1_est, 'R2': R2_est}
+
+        # add error to min class and minus from max class
+        means = [self.data_info['empirical_projected_mean 1'], self.data_info['empirical_projected_mean 2']]
+        min_mean = np.argmin(means)
+        max_mean = np.argmax(means)
+        class_names = ['1', '2']
+        upper_min_class = self.data_info[f'empirical_projected_mean {class_names[min_mean]}'] + \
+            Rs[f'R{class_names[min_mean]}']
+        lower_max_class = self.data_info[f'empirical_projected_mean {class_names[max_mean]}'] - \
+            Rs[f'R{class_names[max_mean]}']
+    
+        # get average as the boundary
+        self.boundary = (upper_min_class + lower_max_class)/2
+        class_nums = [0, 1]
+        self.class_nums = [class_nums[min_mean], 
+                           class_nums[max_mean]]
+    
+    def predict(self, X):
+        if self.is_fit == False:
+            raise AttributeError("Not fit to any data yet, call 'fit(X, y)' or  method first")
+        # project data if not already
+        if X.shape[1] != 1:
+            if self.clf != None:
+                X = self.clf.get_projection(X)
+            else:
+                raise AttributeError(
+                    f"Deltas classifier needs original classifier to project feature space onto 1D classification space")
+        preds = np.zeros(X.shape)
+        preds[X <= self.boundary] = self.class_nums[0]
+        preds[X > self.boundary] = self.class_nums[1]
+        return preds
 
 
 
@@ -63,17 +105,17 @@ class base_deltas:
         D_emp = np.abs(emp_xp1 - emp_xp2)
 
         data_info = {'projected_data': proj_data,
-                    'empirical margin': M_emp,
-                    'R all data': R_sup,
-                    'projected_data 1': xp1,
-                    'projected_data 2': xp2,
-                    'empirical_projected_mean 1': emp_xp1,
-                    'empirical_projected_mean 2': emp_xp2,
-                    'empirical R1': R1_emp,
-                    'empirical R2': R2_emp,
-                    'empirical D': D_emp,
-                    'N1': (data['y'] == 0).sum(),
-                    'N2': (data['y'] == 1).sum(),
+                     'empirical margin': M_emp,
+                     'R all data': R_sup,
+                     'projected_data 1': xp1,
+                     'projected_data 2': xp2,
+                     'empirical_projected_mean 1': emp_xp1,
+                     'empirical_projected_mean 2': emp_xp2,
+                     'empirical R1': R1_emp,
+                     'empirical R2': R2_emp,
+                     'empirical D': D_emp,
+                     'N1': (data['y'] == 0).sum(),
+                     'N2': (data['y'] == 1).sum(),
                      'c1': costs[0],
                      'c2': costs[1],
                     }
@@ -124,7 +166,7 @@ class base_deltas:
                 f"""Parameters
                 R:  {self.data_info['R all data']}
                 N1: {self.data_info['N1']}
-                N2: {self.data_info['N1']}
+                N2: {self.data_info['N2']}
                 R1: {self.data_info['empirical R1']}
                 R2: {self.data_info['empirical R2']}
                 M:  {self.data_info['empirical margin']}
