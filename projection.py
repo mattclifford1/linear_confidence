@@ -16,8 +16,8 @@ def from_clf(data, clf, supports=False):
             [xp1[np.argmin(Y, axis=0)[0]],
              xp2[np.argmin(Y, axis=1)[0]]
             ])
-    xp1 = np.array([p for i, p in enumerate(projected_data['X']) if projected_data['y'][i] == 0])
-    xp2 = np.array([p for i, p in enumerate(projected_data['X']) if projected_data['y'][i] == 1])
+    # xp1 = np.array([p for i, p in enumerate(projected_data['X']) if projected_data['y'][i] == 0])
+    # xp2 = np.array([p for i, p in enumerate(projected_data['X']) if projected_data['y'][i] == 1])
     projected_data['X1'] = xp1
     projected_data['X2'] = xp2
     return projected_data

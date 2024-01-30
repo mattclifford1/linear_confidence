@@ -165,9 +165,10 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
             delta2 = delta1_from_delta2(deltas[0], data_info)
             return contraint_func(deltas[0], delta2, data_info)
     
+    solution_possible = True if contraint_wrapper(deltas_init) <= 0 else False
     if _print == True:
         print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
-        print(f'constraint init: {contraint_wrapper(deltas_init) <= 0}')
+        print(f'constraint init: {solution_possible}')
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
@@ -207,10 +208,11 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         delta1 = deltas[0]
         delta2 = deltas[1]
 
+    solution_found = True if contraint_wrapper(deltas) == 0 else False
     if _print == True:
         print(optim_msg)
         print(f'    delta1 : {delta1} \n    delta2: {delta2}')
-        print(f'    constraint satisfied: {contraint_wrapper(deltas)==0}')
+        print(f'    constraint satisfied: {solution_found}')
     
     if _plot == True:
         # plot loss function
