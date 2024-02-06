@@ -5,6 +5,7 @@ import numpy as np
 import data_utils
 import plots
 import normal
+import models
 import projection
 import radius
 import deltas as ds
@@ -17,13 +18,15 @@ class base_deltas:
         if not hasattr(clf, 'get_projection'):
             raise AttributeError(f"Classifier {clf} needs 'get_projection' method")
         self.clf = clf
+        self._setup()
+
+    def _setup(self):
         self.data_info_made = False
         self.is_fit = False
         # deltas optimisation functions
         self.loss_func = ds.loss_one_delta
         self.contraint_func = ds.contraint_eq7
         self.delta1_from_delta2 = ds.delta2_given_delta1_matt
-
 
     def fit(self, X, y, costs=(1, 1), _plot=False, _print=False):
         # Make data_info - R_ests, D, etc.
@@ -38,8 +41,8 @@ class base_deltas:
                              _print=_print)
         self.delta1, self.delta2, self.solution_possible, self.solution_found = res
 
-        self._make_boundary()
         # make boundary 
+        self._make_boundary()
         self.is_fit = True
 
         return self
@@ -175,3 +178,34 @@ class base_deltas:
                 C2: {self.data_info['c2']}""")
         else:
             print("Not fit to any data yet, call 'fit(X, y)' or  method first")
+
+
+class SVM_deltas(base_deltas):
+    '''
+    use an SVM to project current classisfier onto 1D projection
+    This method doesn't have the requirement that the classifier needs a get_projection method to 1D,
+    but it does need the classifier to project to a feature space (not implimented yet)
+    '''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def fit(self, X, y, **kwargs):
+        clf_copy = self.clf
+        self.clf = SVM_projection(clf_copy, X, y)
+        super().fit(X, y, **kwargs)
+        return self
+
+
+class SVM_projection:
+    '''
+    get a project using an SVM
+    '''
+    def __init__(self, clf, X, y):
+        self.clf_original = clf
+        X_proj = self.clf_original.get_projection(X)
+        self.clf_SVM = models.SVM().fit(X_proj, y)
+
+    def get_projection(self, X):
+        X_orig_clf = self.clf_original.get_projection(X)
+        return self.clf_SVM.get_projection(X_orig_clf)
