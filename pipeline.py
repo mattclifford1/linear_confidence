@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score
 import matplotlib.pyplot as plt
 
 import data_utils
@@ -244,10 +244,16 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
     y_deltas = delta_clf.predict(test_data['X'])
 
     if _print == True:
-        print(
-            f"original accuracy: {accuracy_score(test_data['y'], y_clf)}")
-        print(
-            f"deltas   accuracy: {accuracy_score(test_data['y'], y_deltas)}")
+        metrics = {'accuracy': accuracy_score,
+                   'F1': f1_score,
+                   'precision': precision_score
+                   }
+        for name, func in metrics.items():
+            print(
+                f"original {name}: {func(test_data['y'], y_clf)}")
+            print(
+                f"deltas   {name}: {func(test_data['y'], y_deltas)}")
+            print('\n')
 
     if _plot == True:
         def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
@@ -337,9 +343,15 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
     y_deltas = delta_clf.predict(data_clf['data_test']['X'])
 
     if _print == True:
-        print(f"original accuracy: {accuracy_score(data_clf['data_test']['y'], y_clf)}")
-        print(
-            f"deltas   accuracy: {accuracy_score(data_info['projected_data_test']['y'], y_deltas)}")
+        metrics = {'accuracy': accuracy_score,
+                   'F1': f1_score,
+                   'precision': precision_score
+                   }
+        for name, func in metrics.items():
+            print(f"original {name}: {func(data_clf['data_test']['y'], y_clf)}")
+            print(
+                f"deltas   {name}: {func(data_info['projected_data_test']['y'], y_deltas)}")
+            print('\n')
 
     if _plot == True:
         def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
