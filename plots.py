@@ -16,14 +16,30 @@ font_size = 30
 ticks_size = 24
 ticks_size_small = 20
 
+def projections_from_data_clfs(clfs, X, y, ax=None):
+    ax, show = _get_axes(ax)
+    y_plt = 0
+    for clf in clfs:
+        X_proj = clf.get_projection(X)
+        data = {'X': X_proj, 'y': y}
+
+        xp1, xp2 = projection.get_classes(data)
+        ax.scatter(xp1, np.ones_like(xp1)*y_plt, c='b',
+                s=10, label='Class 1', marker='o')
+        ax.scatter(xp2, np.ones_like(xp2)*y_plt, c='r',
+                s=10, label='Class 2', marker='x')
+        y_plt -= 0.2
+        
 
 def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, calc_data=True):
     ax, show = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
     y = -0.1
-    ax.scatter(xp1, np.ones_like(xp1)*y, c='b', s=10, label='Class 1')
-    ax.scatter(xp2, np.ones_like(xp2)*y, c='r', s=10, label='Class 2')
+    ax.scatter(xp1, np.ones_like(xp1)*y, c='b', 
+               s=10, label='Class 1', marker='o')
+    ax.scatter(xp2, np.ones_like(xp2)*y, c='r',
+               s=10, label='Class 2', marker='x')
 
     # data empircal results
     if calc_data == True:

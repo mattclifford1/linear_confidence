@@ -190,10 +190,14 @@ class SVM_deltas(base_deltas):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def fit(self, X, y, **kwargs):
+    def fit(self, X, y, _plot=False, **kwargs):
         clf_copy = self.clf
         self.clf = SVM_projection(clf_copy, X, y)
-        super().fit(X, y, **kwargs)
+
+        if _plot == True:
+            plots.projections_from_data_clfs([clf_copy, self.clf], X, y)
+
+        super().fit(X, y, _plot=_plot, **kwargs)
         return self
 
 
@@ -204,7 +208,7 @@ class SVM_projection:
     def __init__(self, clf, X, y):
         self.clf_original = clf
         X_proj = self.clf_original.get_projection(X)
-        self.clf_SVM = models.SVM().fit(X_proj, y)
+        self.clf_SVM = models.SVM(kernel='rbf').fit(X_proj, y)
 
     def get_projection(self, X):
         X_orig_clf = self.clf_original.get_projection(X)

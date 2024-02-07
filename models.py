@@ -11,13 +11,21 @@ from imblearn.over_sampling import RandomOverSampler
 
 class SVM(SVC):
     def __init__(self, kernel='linear', **kwargs):
+        self.kernel = kernel
         super().__init__(random_state=0, probability=True,
-                       kernel=kernel, **kwargs)
+                       kernel=self.kernel, **kwargs)
         
     def get_projection(self, X):
-        # TODO: we need to also use the kernel if not linear kernel?
-        projected = np.dot(X, self.coef_.T)/np.linalg.norm(self.coef_.T)
+        X_new = self._compute_kernel(X)
+        if self.kernel == 'linear':
+            projected = np.dot(X, self.coef_.T)/np.linalg.norm(self.coef_.T)
+        else:
+            # TODO: we need to also use the kernel if not linear kernel?
+            projected = X
+            
         return projected
+
+        # return projected
         
 
 class linear(LogisticRegression):
