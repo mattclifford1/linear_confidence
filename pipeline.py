@@ -238,10 +238,11 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
 def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
     # using new class for deltas format
 
-
+    print('a')
     # predict on both classifiers (original and delta adjusted)
     y_clf = original_clf.predict(test_data['X'])
     y_deltas = delta_clf.predict(test_data['X'])
+    print('b')
 
     if _print == True:
         metrics = {'accuracy': accuracy_score,
@@ -253,7 +254,7 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
                 f"original {name}: {func(test_data['y'], y_clf)}")
             print(
                 f"deltas   {name}: {func(test_data['y'], y_deltas)}")
-            print('\n')
+            # print('\n')
 
     if _plot == True:
         def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):

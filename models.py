@@ -10,23 +10,25 @@ from sklearn.neural_network._multilayer_perceptron import safe_sparse_dot, ACTIV
 from imblearn.over_sampling import RandomOverSampler
 
 class SVM(SVC):
-    def __init__(self, kernel='linear', **kwargs):
+    def __init__(self, kernel='rbf', **kwargs):
         self.kernel = kernel
         super().__init__(random_state=0, probability=True,
                        kernel=self.kernel, **kwargs)
         
     def get_projection(self, X):
+        X = np.array(X)
         X_new = self._compute_kernel(X)
         if self.kernel == 'linear':
             projected = np.dot(X, self.coef_.T)/np.linalg.norm(self.coef_.T)
         else:
             # TODO: we need to also use the kernel if not linear kernel?
+            print(X.shape)
+            print(X_new.shape)
+            print(self.coef0)
             projected = X
             
         return projected
 
-        # return projected
-        
 
 class linear(LogisticRegression):
     def __init__(self, **kwargs):
