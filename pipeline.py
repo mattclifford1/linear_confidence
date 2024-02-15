@@ -58,7 +58,7 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
     if _plot == True:
         ax, _ = plots._get_axes(None)
         plots.plot_classes(data, ax=ax)
-        plots.plot_decision_boundary(clf, data, ax=ax)
+        plots.plot_decision_boundary(clf, data, ax=ax, probs=False)
         plots.plt.show()
 
     return clf
@@ -293,7 +293,7 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
 
         ax.legend()
         ax.plot([0], [-1.5], c='w')
-        ax.set_title('original vs deltas on test dataset')
+        ax.set_title('original (top) vs deltas (bottom) on test dataset in projected space')
 
         # plot in original space
         _, axs = plt.subplots(1, 2)

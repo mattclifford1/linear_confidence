@@ -137,13 +137,15 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, pr
     c.set_clim(0, 1)
 
     # add a legend, called a color bar
-    cbar = plt.colorbar(c, ticks=[0, 0.5, 1])
+    if probs == True:
+        cbar_label = 'Probability'
+        ticks = [0, 0.5, 1]
+    else:
+        cbar_label = 'Predicted Class'
+        ticks = [0, 1]
+    cbar = plt.colorbar(c, ticks=ticks)
     if labels == True:
         cbar.ax.tick_params(labelsize=ticks_size)
-        if probs == True:
-            cbar_label = 'Probability'
-        else:
-            cbar_label = 'Predicted Class'
         cbar.ax.set_ylabel(cbar_label, size=ticks_size)
 
     # set labels
@@ -198,7 +200,8 @@ def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False, res=25):
         # keep just the probabilities for class 0
         yhat = yhat[:, 0]
     else:
-        yhat = clf.predict(flat_grid)
+        # do opposite to match probs colours where we show P(X=class 0)
+        yhat = 1 - clf.predict(flat_grid)
 
     # yhat = clf.predict(flat_grid)
 
