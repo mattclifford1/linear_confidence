@@ -237,6 +237,15 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         _ = plots.plot_projection(data_info['projected_data'], data_info['projected_means'], R1_est, R2_est, R_est=True, ax=ax)
     return delta1, delta2
 
+
+# make precision for each class
+def precision0(*args, **kwargs):
+    return precision_score(*args, **kwargs, pos_label=0)
+
+def precision1(*args, **kwargs):
+    return precision_score(*args, **kwargs, pos_label=1)
+
+
 def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
     # using new class for deltas format
 
@@ -247,14 +256,15 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
     if _print == True:
         metrics = {'accuracy': accuracy_score,
                    'F1': f1_score,
-                   'precision': precision_score
+                   'precision0': precision0,
+                   'precision1': precision1,
                    }
         for name, func in metrics.items():
             print(
                 f"original {name}: {func(test_data['y'], y_clf)}")
             print(
                 f"deltas   {name}: {func(test_data['y'], y_deltas)}")
-            # print('\n')
+            print('')
 
     if _plot == True:
         def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
