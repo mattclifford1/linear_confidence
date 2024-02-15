@@ -180,19 +180,49 @@ class base_deltas:
             print("Not fit to any data yet, call 'fit(X, y)' or  method first")
 
 
-class SVM_deltas(base_deltas):
+class reprojectioner:
     '''
-    use an SVM to project current classisfier onto 1D projection
+    get a project using a model (eg. SVM)
+    '''
+
+    def __init__(self, projecter=models.SVM(kernel='rbf')):
+        # projecter need to have .fit() and .get_projection attributes
+        if not hasattr(projecter, 'get_projection'):
+            raise AttributeError(
+                f"Projection Model {projecter} needs 'get_projection' method")
+        if not hasattr(projecter, 'fit'):
+            raise AttributeError(
+                f"Projection Model {projecter} needs 'fit' method")
+        self.projecter = projecter
+
+    def fit_projection(self, clf, X, y):
+        self.clf_original = clf
+        X_proj = self.clf_original.get_projection(X)
+        # fit reprojection model to the projected data
+        self.projecter = self.projecter.fit(X_proj, y)
+        return self
+
+    def get_projection(self, X):
+        # project with original model
+        X_orig_clf = self.clf_original.get_projection(X)
+        # reproject with second model (hopefully more separated/bigger margin)
+        return self.projecter.get_projection(X_orig_clf)
+    
+
+class reprojection_deltas(base_deltas):
+    '''
+    use a model (e.g SVM) to project current classisfier onto 1D projection
     This method doesn't have the requirement that the classifier needs a get_projection method to 1D,
     but it does need the classifier to project to a feature space (not implimented yet)
     '''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, clf, projection_model=reprojectioner, *args, **kwargs):
+        super().__init__(clf, *args, **kwargs)
+        self.projection_model = projection_model
 
     def fit(self, X, y, _plot=False, **kwargs):
         clf_copy = self.clf
-        self.clf = SVM_projection(clf_copy, X, y)
+        self.clf = self.projection_model.fit_projection(clf_copy, X, y)
 
         if _plot == True:
             plots.projections_from_data_clfs([clf_copy, self.clf], X, y)
@@ -201,15 +231,4 @@ class SVM_deltas(base_deltas):
         return self
 
 
-class SVM_projection:
-    '''
-    get a project using an SVM
-    '''
-    def __init__(self, clf, X, y):
-        self.clf_original = clf
-        X_proj = self.clf_original.get_projection(X)
-        self.clf_SVM = models.SVM(kernel='rbf').fit(X_proj, y)
 
-    def get_projection(self, X):
-        X_orig_clf = self.clf_original.get_projection(X)
-        return self.clf_SVM.get_projection(X_orig_clf)

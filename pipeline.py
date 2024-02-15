@@ -44,8 +44,10 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
         weights = 'balanced'
     else:
         weights = None
-    if model == 'SVM':
-        clf = models.SVM(class_weight=weights).fit(data['X'], data['y'])
+    if model in ['SVM', 'SVM-linear']:
+        clf = models.SVM(kernel='linear', class_weight=weights).fit(data['X'], data['y'])
+    elif model == 'SVM-rbf':
+        clf = models.SVM(kernel='rbf', class_weight=weights).fit(data['X'], data['y'])
     elif model == 'Linear':
         clf = models.linear(class_weight=weights).fit(data['X'], data['y'])
     elif model == 'MLP':
@@ -238,11 +240,9 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
 def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
     # using new class for deltas format
 
-    print('a')
     # predict on both classifiers (original and delta adjusted)
     y_clf = original_clf.predict(test_data['X'])
     y_deltas = delta_clf.predict(test_data['X'])
-    print('b')
 
     if _print == True:
         metrics = {'accuracy': accuracy_score,

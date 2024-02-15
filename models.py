@@ -16,15 +16,12 @@ class SVM(SVC):
                        kernel=self.kernel, **kwargs)
         
     def get_projection(self, X):
-        X = np.array(X)
-        X_new = self._compute_kernel(X)
+        X_kern = self._compute_kernel(np.array(X))
         if self.kernel == 'linear':
-            projected = np.dot(X, self.coef_.T)/np.linalg.norm(self.coef_.T)
+            projected = np.dot(X_kern, self.coef_.T) / \
+                np.linalg.norm(self.coef_.T)
         else:
             # TODO: we need to also use the kernel if not linear kernel?
-            print(X.shape)
-            print(X_new.shape)
-            print(self.coef0)
             projected = X
             
         return projected
