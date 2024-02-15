@@ -9,6 +9,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neural_network._multilayer_perceptron import safe_sparse_dot, ACTIVATIONS
 from imblearn.over_sampling import RandomOverSampler
 
+
 class SVM(SVC):
     def __init__(self, kernel='rbf', **kwargs):
         self.kernel = kernel
@@ -16,15 +17,20 @@ class SVM(SVC):
                        kernel=self.kernel, **kwargs)
         
     def get_projection(self, X):
-        X_kern = self._compute_kernel(np.array(X))
+        if not isinstance(X, np.ndarray):
+            X = np.array(X)
         if self.kernel == 'linear':
-            projected = np.dot(X_kern, self.coef_.T) / \
-                np.linalg.norm(self.coef_.T)
+            X_kern = self._compute_kernel(X)  # dont actually needed (is identity for linear)
+            projected = np.dot(X_kern, self.coef_.T) / np.linalg.norm(self.coef_.T)
         else:
-            # TODO: we need to also use the kernel if not linear kernel?
-            projected = X
-            
+            # use self.dual_coef_ in the kernel form
+
+            # simpler format below as otherwise can do dig around in libSVM
+            # can use this for linear too in the future
+            projected = self.decision_function(np.array(X)) - self.intercept_
+            projected = np.expand_dims(projected, axis=1)
         return projected
+
 
 
 class linear(LogisticRegression):

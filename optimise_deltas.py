@@ -54,6 +54,10 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
         print(f'constraint init: {solution_possible}')
 
+    # return early if optimisation not possible
+    if solution_possible == False:
+        return 1, 1, solution_possible, False
+
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
 
