@@ -42,17 +42,18 @@ class base_deltas:
         self.delta1, self.delta2, self.solution_possible, self.solution_found = res
 
         # make boundary 
-        self._make_boundary()
+        self.boundary, self.class_nums = self._make_boundary(
+            self.delta1, self.delta2)
         self.is_fit = True
 
         return self
     
-    def _make_boundary(self):
+    def _make_boundary(self, delta1, delta2):
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(
-            self.data_info['empirical R1'], self.data_info['R all data'], self.data_info['N1'], self.delta1)
+            self.data_info['empirical R1'], self.data_info['R all data'], self.data_info['N1'], delta1)
         R2_est = radius.R_upper_bound(
-            self.data_info['empirical R2'], self.data_info['R all data'], self.data_info['N2'], self.delta2)
+            self.data_info['empirical R2'], self.data_info['R all data'], self.data_info['N2'], delta2)
         Rs = {'R1': R1_est, 'R2': R2_est}
 
         # add error to min class and minus from max class
@@ -66,14 +67,18 @@ class base_deltas:
             Rs[f'R{class_names[max_mean]}']
     
         # get average as the boundary
-        self.boundary = (upper_min_class + lower_max_class)/2
+        boundary = (upper_min_class + lower_max_class)/2
         class_nums = [0, 1]
-        self.class_nums = [class_nums[min_mean], 
-                           class_nums[max_mean]]
+        class_nums = [class_nums[min_mean], 
+                      class_nums[max_mean]]
+        return boundary, class_nums
     
     def predict(self, X):
         if self.is_fit == False:
             raise AttributeError("Not fit to any data yet, call 'fit(X, y)' or  method first")
+        return self._predict(X, self.boundary, self.class_nums)
+        
+    def _predict(self, X, boundary, class_nums):
         # project data if not already
         if X.shape[1] != 1:
             if self.clf != None:
@@ -82,11 +87,14 @@ class base_deltas:
                 raise AttributeError(
                     f"Deltas classifier needs original classifier to project feature space onto 1D classification space")
         preds = np.zeros(X.shape)
-        preds[X <= self.boundary] = self.class_nums[0]
-        preds[X > self.boundary] = self.class_nums[1]
+        preds[X <= boundary] = class_nums[0]
+        preds[X > boundary] = class_nums[1]
         return preds
 
-
+    def _predict_given_delta1(self, X, delta1):
+        delta2 = self.delta1_from_delta2(delta1, self.data_info)
+        boundary, class_nums = self._make_boundary(delta1, delta2)
+        return self._predict(X, boundary, class_nums)
 
     def get_data_info(self, X, y, costs=(1, 1), _print=False):
         # project data according to classifier and calculate data attributes needed

@@ -67,6 +67,7 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
 
     if _plot == True:
         for name, c in zip(['clf', 'SMOTE'], [clf, clf_SMOTE]):
+            print(name)
             ax, _ = plots._get_axes(None)
             plots.plot_classes(data, ax=ax)
             plots.plot_decision_boundary(c, data, ax=ax, probs=False)
@@ -319,6 +320,7 @@ def eval_test_new(clfs, test_data, _print=True, _plot=True):
 
         # plot in original space
         for name, clf in clfs.items():
+            print(name)
             ax, _ = plots._get_axes(None)
             data = {'X': test_data['X'], 'y': preds[name]}
             # data = test_data

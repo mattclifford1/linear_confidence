@@ -117,12 +117,25 @@ def plot_classes(data, ax=None, dim_reducer=None):
         plt.show()
 
 
+def plot_decision_boundary_custom_pred(pred_func, data, ax=None, dim_reducer=None, labels=True, probs=True):
+    ''' for pred given delta1 func'''
+    xgrids, zz = get_grid_pred(
+        None, data, probs=probs, dim_reducer=dim_reducer, custom_pred=pred_func)
+    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True)
+
+
 def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, probs=True):
     '''
     plot a decision boundary on axes
     input:
         - clf: sklearn classifier object
     '''
+    xgrids, zz = get_grid_pred(clf, data, probs=probs, dim_reducer=dim_reducer)
+    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True)
+
+
+def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True):
+    
     # if dim_reducer != None:
     #     X = dim_reducer.transform(data['X'])
     #     # need to impliment this to encorportant n dimensions
@@ -130,7 +143,7 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, pr
     #     return
 
     ax, show = _get_axes(ax)
-    xgrids, zz = get_grid_pred(clf, data, probs=probs, dim_reducer=dim_reducer)
+    
     # plot the grid of x, y and z values as a surface
     c = ax.contourf(xgrids[0], xgrids[1], zz, cmap=cm,
                     vmin=0, vmax=1, alpha=0.7)
@@ -161,7 +174,7 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, pr
     if show == True:
         plt.show()
 
-def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False, res=25):
+def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False, res=25, custom_pred=None):
     # get X from data
     X = data['X']
     if dim_reducer != None:
@@ -195,7 +208,10 @@ def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False, res=25):
         flat_grid = dim_reducer.inverse_transform(flat_grid)
 
     # make predictions for the flat_grid
-    if probs == True:
+    if custom_pred != None:
+        # do opposite to match probs colours where we show P(X=class 0)
+        yhat = 1 - custom_pred(flat_grid)
+    elif probs == True:
         yhat = clf.predict_proba(flat_grid)
         # keep just the probabilities for class 0
         yhat = yhat[:, 0]
