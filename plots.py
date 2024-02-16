@@ -121,7 +121,7 @@ def plot_decision_boundary_custom_pred(pred_func, data, ax=None, dim_reducer=Non
     ''' for pred given delta1 func'''
     xgrids, zz = get_grid_pred(
         None, data, probs=probs, dim_reducer=dim_reducer, custom_pred=pred_func)
-    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True)
+    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=probs)
 
 
 def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, probs=True):
@@ -131,7 +131,7 @@ def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, pr
         - clf: sklearn classifier object
     '''
     xgrids, zz = get_grid_pred(clf, data, probs=probs, dim_reducer=dim_reducer)
-    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True)
+    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=probs)
 
 
 def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True):
