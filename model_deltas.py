@@ -167,6 +167,7 @@ class base_deltas:
                 self.data_info['empirical R1'],
                 self.data_info['empirical R1'],
                 data_info=self.data_info)
+            plots.plt.show()
         else:
             print("Not fit to any data yet, call 'fit(X, y)' or  method first")
 

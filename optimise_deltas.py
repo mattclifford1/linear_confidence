@@ -115,6 +115,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
             ax.set_xlabel('delta1')
             # ax.set_ylabel('Loss')
             ax.legend()
+            plt.show()
 
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(
