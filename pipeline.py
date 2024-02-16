@@ -66,10 +66,11 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
         raise ValueError(f"model: {model} not in list of available models")
 
     if _plot == True:
-        for c in [clf, clf_SMOTE]:
+        for name, c in zip(['clf', 'SMOTE'], [clf, clf_SMOTE]):
             ax, _ = plots._get_axes(None)
             plots.plot_classes(data, ax=ax)
             plots.plot_decision_boundary(c, data, ax=ax, probs=False)
+            ax.set_title(name)
             plots.plt.show()
 
     return clf, clf_SMOTE
@@ -314,19 +315,18 @@ def eval_test_new(clfs, test_data, _print=True, _plot=True):
         ax.legend()
         ax.plot([0], [-1.5], c='w')
         ax.set_title('original (top) vs deltas (bottom) on test dataset in projected space')
+        plots.plt.show()
 
         # plot in original space
-        _, axs = plt.subplots(len(clfs), 1)
-        counter = 0
         for name, clf in clfs.items():
-            ax = axs[counter]
+            ax, _ = plots._get_axes(None)
             data = {'X': test_data['X'], 'y': preds[name]}
             # data = test_data
             plots.plot_classes(data, ax=ax)
             plots.plot_decision_boundary(
                 clf, test_data, ax=ax, probs=False)
             ax.set_title(name)
-            counter += 1
+            plots.plt.show()
 
 
 
