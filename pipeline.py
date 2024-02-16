@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds
 from sklearn.metrics import accuracy_score, f1_score, precision_score
 import matplotlib.pyplot as plt
+from imblearn.over_sampling import SMOTE
 
 import data_utils
 import plots
@@ -37,31 +38,41 @@ def get_data(m1 = [1, 1],
     return {'data': data, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
 
 
+def get_SMOTE_data(data):
+    oversample = SMOTE()
+    X, y = oversample.fit_resample(data['X'], data['y'])
+    return {'X': X, 'y': y}
+
 def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
     data = data_clf['data']
-
+    SMOTE_data = get_SMOTE_data(data)
     if balance_clf == True:
         weights = 'balanced'
     else:
         weights = None
     if model in ['SVM', 'SVM-linear']:
         clf = models.SVM(kernel='linear', class_weight=weights).fit(data['X'], data['y'])
+        clf_SMOTE = models.SVM(kernel='linear', class_weight=weights).fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
         clf = models.SVM(kernel='rbf', class_weight=weights).fit(data['X'], data['y'])
+        clf_SMOTE = models.SVM(kernel='rbf', class_weight=weights).fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'Linear':
         clf = models.linear(class_weight=weights).fit(data['X'], data['y'])
+        clf_SMOTE = models.linear(class_weight=weights).fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MLP':
         clf = models.NN(class_weight=weights).fit(data['X'], data['y'])
+        clf_SMOTE = models.NN(class_weight=weights).fit(SMOTE_data['X'], SMOTE_data['y'])
     else:
         raise ValueError(f"model: {model} not in list of available models")
 
     if _plot == True:
-        ax, _ = plots._get_axes(None)
-        plots.plot_classes(data, ax=ax)
-        plots.plot_decision_boundary(clf, data, ax=ax, probs=False)
-        plots.plt.show()
+        for c in [clf, clf_SMOTE]:
+            ax, _ = plots._get_axes(None)
+            plots.plot_classes(data, ax=ax)
+            plots.plot_decision_boundary(c, data, ax=ax, probs=False)
+            plots.plt.show()
 
-    return clf
+    return clf, clf_SMOTE
 
 
 def data_project_and_info(data, m1, m2, clf, data_test=None, _plot=True, _print=True):
@@ -246,12 +257,13 @@ def precision1(*args, **kwargs):
     return precision_score(*args, **kwargs, pos_label=1)
 
 
-def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
+def eval_test_new(clfs, test_data, _print=True, _plot=True):
     # using new class for deltas format
 
     # predict on both classifiers (original and delta adjusted)
-    y_clf = original_clf.predict(test_data['X'])
-    y_deltas = delta_clf.predict(test_data['X'])
+    preds = {}
+    for name, clf in clfs.items():
+        preds[name] = clf.predict(test_data['X'])
 
     if _print == True:
         metrics = {'accuracy': accuracy_score,
@@ -259,11 +271,9 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
                    'precision0': precision0,
                    'precision1': precision1,
                    }
-        for name, func in metrics.items():
-            print(
-                f"original {name}: {func(test_data['y'], y_clf)}")
-            print(
-                f"deltas   {name}: {func(test_data['y'], y_deltas)}")
+        for metric, func in metrics.items():
+            for name, y_preds in preds.items():
+                print(f"{name} {metric}: {func(test_data['y'], y_preds)}")
             print('')
 
     if _plot == True:
@@ -287,17 +297,17 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
 
         _, ax = plt.subplots(1, 1)
         y_plot = 0
-        for clf, name in zip([original_clf, delta_clf], ['Original', 'Deltas']):
+        for name, clf in clfs.items():
             # plot test data
             X = test_data['X']
             y_plot = _plot_projection_test_and_grid(
-                X, clf, original_clf, y_plot, name, False, ax)
+                X, clf, clfs['original'], y_plot, name, False, ax)
 
             # plot linspace/grid
             X, _ = plots.get_grid_pred(
                 clf, test_data, probs=False, flat=True, res=25)
             y_plot = _plot_projection_test_and_grid(
-                X, clf, original_clf, y_plot, name, True, ax)
+                X, clf, clfs['original'], y_plot, name, True, ax)
 
             y_plot -= 0.2
 
@@ -306,17 +316,17 @@ def eval_test_new(original_clf, delta_clf, test_data, _print=True, _plot=True):
         ax.set_title('original (top) vs deltas (bottom) on test dataset in projected space')
 
         # plot in original space
-        _, axs = plt.subplots(1, 2)
-        titles = ['Original', 'Deltas']
-        clfs = [original_clf, delta_clf]
-        for title, ax, clf in zip(titles, axs, clfs):
-            clf_preds = clf.predict(test_data['X'])
-            data = {'X': test_data['X'], 'y': clf_preds}
+        _, axs = plt.subplots(len(clfs), 1)
+        counter = 0
+        for name, clf in clfs.items():
+            ax = axs[counter]
+            data = {'X': test_data['X'], 'y': preds[name]}
             # data = test_data
             plots.plot_classes(data, ax=ax)
             plots.plot_decision_boundary(
                 clf, test_data, ax=ax, probs=False)
-            ax.set_title(title)
+            ax.set_title(name)
+            counter += 1
 
 
 
