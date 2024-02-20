@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds
 from sklearn.metrics import accuracy_score, f1_score, precision_score
+from sklearn.datasets import make_classification
 import matplotlib.pyplot as plt
 from imblearn.over_sampling import SMOTE
 
@@ -36,6 +37,27 @@ def get_data(m1 = [1, 1],
         m1 = scaler.transform_instance(m1)
         m2 = scaler.transform_instance(m2)
     return {'data': data, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
+
+def get_non_sep_data(N1 = 10000,
+                     N2 = 10000,
+                     scale = True,
+                     test_nums=[10000, 10000]):
+    class1_num = N1 + test_nums[0]
+    class2_num = N2 + test_nums[1]
+
+    #TODO: make weights param from above samples
+
+    X, y = make_classification(n_samples=10000, n_features=2, n_redundant=0,
+                               n_clusters_per_class=1, weights=[0.99], flip_y=0, random_state=1)
+                               
+    #TODO: now split into train and test
+    
+    scaler = data_utils.normaliser(data)
+    if scale == True:
+        data = scaler(data)
+        data_test = scaler(data_test)
+    return {'data': data, 'data_test': data_test}
+
 
 
 def get_SMOTE_data(data):

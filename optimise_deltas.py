@@ -54,9 +54,10 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
         print(f'constraint init: {solution_possible}')
 
-    # return early if optimisation not possible
-    if solution_possible == False:
-        return 1, 1, solution_possible, False
+    # # return early if optimisation not possible
+    # if solution_possible == False:
+    #     solution_found = False
+    #     return 1, 1, solution_possible, solution_found
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
@@ -65,18 +66,29 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         {'type': 'eq', 'fun': contraint_wrapper},
         # {'type':'eq', 'fun': contraint_real},  # more equality contraints that independaent variables
     ]
-    if grid_search == True:
+    resolution = 1000
+    tol = 1e-5
+    if grid_search == True and solution_possible == True:
         # line search for optimal value - only works for one delta atm
-        resolution = 1000
         delta1s = np.linspace(0.000000000000001, 1, resolution)
         J = loss_func(delta1s, data_info)
         # eliminate any deltas which don't satisfy the constraint
-        tol = 1e-5
         constraints = np.array([contraint_wrapper([d]) for d in delta1s])
         J[constraints > tol] = np.max(J)
         J[constraints < -tol] = np.max(J)
         deltas = [delta1s[np.argmin(J)]]
         optim_msg = 'Grid Search Optimisation Complete'
+    elif grid_search == True and solution_possible == False:
+        if _print == True:
+            print('Solution not possible so ignoring contraint and using decoupled loss function for each delta')
+        # do a 2D grid search without the contraint as it's impossible to satisfy
+        delta1s = np.linspace(0.000000000000001, 1, resolution)
+        delta2s = np.linspace(0.000000000000001, 1, resolution)
+        delta1s_grid, delta2s_grid = np.meshgrid(delta1s, delta2s)
+        J = ds.loss(delta1s_grid, delta2s_grid, data_info)
+        deltas = [delta1s[np.argmin(J)], delta2s[np.argmin(J)]]
+        optim_msg = 'Contraint not possible so used uncoupled delta grid Search Optimisation'
+        num_deltas = 2
     else:
         res = minimize(loss_func,
                        deltas_init,
@@ -105,18 +117,20 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
     if _plot == True:
         # plot loss function
         if num_deltas == 1:
-            if grid_search != True:
-                delta1s = np.linspace(0.000000000001, 1, 1000)
-                J = loss_func(delta1s, data_info)
-                constraints = [contraint_wrapper([d]) for d in delta1s]
             _, ax = plt.subplots(1, 1)
             ax.plot(delta1s, J, label='Loss')
             ax.plot(delta1s, constraints, label='constraint')
             ax.set_xlabel('delta1')
-            # ax.set_ylabel('Loss')
             ax.legend()
             plt.show()
-
+        else:
+            _, ax = plt.subplots(1, 1)
+            c = ax.contourf(delta1s_grid, delta2s_grid, J)
+            ax.set_xlabel('delta1')
+            ax.set_ylabel('delta2')
+            cbar = plt.colorbar(c)
+            cbar.ax.set_ylabel('Loss')
+            plt.show()
         # calculate each R upper bound
         R1_est = radius.R_upper_bound(
             data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
