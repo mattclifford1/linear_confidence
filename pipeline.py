@@ -66,11 +66,11 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
         raise ValueError(f"model: {model} not in list of available models")
 
     if _plot == True:
-        for name, c in zip(['clf', 'SMOTE'], [clf, clf_SMOTE]):
+        for name, classif, t_data in zip(['clf', 'SMOTE'], [clf, clf_SMOTE], [data, SMOTE_data]):
             print(name)
             ax, _ = plots._get_axes(None)
-            plots.plot_classes(data, ax=ax)
-            plots.plot_decision_boundary(c, data, ax=ax, probs=False)
+            plots.plot_classes(t_data, ax=ax)
+            plots.plot_decision_boundary(classif, t_data, ax=ax, probs=False)
             ax.set_title(name)
             plots.plt.show()
 
