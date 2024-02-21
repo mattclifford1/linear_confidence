@@ -90,7 +90,6 @@ def delta2_given_delta1(delta1, data_info):
 
     return np.exp((-N2/2) * np.square(delta2_inside_bracket(N1, N2, M_emp, delta1, R)))
 
-
 def delta2_given_delta1_matt(delta1, data_info):
     # eq.9 but re doing the maths - refer to notes for letters
     N1 = data_info['N1']
@@ -111,6 +110,27 @@ def delta2_given_delta1_matt(delta1, data_info):
     B = D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
     delta2 = 1/np.exp(0.5*(np.square(((B*np.sqrt(N2))/(factor*R)) - 2)))
     return delta2
+
+def delta1_given_delta2_matt(delta2, data_info):
+    # eq.9 but re doing the maths - refer to notes for letters
+    N1 = data_info['N1']
+    N2 = data_info['N2']
+    R = data_info['R all data']
+    R1_emp = data_info['empirical R1']
+    R2_emp = data_info['empirical R2']
+    D_emp = data_info['empirical D']
+    
+    if USE_TWO == True:
+        factor = 2
+    else:
+        factor = 1
+
+    def error(R, N, d, f):
+        return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
+
+    B = D_emp - R2_emp - R1_emp - error(R, N2, delta2, factor)
+    delta1 = 1/np.exp(0.5*(np.square(((B*np.sqrt(N1))/(factor*R)) - 2)))
+    return delta1
 
 def eq7_matt(delta1, delta2, data_info):
     N1 = data_info['N1']

@@ -26,7 +26,8 @@ class base_deltas:
         # deltas optimisation functions
         self.loss_func = ds.loss_one_delta
         self.contraint_func = ds.contraint_eq7
-        self.delta1_from_delta2 = ds.delta2_given_delta1_matt
+        self.delta2_from_delta1 = ds.delta2_given_delta1_matt
+        self.delta1_from_delta2 = ds.delta1_given_delta2_matt
 
     def fit(self, X, y, costs=(1, 1), _plot=False, _print=False):
         # Make data_info - R_ests, D, etc.
@@ -36,7 +37,7 @@ class base_deltas:
         res = self._optimise(self.data_info, 
                              self.loss_func,
                              self.contraint_func,
-                             self.delta1_from_delta2,
+                             self.delta2_from_delta1,
                              _plot=_plot, 
                              _print=_print)
         self.delta1, self.delta2, self.solution_possible, self.solution_found = res
@@ -92,7 +93,12 @@ class base_deltas:
         return preds
 
     def _predict_given_delta1(self, X, delta1):
-        delta2 = self.delta1_from_delta2(delta1, self.data_info)
+        delta2 = self.delta2_from_delta1(delta1, self.data_info)
+        boundary, class_nums = self._make_boundary(delta1, delta2)
+        return self._predict(X, boundary, class_nums)
+    
+    def _predict_given_delta2(self, X, delta2):
+        delta1 = self.delta1_from_delta2(delta2, self.data_info)
         boundary, class_nums = self._make_boundary(delta1, delta2)
         return self._predict(X, boundary, class_nums)
 
@@ -139,7 +145,7 @@ class base_deltas:
                   data_info, 
                   loss_func, 
                   contraint_func,
-                  delta1_from_delta2=None,
+                  delta2_from_delta1=None,
                   num_deltas=1, 
                   grid_search=True,
                   _plot=False, 
@@ -149,7 +155,7 @@ class base_deltas:
             data_info, 
             loss_func, 
             contraint_func, 
-            delta1_from_delta2, 
+            delta2_from_delta1, 
             num_deltas, 
             grid_search, 
             _print, 

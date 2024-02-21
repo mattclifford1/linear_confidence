@@ -11,14 +11,14 @@ import radius
 import plots
 
 
-def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_deltas=1, grid_search=False, _print=True, _plot=True):
+def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_deltas=1, grid_search=False, _print=True, _plot=True):
     # get initial deltas
     delta1 = np.random.uniform()
     delta1 = 1   # use min error distance to give it the best chance to optimise correctly
     if num_deltas == 2:
         bounds = Bounds([0, 0], [1, 1])
-        if delta1_from_delta2 != None:
-            delta2 = delta1_from_delta2(delta1, data_info)
+        if delta2_from_delta1 != None:
+            delta2 = delta2_from_delta1(delta1, data_info)
         else:
             # get from the contraint function
             delta1, delta2 = optimise_contraint.get_init_deltas(
@@ -31,7 +31,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         deltas_init = [delta1]
         if _print == True:
             print(
-                f'deltas init: {[deltas_init[0], delta1_from_delta2(deltas_init[0], data_info)]}')
+                f'deltas init: {[deltas_init[0], delta2_from_delta1(deltas_init[0], data_info)]}')
 
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
         use_grad = True
@@ -39,14 +39,14 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
         use_grad = False
 
     # set up contraints
-    data_info['delta2_given_delta1_func'] = delta1_from_delta2
+    data_info['delta2_given_delta1_func'] = delta2_from_delta1
     if num_deltas == 2:
         def contraint_wrapper(deltas):
             return contraint_func(deltas[0], deltas[1], data_info)
 
     else:
         def contraint_wrapper(deltas):
-            delta2 = delta1_from_delta2(deltas[0], data_info)
+            delta2 = delta2_from_delta1(deltas[0], data_info)
             return contraint_func(deltas[0], delta2, data_info)
 
     solution_possible = True if contraint_wrapper(deltas_init) <= 0 else False
@@ -103,7 +103,7 @@ def optimise(data_info, loss_func, contraint_func, delta1_from_delta2=None, num_
 
     if len(deltas) == 1:
         delta1 = deltas[0]
-        delta2 = delta1_from_delta2(delta1, data_info)
+        delta2 = delta2_from_delta1(delta1, data_info)
     else:
         delta1 = deltas[0]
         delta2 = deltas[1]
