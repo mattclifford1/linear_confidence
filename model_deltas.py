@@ -31,7 +31,8 @@ class base_deltas:
 
     def fit(self, X, y, costs=(1, 1), _plot=False, _print=False):
         # Make data_info - R_ests, D, etc.
-        self.data_info = self.get_data_info(X, y, costs, _print=_print)
+        self.data_info = self.get_data_info(X, y, self.clf, costs, _print=_print)
+        self.data_info_made = True
 
         # optimise for the deltas
         res = self._optimise(self.data_info, 
@@ -102,10 +103,11 @@ class base_deltas:
         boundary, class_nums = self._make_boundary(delta1, delta2)
         return self._predict(X, boundary, class_nums)
 
-    def get_data_info(self, X, y, costs=(1, 1), _print=False):
+    @staticmethod
+    def get_data_info(X, y, clf, costs=(1, 1), _print=False):
         # project data according to classifier and calculate data attributes needed
         data = {'X': X, 'y': y}
-        proj_data = projection.from_clf(data, self.clf, supports=True)
+        proj_data = projection.from_clf(data, clf, supports=True)
         # Empircal M
         M_emp = np.abs(proj_data['supports'][1]-proj_data['supports'][0]).squeeze()
 
@@ -138,7 +140,6 @@ class base_deltas:
                     }
         # if _print == True:
         #     print(f'R1 empirical: {R1_emp}\nR2 empirical: {R2_emp}')
-        self.data_info_made = True
         return data_info
     
     def _optimise(self, 
