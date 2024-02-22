@@ -1,13 +1,12 @@
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, precision_score
-from sklearn.datasets import make_classification
-from sklearn.utils import shuffle
 import matplotlib.pyplot as plt
 from imblearn.over_sampling import SMOTE
 
 import data_utils
 import plots
 import normal
+import madelon
 import projection
 import models
 
@@ -40,52 +39,9 @@ def get_non_sep_data(N1=10000,
                      N2=10000,
                      scale=True,
                      test_nums=[10000, 10000]):
-    class1_num = N1 + test_nums[0]
-    class2_num = N2 + test_nums[1]
-
-    # get samples nums and proportions
-    n_samples = class1_num + class2_num
-    weights = [class1_num/n_samples, class2_num/n_samples]
-    # sample data
-    # 5 = good seperable dataset
-    # 9 =  non seperable
-    X, y = make_classification(n_samples=n_samples, n_features=2, n_redundant=0, shuffle=False,
-                               n_clusters_per_class=1, weights=weights, flip_y=0, random_state=9)
-    # split into train and test                           
-    class1 = [x for i, x in enumerate(X) if y[i] == 0]
-    class2 = [x for i, x in enumerate(X) if y[i] == 1]
-
-    X_train = []
-    y_train = []
-    for i in range(N1):
-        X_train.append(class1[i])
-        y_train.append(0)
-    for j in range(N2):
-        X_train.append(class2[j])
-        y_train.append(1)
-    X_test = []
-    y_test = []
-    for i in range(test_nums[0]):
-        X_test.append(class1[i+N1])
-        y_test.append(0)
-    for j in range(test_nums[1]):
-        X_test.append(class2[j+N2])
-        y_test.append(1)
-
-    X_train, y_train = shuffle(X_train, y_train, random_state=1)
-    X_test, y_test = shuffle(X_test, y_test, random_state=1)
-
-    data = {'X': np.array(X_train), 'y':np.array(y_train)}
-    data_test = {'X': np.array(X_test), 'y':np.array(y_test)}
-    
-    scaler = data_utils.normaliser(data)
-    if scale == True:
-        data = scaler(data)
-        data_test = scaler(data_test)
+    data, data_test = madelon.get_non_separable(N1=N1, N2=N2, scale=scale, test_nums=test_nums)
 
     return {'data': data, 'data_test': data_test}
-
-
 
 def get_SMOTE_data(data):
     oversample = SMOTE()
