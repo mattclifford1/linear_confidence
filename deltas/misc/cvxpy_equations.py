@@ -1,11 +1,11 @@
 import cvxpy as cp
-import deltas
+import deltas.utils.equations as equations
 
 
 def loss_one_delta(delta1, c1, c2, N1, N2, M_emp, R):
     # eq. 6 with delta2 calced from delta1
     delta2 = delta2_given_delta1(N1, N2, M_emp, delta1, R)
-    return deltas.loss(c1, c2, delta1, delta2, N1, N2)
+    return equations.loss(c1, c2, delta1, delta2, N1, N2)
 
 def delta2_given_delta1(N1, N2, M_emp, delta1, R):
     # eq.9

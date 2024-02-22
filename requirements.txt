@@ -5,8 +5,8 @@ notebook
 scipy
 tqdm
 ipywidgets
-cvxpy
 imbalanced-learn
+# cvxpy
 # torch
 # plotly
 # chart_studio

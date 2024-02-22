@@ -1,11 +1,6 @@
 16 Feb
 Add more datasets
     - Rauls'
-    - https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_classification.html
-    - https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
-
-
-2D grid search just to double check what's going on
 
 Set boundary proportional to the confidence (1-d)
 

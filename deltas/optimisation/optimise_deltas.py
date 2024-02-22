@@ -5,10 +5,10 @@ simple grid search to find deltas wrt a contraint tolerance
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize, Bounds
-import optimise_contraint
-import deltas as ds
-import radius
-import plots
+import deltas.optimisation.optimise_contraint as optimise_contraint
+import deltas.utils.equations as ds
+import deltas.utils.radius as radius
+import deltas.plotting.plots as plots
 
 
 def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_deltas=1, grid_search=False, _print=True, _plot=True):

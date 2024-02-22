@@ -1,5 +1,5 @@
 import numpy as np
-from misc import USE_TWO
+from deltas.misc.use_two import USE_TWO
 
 
 def R_upper_bound(R_emp, R_sup, N, delta, two=USE_TWO):

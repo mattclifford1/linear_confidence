@@ -1,5 +1,5 @@
 import torch
-import network
+import deltas.classifiers.network as network
 import random
 from tqdm import tqdm
 

@@ -2,15 +2,15 @@
 scikit-learn style class to fit deltas
 '''
 import numpy as np
-import data_utils
-import plots
-import normal
-import models
-import projection
-import radius
-import deltas as ds
-import optimise_contraint
-import optimise_deltas
+import deltas.data.utils as utils
+import deltas.plotting.plots as plots
+import deltas.data.normal as normal
+import deltas.classifiers.models as models
+import deltas.utils.projection as projection
+import deltas.utils.radius as radius
+import deltas.utils.equations as ds
+import deltas.optimisation.optimise_contraint as optimise_contraint
+import deltas.optimisation.optimise_deltas as optimise_deltas
 
 
 class base_deltas:

@@ -2,8 +2,8 @@
 functions for cost, derivative and finding deltas from one another
 '''
 import numpy as np
-import radius
-from misc import USE_TWO
+import deltas.utils.radius as radius
+from deltas.misc.use_two import USE_TWO
 
 
 def class_cost(c=1, delta=0.5, N=100):

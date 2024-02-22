@@ -6,7 +6,7 @@ from sklearn.datasets import make_classification
 from sklearn.utils import shuffle
 import numpy as np
 
-import data_utils
+import deltas.data.utils as utils
 
 
 def get_separable(N1=10000,
@@ -66,7 +66,7 @@ def _get_data(N1=10000,
     data = {'X': np.array(X_train), 'y': np.array(y_train)}
     data_test = {'X': np.array(X_test), 'y': np.array(y_test)}
 
-    scaler = data_utils.normaliser(data)
+    scaler = utils.normaliser(data)
     if scale == True:
         data = scaler(data)
         data_test = scaler(data_test)

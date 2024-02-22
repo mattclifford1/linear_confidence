@@ -3,12 +3,12 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score
 import matplotlib.pyplot as plt
 from imblearn.over_sampling import SMOTE
 
-import data_utils
-import plots
-import normal
-import madelon
-import projection
-import models
+import deltas.data.utils as utils
+import deltas.plotting.plots as plots
+import deltas.data.normal as normal
+import deltas.data.madelon as madelon
+import deltas.utils.projection as projection
+import deltas.classifiers.models as models
 
 
 def get_data(m1 = [1, 1],
@@ -26,7 +26,7 @@ def get_data(m1 = [1, 1],
                                        covs=[cov1, cov2],
                                        num_samples=[test_nums[0], test_nums[1]])
 
-    scaler = data_utils.normaliser(data)
+    scaler = utils.normaliser(data)
     if scale == True:
         data = scaler(data)
         data_test = scaler(data_test)

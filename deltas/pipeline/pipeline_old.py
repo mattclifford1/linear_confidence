@@ -5,14 +5,14 @@ from sklearn.datasets import make_classification
 import matplotlib.pyplot as plt
 from imblearn.over_sampling import SMOTE
 
-import data_utils
-import plots
-import normal
-import projection
-import radius
-import deltas as ds
-import optimise_contraint
-import models
+import deltas.data.utils as utils
+import deltas.plotting.plots as plots
+import deltas.data.normal as normal
+import deltas.utils.projection as projection
+import deltas.utils.radius as radius
+import deltas.utils.equations as ds
+import deltas.optimisation.optimise_contraint as optimise_contraint
+import deltas.classifiers.models as models
 
 
 def data_project_and_info(data, m1, m2, clf, data_test=None, _plot=True, _print=True):
