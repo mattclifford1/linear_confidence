@@ -1,8 +1,6 @@
 from collections import Counter
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
 from matplotlib.colors import ListedColormap
-from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.decomposition import PCA
 import numpy as np
 import projection

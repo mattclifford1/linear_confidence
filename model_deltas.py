@@ -165,9 +165,14 @@ class base_deltas:
         return res
 
 
-    def plot_data(self, m1, m2):
+    def plot_data(self, m1=None, m2=None):
         if self.data_info_made == True:
-            proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, self.clf)
+            # project means if we have them
+            if m1 != None and m2 != None:
+                proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, self.clf)
+            else:
+                proj_means = None
+            # plot the data
             _ = plots.plot_projection(
                 self.data_info['projected_data'], 
                 proj_means,
