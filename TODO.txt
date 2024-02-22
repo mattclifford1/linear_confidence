@@ -1,5 +1,6 @@
 16 Feb
 Add more datasets
+    - uniform sphere instead of Gaussian
     - Rauls'
 
 Set boundary proportional to the confidence (1-d)
