@@ -38,7 +38,7 @@ def _get_data(N1=10000,
     # 5 = good seperable dataset
     # 9 =  non seperable
     X, y = make_classification(n_samples=n_samples, n_features=2, n_redundant=0, shuffle=False,
-                               n_clusters_per_class=1, weights=weights, flip_y=0, random_state=9)
+                               n_clusters_per_class=1, weights=weights, flip_y=0, random_state=gen_num)
     # split into train and test
     class1 = [x for i, x in enumerate(X) if y[i] == 0]
     class2 = [x for i, x in enumerate(X) if y[i] == 1]

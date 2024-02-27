@@ -43,6 +43,16 @@ def get_non_sep_data(N1=10000,
 
     return {'data': data, 'data_test': data_test}
 
+
+def get_sep_data(N1=10000,
+                 N2=10000,
+                 scale=True,
+                 test_nums=[10000, 10000]):
+    data, data_test = madelon.get_separable(
+        N1=N1, N2=N2, scale=scale, test_nums=test_nums)
+
+    return {'data': data, 'data_test': data_test}
+
 def get_SMOTE_data(data):
     oversample = SMOTE()
     X, y = oversample.fit_resample(data['X'], data['y'])
