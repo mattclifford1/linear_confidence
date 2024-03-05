@@ -7,6 +7,7 @@ import deltas.data.utils as utils
 import deltas.plotting.plots as plots
 import deltas.data.normal as normal
 import deltas.data.madelon as madelon
+import deltas.data.sklearn_synthetic as synthetic
 import deltas.utils.projection as projection
 import deltas.classifiers.models as models
 
@@ -52,6 +53,17 @@ def get_sep_data(N1=10000,
         N1=N1, N2=N2, scale=scale, test_nums=test_nums)
 
     return {'data': data, 'data_test': data_test}
+
+
+def get_synthetic_sep_data(N1=10000,
+                           N2=10000,
+                           scale=True,
+                           test_nums=(10000, 10000)):
+    
+    data = synthetic.get_moons((N1, N2))
+    data_test = synthetic.get_moons(test_nums)
+    return {'data': data, 'data_test': data_test}
+
 
 def get_SMOTE_data(data):
     oversample = SMOTE()

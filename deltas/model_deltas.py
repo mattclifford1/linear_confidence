@@ -41,7 +41,10 @@ class base_deltas:
                              self.delta2_from_delta1,
                              _plot=_plot, 
                              _print=_print)
-        self.delta1, self.delta2, self.solution_possible, self.solution_found = res
+        self.delta1 = res['delta1']
+        self.delta2 = res['delta2']
+        self.solution_possible = res['solution_possible']
+        self.solution_found = res['solution_found']
 
         # make boundary 
         self.boundary, self.class_nums = self._make_boundary(
@@ -228,7 +231,7 @@ class reprojectioner:
     def get_projection(self, X):
         # project with original model
         X_orig_clf = self.clf_original.get_projection(X)
-        # reproject with second model (hopefully more separated/bigger margin)
+        # reproject with second model (hopefully separated/bigger margin)
         return self.projecter.get_projection(X_orig_clf)
     
 
@@ -254,4 +257,33 @@ class reprojection_deltas(base_deltas):
         return self
 
 
+class downsample_deltas(base_deltas):
+    '''
+    Downsample the dataset (randomly) until we find a good solution
+    '''
+
+    def __init__(self, clf, *args, **kwargs):
+        super().__init__(clf, *args, **kwargs)
+
+    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False):
+        # Make data_info - R_ests, D, etc.
+        self.data_info = self.get_data_info(
+            X, y, self.clf, costs, _print=_print)
+        self.data_info_made = True
+
+        # optimise for the deltas
+        res = self._optimise(self.data_info,
+                             self.loss_func,
+                             self.contraint_func,
+                             self.delta2_from_delta1,
+                             _plot=_plot,
+                             _print=_print)
+        self.delta1, self.delta2, self.solution_possible, self.solution_found = res
+
+        # make boundary
+        self.boundary, self.class_nums = self._make_boundary(
+            self.delta1, self.delta2)
+        self.is_fit = True
+
+        return self
 

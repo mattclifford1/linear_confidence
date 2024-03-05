@@ -140,4 +140,8 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         _ = plots.plot_projection(
             data_info['projected_data'], None, R1_est, R2_est, R_est=True, ax=ax)
 
-    return delta1, delta2, solution_possible, solution_found
+    return {'delta1': delta1, 
+            'delta2': delta2, 
+            'solution_possible': solution_possible, 
+            'solution_found': solution_found,
+            'loss': loss_func(delta1, data_info)}
