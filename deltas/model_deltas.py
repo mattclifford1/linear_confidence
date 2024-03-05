@@ -278,7 +278,10 @@ class downsample_deltas(base_deltas):
                              self.delta2_from_delta1,
                              _plot=_plot,
                              _print=_print)
-        self.delta1, self.delta2, self.solution_possible, self.solution_found = res
+        self.delta1 = res['delta1']
+        self.delta2 = res['delta2']
+        self.solution_possible = res['solution_possible']
+        self.solution_found = res['solution_found']
 
         # make boundary
         self.boundary, self.class_nums = self._make_boundary(
