@@ -66,24 +66,24 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         {'type': 'eq', 'fun': contraint_wrapper},
         # {'type':'eq', 'fun': contraint_real},  # more equality contraints that independaent variables
     ]
-    resolution = 1000
-    tol = 1e-5
+    resolution = 10000
+    tol_constraint = 1e-6
     if grid_search == True and solution_possible == True:
         # line search for optimal value - only works for one delta atm
-        delta1s = np.linspace(0.000000000000001, 1, resolution)
+        delta1s = np.linspace(1/resolution, 1, resolution)
         J = loss_func(delta1s, data_info)
         # eliminate any deltas which don't satisfy the constraint
         constraints = np.array([contraint_wrapper([d]) for d in delta1s])
-        J[constraints > tol] = np.max(J)
-        J[constraints < -tol] = np.max(J)
+        J[constraints > tol_constraint] = np.max(J)
+        J[constraints < -tol_constraint] = np.max(J)
         deltas = [delta1s[np.argmin(J)]]
         optim_msg = 'Grid Search Optimisation Complete'
     elif grid_search == True and solution_possible == False:
         if _print == True:
             print('Solution not possible so ignoring contraint and using decoupled loss function for each delta')
         # do a 2D grid search without the contraint as it's impossible to satisfy
-        delta1s = np.linspace(0.000000000000001, 1, resolution)
-        delta2s = np.linspace(0.000000000000001, 1, resolution)
+        delta1s = np.linspace(1/resolution, 1, resolution)
+        delta2s = np.linspace(1/resolution, 1, resolution)
         delta1s_grid, delta2s_grid = np.meshgrid(delta1s, delta2s)
         J = ds.loss(delta1s_grid, delta2s_grid, data_info)
         deltas = [delta1s[np.argmin(J)], delta2s[np.argmin(J)]]

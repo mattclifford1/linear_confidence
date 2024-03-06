@@ -1,7 +1,11 @@
 '''
 scikit-learn style class to fit deltas
 '''
+import random
 import numpy as np
+from tqdm import tqdm
+from sklearn.utils import resample
+
 import deltas.data.utils as utils
 import deltas.plotting.plots as plots
 import deltas.data.normal as normal
@@ -265,28 +269,100 @@ class downsample_deltas(base_deltas):
     def __init__(self, clf, *args, **kwargs):
         super().__init__(clf, *args, **kwargs)
 
-    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False):
-        # Make data_info - R_ests, D, etc.
-        self.data_info = self.get_data_info(
-            X, y, self.clf, costs, _print=_print)
-        self.data_info_made = True
+    def check_if_solvable(self, data_info):
+        '''check the constraint to see if we have a viable solution'''
+        if self.contraint_func(1, 1, data_info) <= 0:
+            return True
+        else:
+            return False
+        
+    def random_downsample_data(self, X, y):
+        '''randomly downsample the dataset'''
+        x1 = np.array([p for i, p in enumerate(X) if y[i] == 0])
+        x2 = np.array([p for i, p in enumerate(X) if y[i] == 1])
+        y1 = np.zeros(len(y) - sum(y))
+        y2 = np.ones(sum(y))
 
+        _x1, _y1, num_reduced1 = self.random_downsample_class(x1, y1)
+        _x2, _y2, num_reduced2 = self.random_downsample_class(x2, y2)
+
+        return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1+num_reduced2
+
+    def random_downsample_class(self, X, y):
+        ' given only one class'
+        num_samples = len(y)
+        num_down_to = random.randint(1, num_samples)
+        num_reduced = num_samples - num_down_to
+        # now downsample
+        _X, _y = resample(X, y, n_samples=num_down_to)
+        return _X, _y, num_reduced
+
+
+    def _fit(self, data_info, _plot=False, _print=False):
+        '''fit so downsampled dataset - dont save to self as we might not use this fit trial'''
         # optimise for the deltas
-        res = self._optimise(self.data_info,
+        res = self._optimise(data_info,
                              self.loss_func,
                              self.contraint_func,
                              self.delta2_from_delta1,
                              _plot=_plot,
                              _print=_print)
-        self.delta1 = res['delta1']
-        self.delta2 = res['delta2']
-        self.solution_possible = res['solution_possible']
-        self.solution_found = res['solution_found']
+        return res
 
-        # make boundary
-        self.boundary, self.class_nums = self._make_boundary(
-            self.delta1, self.delta2)
-        self.is_fit = True
+
+    def fit(self, X, y, costs=(1, 1), alpha=1, trials_budget=1000, _plot=False, _print=False):
+        '''
+        fit to downsampled datasets, then pick the lowest loss
+        alpha is the penalty value on the loss for removing points
+        '''
+        best_loss = None
+        best_num_points_removed = None
+        for i in tqdm(range(trials_budget), desc='Trying random downsampling deltas', leave=False):
+            # downsample
+            _X, _y, num_reduced = self.random_downsample_data(X, y)
+            # see if we can fit deltas
+            data_info = self.get_data_info(_X, _y, self.clf, costs, _print=False)
+            if self.check_if_solvable(data_info) == True:
+                res = self._fit(data_info, _plot=False, _print=False)
+                # add penalty to the loss
+                res['loss'] += alpha*num_reduced
+                if best_loss == None:  # first result found so far
+                    best_loss = res['loss']
+                    best_num_points_removed = num_reduced
+                    self.data_info = data_info
+                    self.delta1 = res['delta1']
+                    self.delta2 = res['delta2']
+                    self.solution_possible = res['solution_possible']
+                    self.solution_found = res['solution_found']
+                else:
+                    if res['loss'] < best_loss:
+                        best_loss = res['loss']
+                        best_num_points_removed = num_reduced
+                        self.data_info = data_info
+                        self.delta1 = res['delta1']
+                        self.delta2 = res['delta2']
+                        self.solution_possible = res['solution_possible']
+                        self.solution_found = res['solution_found']
+
+
+        if best_loss == None:
+            print('Unable to find result with downsample, increase the budget')
+            self.is_fit = False
+        else:
+            print(
+                f"found downsampled solution with removing {best_num_points_removed} number of points")
+            # make boundary
+            self.boundary, self.class_nums = self._make_boundary(
+                self.delta1, self.delta2)
+            self.is_fit = True
+            self.data_info_made = True
 
         return self
+
+    def try_fit_downsample(self, X, y, costs):    
+        # Make data_info - R_ests, D, etc.
+        data_info = self.get_data_info(
+            X, y, self.clf, costs, _print=False)
+        
+        return self.check_if_solvable(self, data_info), data_info
 
