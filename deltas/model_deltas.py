@@ -282,15 +282,16 @@ class downsample_deltas(base_deltas):
         
     def random_downsample_data(self, X, y):
         '''randomly downsample the dataset'''
-        x1 = np.array([p for i, p in enumerate(X) if y[i] == 0])
-        x2 = np.array([p for i, p in enumerate(X) if y[i] == 1])
-        y1 = np.zeros(len(y) - sum(y))
-        y2 = np.ones(sum(y))
-
+        # split into each class
+        x1 = X[y==0, :]
+        x2 = X[y==1, :]
+        y1 = y[y==0]
+        y2 = y[y==1]
+        # downsample each class
         _x1, _y1, num_reduced1 = self.random_downsample_class(x1, y1)
         _x2, _y2, num_reduced2 = self.random_downsample_class(x2, y2)
-
-        return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1+num_reduced2
+        # put data back together - don't need to shuffle as deltas algorithm isn't affected by this
+        return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1, num_reduced2
 
     def random_downsample_class(self, X, y):
         ' given only one class'
@@ -340,10 +341,11 @@ class downsample_deltas(base_deltas):
         # now try as many random downsamples of the dataset as the budget allows
         for _ in tqdm(range(trials_budget), desc='Trying random downsampling deltas', leave=False):
             # downsample
-            _X, _y, num_reduced = self.random_downsample_data(X, y)
+            _X, _y, num_reduced1, num_reduced2 = self.random_downsample_data(
+                X, y)
             # see if we can fit deltas
             data_info = self.get_data_info(_X, _y, self.clf, costs, _print=False)
-            data_info['num_reduced'] = num_reduced
+            data_info['num_reduced'] = num_reduced1 + num_reduced2
             data_info['alpha'] = alpha
             best_loss, best_num_points_removed = self._check_and_optimise_data(
                 data_info, best_loss, best_num_points_removed)
