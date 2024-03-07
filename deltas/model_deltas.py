@@ -174,23 +174,27 @@ class base_deltas:
 
     def plot_data(self, data_clf=None, m1=None, m2=None):
         if self.data_info_made == True:
-            # project means if we have them
+            self._plot_data(self.data_info, self.clf, data_clf=data_clf, m1=m1, m2=m2)
+        else:
+            print("Not fit to any data yet, call 'fit(X, y)' or  method first")
+
+    @staticmethod
+    def _plot_data(data_info, clf, data_clf=None, m1=None, m2=None):
+        # project means if we have them
             proj_means = None
             if isinstance(data_clf, dict):
                 if 'mean1' in data_clf.keys() and 'mean2' in data_clf.keys():
                     m1 = data_clf['mean1']
                     m2 = data_clf['mean2']
-                    proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, self.clf)
+                    proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, clf)
             # plot the data
             _ = plots.plot_projection(
-                self.data_info['projected_data'], 
+                data_info['projected_data'], 
                 proj_means,
-                self.data_info['empirical R1'],
-                self.data_info['empirical R1'],
-                data_info=self.data_info)
+                data_info['empirical R1'],
+                data_info['empirical R1'],
+                data_info=data_info)
             plots.plt.show()
-        else:
-            print("Not fit to any data yet, call 'fit(X, y)' or  method first")
 
 
     def print_params(self):
@@ -310,54 +314,85 @@ class downsample_deltas(base_deltas):
         return res
 
 
-    def fit(self, X, y, costs=(1, 1), alpha=1, trials_budget=1000, _plot=False, _print=False):
+    def fit(self, X, y, costs=(1, 1), alpha=1, trials_budget=100, _plot=False, _print=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
         alpha is the penalty value on the loss for removing points
         '''
+        self._fit_single_thread(X, y, costs=costs, alpha=alpha,
+                                trials_budget=trials_budget, _plot=_plot, _print=_print)
+        return self
+        
+
+    def _fit_single_thread(self, X, y, costs, alpha, trials_budget, _plot=False, _print=True):
+        ''' use one worker in simple loop to find solution of random downsampling'''
         best_loss = None
         best_num_points_removed = None
-        for i in tqdm(range(trials_budget), desc='Trying random downsampling deltas', leave=False):
+        # check we don't already have solvable without downsampling
+        data_info = self.get_data_info(X, y, self.clf, costs, _print=False)
+        data_info['num_reduced'] = 0
+        best_loss, best_num_points_removed = self._check_and_optimise_data(
+            data_info, best_loss, best_num_points_removed)
+        if _plot == True:
+            print('Original Data')
+            self._plot_data(data_info, self.clf)
+
+        # now try as many random downsamples of the dataset as the budget allows
+        for _ in tqdm(range(trials_budget), desc='Trying random downsampling deltas', leave=False):
             # downsample
             _X, _y, num_reduced = self.random_downsample_data(X, y)
             # see if we can fit deltas
             data_info = self.get_data_info(_X, _y, self.clf, costs, _print=False)
-            if self.check_if_solvable(data_info) == True:
-                res = self._fit(data_info, _plot=False, _print=False)
-                # add penalty to the loss
-                res['loss'] += alpha*num_reduced
-                if best_loss == None:  # first result found so far
-                    best_loss = res['loss']
-                    best_num_points_removed = num_reduced
-                    self.data_info = data_info
-                    self.delta1 = res['delta1']
-                    self.delta2 = res['delta2']
-                    self.solution_possible = res['solution_possible']
-                    self.solution_found = res['solution_found']
-                else:
-                    if res['loss'] < best_loss:
-                        best_loss = res['loss']
-                        best_num_points_removed = num_reduced
-                        self.data_info = data_info
-                        self.delta1 = res['delta1']
-                        self.delta2 = res['delta2']
-                        self.solution_possible = res['solution_possible']
-                        self.solution_found = res['solution_found']
+            data_info['num_reduced'] = num_reduced
+            data_info['alpha'] = alpha
+            best_loss, best_num_points_removed = self._check_and_optimise_data(
+                data_info, best_loss, best_num_points_removed)
+            
 
-
+        # finished search, now make new boundary if we found a solution
         if best_loss == None:
-            print('Unable to find result with downsample, increase the budget')
+            if _print == True:
+                print('Unable to find result with downsample, increase the budget')
             self.is_fit = False
         else:
-            print(
-                f"found downsampled solution with removing {best_num_points_removed} number of points")
+            if _plot == True:
+                print(f'Best Random Downsampled dataset solution found with budget: {trials_budget}')
+                self._plot_data(self.data_info, self.clf)
             # make boundary
             self.boundary, self.class_nums = self._make_boundary(
                 self.delta1, self.delta2)
             self.is_fit = True
             self.data_info_made = True
+            if _print == True:
+                print(
+                    f"Found downsampled solution by removing {best_num_points_removed} number of points")
 
-        return self
+    
+    def _check_and_optimise_data(self, data_info, best_loss, best_num_points_removed, _plot=False, _print=False):
+        if self.check_if_solvable(data_info) == True:
+            res = self._fit(data_info, _plot=_plot, _print=_print)
+            # add penalty to the loss
+            if data_info['num_reduced'] != 0:
+                res['loss'] += data_info['alpha']*data_info['num_reduced']
+            if best_loss == None:  # first result found so far
+                best_loss = res['loss']
+                best_num_points_removed = data_info['num_reduced']
+                self._save_as_best(res, data_info)
+            else:
+                if res['loss'] < best_loss:
+                    best_loss = res['loss']
+                    best_num_points_removed = data_info['num_reduced']
+                    self._save_as_best(res, data_info)
+        return best_loss, best_num_points_removed
+
+
+    
+    def _save_as_best(self, results, data_info):
+        self.data_info = data_info
+        self.delta1 = results['delta1']
+        self.delta2 = results['delta2']
+        self.solution_possible = results['solution_possible']
+        self.solution_found = results['solution_found']
 
     def try_fit_downsample(self, X, y, costs):    
         # Make data_info - R_ests, D, etc.
