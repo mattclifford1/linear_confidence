@@ -316,24 +316,13 @@ class downsample_deltas(base_deltas):
         return res
 
 
-    def fit(self, X, y, costs=(1, 1), alpha=1, max_trials=10000, force_downsample=False, _plot=False, _print=False):
+    def fit(self, X, y, costs=(1, 1), alpha=1, max_trials=10000, force_downsample=False, parallel=True, _plot=False, _print=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
-            cut_off_trials:   the number of viable downsampled datasets to find before stopping
             max_trials:       the number of downsampled datasets to try 
             force_downsample: try downsampling even if the original projection is solvable
         '''
-        self._fit_single_thread(X, y, costs=costs, alpha=alpha,
-                                max_trials=max_trials, force_downsample=force_downsample,
-                                _plot=_plot, _print=_print)
-        if _plot == True and self.is_fit == True:
-            plots.deltas_projected_boundary(self.delta1, self.delta2, self.data_info)
-        return self
-    
-        
-    def _fit_single_thread(self, X, y, costs, alpha, max_trials, force_downsample, _plot=False, _print=True):
-        ''' use one worker in simple loop to find solution of random downsampling'''
         # check we don't already have solvable without downsampling
         data_info = self.get_data_info(X, y, self.clf, costs, _print=False)
         data_info['num_reduced'] = 0
@@ -383,15 +372,19 @@ class downsample_deltas(base_deltas):
             
             if _print == True:
                 print(
-                    f'Best Random Downsampled dataset solution found with budget: {max_trials} and {len(losses)} found viable downsampled solutions')
-                # self._plot_data(self.data_info, self.clf)
+                    f'With budget {max_trials} have found {len(losses)} viable downsampled solutions')
             # make boundary
             self.boundary, self.class_nums = self._make_boundary(
                 self.delta1, self.delta2)
             self.is_fit = True
             if _print == True:
                 print(
-                    f"Found downsampled solution by removing {self.data_info['num_reduced']} number of points")
+                    f"Best solution found by removing {self.data_info['num_reduced']} data points")
+            if _plot == True:
+                print('Downsampled data:')
+                plots.deltas_projected_boundary(
+                    self.delta1, self.delta2, self.data_info)
+        return self
 
     
     def _check_and_optimise_data(self, data_info, _plot=False, _print=False):
