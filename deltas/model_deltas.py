@@ -2,6 +2,9 @@
 scikit-learn style class to fit deltas
 '''
 import random
+import multiprocessing
+from itertools import product
+
 import numpy as np
 from tqdm import tqdm
 from sklearn.utils import resample
@@ -294,7 +297,8 @@ class downsample_deltas(base_deltas):
         # put data back together - don't need to shuffle as deltas algorithm isn't affected by this
         return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1, num_reduced2
 
-    def random_downsample_class(self, X, y):
+    @staticmethod
+    def random_downsample_class(X, y):
         ' given only one class'
         num_samples = len(y)
         num_down_to = random.randint(1, num_samples)
@@ -304,19 +308,33 @@ class downsample_deltas(base_deltas):
         return _X, _y, num_reduced
 
 
-    def _fit(self, data_info, _plot=False, _print=False):
-        '''fit so downsampled dataset - dont save to self as we might not use this fit trial'''
-        # optimise for the deltas
-        res = self._optimise(data_info,
-                             self.loss_func,
-                             self.contraint_func,
-                             self.delta2_from_delta1,
-                             _plot=_plot,
-                             _print=_print)
-        return res
+    @staticmethod
+    def _test_single(args):
+        '''wrapper for trialing downsample for use with multiprocessing'''
+        self_arg, X, y, costs, alpha, num_runs = args
+        losses = []
+        data_infos = []
+        all_results = []
+        for _ in range(num_runs):
+            # downsample
+            _X, _y, num_reduced1, num_reduced2 = self_arg.random_downsample_data(
+                X, y)
+            # see if we can fit deltas
+            data_info = self_arg.get_data_info(
+                _X, _y, self_arg.clf, costs, _print=False)
+            data_info['num_reduced'] = num_reduced1 + num_reduced2
+            data_info['alpha'] = alpha
+            results = self_arg._check_and_optimise_data(data_info)
+            if results != None:
+                losses.append(results['loss'])
+                data_infos.append(data_info)
+                all_results.append(results)
+        return losses, data_infos, all_results
+        
 
 
-    def fit(self, X, y, costs=(1, 1), alpha=1, max_trials=10000, force_downsample=False, parallel=True, _plot=False, _print=False):
+
+    def fit(self, X, y, costs=(1, 1), alpha=1, max_trials=10000, force_downsample=False, parallel=False, _plot=False, _print=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
@@ -341,19 +359,33 @@ class downsample_deltas(base_deltas):
             all_results.append(results)
             
         if results == None or force_downsample == True:
-            for _ in tqdm(range(max_trials), desc='Trying random downsampling deltas', leave=False):
-                # downsample
-                _X, _y, num_reduced1, num_reduced2 = self.random_downsample_data(
-                    X, y)
-                # see if we can fit deltas
-                data_info = self.get_data_info(_X, _y, self.clf, costs, _print=False)
-                data_info['num_reduced'] = num_reduced1 + num_reduced2
-                data_info['alpha'] = alpha
-                results = self._check_and_optimise_data(data_info)
-                if results != None:
-                    losses.append(results['loss'])
-                    data_infos.append(data_info)
-                    all_results.append(results)
+            if parallel == True:
+                n_cpus = int(multiprocessing.cpu_count())
+                with multiprocessing.Pool(processes=n_cpus) as pool:
+                    # add an argument of how many trials for each worker to do 
+                    num_runs = 100  # runs each worker does (counter overhead of spawning a process)
+                    scaled_trials = max_trials//num_runs
+                    args = [[self, X, y, costs, alpha, num_runs]] * \
+                        scaled_trials
+                    trials = list(tqdm(pool.imap_unordered(self._test_single, args), 
+                                  total=scaled_trials, desc='Trying random downsampling deltas'))
+                    # now merge all the results together
+                    # TODO: MERGE RESULTS
+
+            else:
+                for _ in tqdm(range(max_trials), desc='Trying random downsampling deltas', leave=True):
+                    # downsample
+                    _X, _y, num_reduced1, num_reduced2 = self.random_downsample_data(
+                        X, y)
+                    # see if we can fit deltas
+                    data_info = self.get_data_info(_X, _y, self.clf, costs, _print=False)
+                    data_info['num_reduced'] = num_reduced1 + num_reduced2
+                    data_info['alpha'] = alpha
+                    results = self._check_and_optimise_data(data_info)
+                    if results != None:
+                        losses.append(results['loss'])
+                        data_infos.append(data_info)
+                        all_results.append(results)
 
         else:
             if _print == True:
@@ -386,11 +418,19 @@ class downsample_deltas(base_deltas):
                     self.delta1, self.delta2, self.data_info)
         return self
 
-    
-    def _check_and_optimise_data(self, data_info, _plot=False, _print=False):
+    @staticmethod
+    def static_check_and_optimise(self_arg, data_info):
+        self_arg._check_and_optimise_data(self_arg, data_info)
+
+    def _check_and_optimise_data(self, data_info):
         '''return optim results, will be None if not solvable'''
         if self.check_if_solvable(data_info) == True:
-            res = self._fit(data_info, _plot=_plot, _print=_print)
+            res = self._optimise(data_info,
+                                 self.loss_func,
+                                 self.contraint_func,
+                                 self.delta2_from_delta1,
+                                 _plot=False,
+                                 _print=False)
             # add penalty to the loss
             if data_info['num_reduced'] != 0:
                 res['loss'] += data_info['alpha']*data_info['num_reduced']
