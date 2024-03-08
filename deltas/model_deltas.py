@@ -327,7 +327,7 @@ class downsample_deltas(base_deltas):
         self._fit_single_thread(X, y, costs=costs, alpha=alpha,
                                 cut_off_trials=cut_off_trials, max_trials=max_trials, force_downsample=force_downsample,
                                 _plot=_plot, _print=_print)
-        if _plot == True:
+        if _plot == True and self.is_fit == True:
             plots.deltas_projected_boundary(self.delta1, self.delta2, self.data_info)
         return self
         
