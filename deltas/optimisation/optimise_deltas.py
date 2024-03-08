@@ -131,14 +131,7 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
             cbar = plt.colorbar(c)
             cbar.ax.set_ylabel('Loss')
             plt.show()
-        # calculate each R upper bound
-        R1_est = radius.R_upper_bound(
-            data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
-        R2_est = radius.R_upper_bound(
-            data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
-        _, ax = plt.subplots(1, 1)
-        _ = plots.plot_projection(
-            data_info['projected_data'], None, R1_est, R2_est, R_est=True, ax=ax)
+        plots.deltas_projected_boundary(delta1, delta2, data_info)
 
     return {'delta1': delta1, 
             'delta2': delta2, 

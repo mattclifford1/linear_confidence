@@ -29,7 +29,7 @@ def projections_from_data_clfs(clfs, X, y, ax=None):
         y_plt -= 0.2
         
 
-def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, calc_data=True):
+def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, deltas_to_plot=[1, 0.5, 0.1, 0.001], calc_data=True):
     ax, show = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
@@ -69,7 +69,7 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     
     # plot R error estimates if given the data
     if data_info != None:
-        for d in [1, 0.5, 0.1, 0.001]:
+        for d in deltas_to_plot:
             R_ests = get_R_estimates(data_info, deltas=[d, d])
             ax.plot([emp_xp1-R_ests[0], emp_xp1+R_ests[0]], [d, d],
                     c='b', marker='|', linestyle='dashed')
@@ -239,3 +239,13 @@ def _get_axes(ax):
     else:
         show = False
     return ax, show
+
+def deltas_projected_boundary(delta1, delta2, data_info):
+    # calculate each R upper bound
+    R1_est = radius.R_upper_bound(
+        data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
+    R2_est = radius.R_upper_bound(
+        data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
+    _, ax = plt.subplots(1, 1)
+    _ = plot_projection(
+        data_info['projected_data'], None, R1_est, R2_est, R_est=True, ax=ax)

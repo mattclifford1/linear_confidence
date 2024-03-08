@@ -29,8 +29,12 @@ def closest_node(node, nodes):
 
 def get_classes(data):
     # data points
-    xp1 = data['X'][data['y'] == 0, :]
-    xp2 = data['X'][data['y'] == 1, :]
+    if len(data['X'].shape) == 1:
+        xp1 = data['X'][data['y'] == 0]
+        xp2 = data['X'][data['y'] == 1]
+    else:
+        xp1 = data['X'][data['y'] == 0, :]
+        xp2 = data['X'][data['y'] == 1, :]
     return xp1, xp2
 
 def get_emp_means(data):

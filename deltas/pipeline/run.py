@@ -135,6 +135,7 @@ def eval_test(clfs, test_data, _print=True, _plot=True):
         def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
             proj_data = {'X': clf_projecter.get_projection(X),
                          'y': clf.predict(X)}
+            
             xp1, xp2 = projection.get_classes(proj_data)
             y_plot -= 0.1
 
