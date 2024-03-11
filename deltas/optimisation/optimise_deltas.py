@@ -49,15 +49,11 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
             delta2 = delta2_from_delta1(deltas[0], data_info)
             return contraint_func(deltas[0], delta2, data_info)
 
-    solution_possible = True if contraint_wrapper(deltas_init) <= 0 else False
+    solution_possible = True if contraint_func(1, 1, data_info) <= 0 else False
     if _print == True:
-        print(f'eq. 7 can be satisfied: {ds.contraint_eq7(1, 1, data_info) <= 0}')
+        print(
+            f'eq. 7 can be satisfied: {solution_possible}')
         print(f'constraint init: {solution_possible}')
-
-    # # return early if optimisation not possible
-    # if solution_possible == False:
-    #     solution_found = False
-    #     return 1, 1, solution_possible, solution_found
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
@@ -81,7 +77,7 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
     elif grid_search == True and solution_possible == False and grid_2D == True:
         # be careful as this method can use a lot of RAM!
         if _print == True:
-            print('Solution not possible so ignoring contraint and using decoupled loss function for each delta')
+            print('Solution not possible so ignoring constraint and using decoupled loss function for each delta')
         # do a 2D grid search without the contraint as it's impossible to satisfy
         delta1s = np.linspace(1/resolution, 1, resolution)
         delta2s = np.linspace(1/resolution, 1, resolution)
