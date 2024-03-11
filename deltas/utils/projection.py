@@ -6,11 +6,16 @@ def from_clf(data, clf, supports=False):
         projected = clf.get_projection(data['X'])
     else:
         raise AttributeError(f"Classifier {clf} needs 'get_projection' method")
-    # get supports
-    xp1 = projected[data['y'] == 0, :]
-    xp2 = projected[data['y'] == 1, :]
+    data = {'X': projected, 'y': data['y']}
 
-    projected_data = {'X': projected, 'y': data['y']}
+    return make_calcs(data, supports=supports)
+
+
+def make_calcs(projected_data, supports=False):
+    # get supports
+    xp1 = projected_data['X'][projected_data['y'] == 0, :]
+    xp2 = projected_data['X'][projected_data['y'] == 1, :]
+
     if supports == True:
         Y = cdist(xp1, xp2, 'euclidean')
         projected_data['supports'] = np.array(

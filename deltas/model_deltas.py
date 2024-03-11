@@ -1,6 +1,7 @@
 '''
 scikit-learn style class to fit deltas
 '''
+import sys
 import random
 import multiprocessing
 from itertools import product
@@ -114,10 +115,17 @@ class base_deltas:
         return self._predict(X, boundary, class_nums)
 
     @staticmethod
-    def get_data_info(X, y, clf, costs=(1, 1), _print=False):
-        # project data according to classifier and calculate data attributes needed
+    def get_data_info(X, y, clf=None, costs=(1, 1), _print=False):
+        # get projection information
         data = {'X': X, 'y': y}
-        proj_data = projection.from_clf(data, clf, supports=True)
+        if clf != None:
+            # project data according to classifier and calculate data attributes needed
+            proj_data = projection.from_clf(data, clf, supports=True)
+        elif X.shape[1] == 1:
+            proj_data = projection.make_calcs(data, supports=True)
+        else:
+            raise AttributeError('Provide classifier to project or already projected data X (one dimensional)')
+        
         # Empircal M
         M_emp = np.abs(proj_data['supports'][1]-proj_data['supports'][0]).squeeze()
 
@@ -152,8 +160,8 @@ class base_deltas:
         #     print(f'R1 empirical: {R1_emp}\nR2 empirical: {R2_emp}')
         return data_info
     
-    def _optimise(self, 
-                  data_info, 
+    @staticmethod
+    def _optimise(data_info, 
                   loss_func, 
                   contraint_func,
                   delta2_from_delta1=None,
@@ -163,15 +171,14 @@ class base_deltas:
                   _print=False):
         # optimise for the deltas. N.B. keep data_info as arg for flexibility
         res = optimise_deltas.optimise(
-            data_info, 
-            loss_func, 
-            contraint_func, 
-            delta2_from_delta1, 
-            num_deltas, 
-            grid_search, 
-            _print, 
-            _plot)
-
+            data_info=data_info,
+            loss_func=loss_func,
+            contraint_func=contraint_func,
+            delta2_from_delta1=delta2_from_delta1, 
+            num_deltas=num_deltas,
+            grid_search=grid_search, 
+            _print=_print, 
+            _plot=_plot)
         return res
 
 
@@ -277,14 +284,21 @@ class downsample_deltas(base_deltas):
     def __init__(self, clf, *args, **kwargs):
         super().__init__(clf, *args, **kwargs)
 
+    
     def check_if_solvable(self, data_info):
+        return downsample_deltas.check_if_solvable_static(data_info, self.contraint_func)
+    
+    @staticmethod
+    def check_if_solvable_static(data_info, contraint_func):
         '''check the constraint to see if we have a viable solution'''
-        if self.contraint_func(1, 1, data_info) <= 0:
+        if contraint_func(1, 1, data_info) <= 0:
             return True
         else:
             return False
+
         
-    def random_downsample_data(self, X, y):
+    @staticmethod
+    def random_downsample_data(X, y):
         '''randomly downsample the dataset'''
         # split into each class
         x1 = X[y==0, :]
@@ -292,8 +306,8 @@ class downsample_deltas(base_deltas):
         y1 = y[y==0]
         y2 = y[y==1]
         # downsample each class
-        _x1, _y1, num_reduced1 = self.random_downsample_class(x1, y1)
-        _x2, _y2, num_reduced2 = self.random_downsample_class(x2, y2)
+        _x1, _y1, num_reduced1 = downsample_deltas.random_downsample_class(x1, y1)
+        _x2, _y2, num_reduced2 = downsample_deltas.random_downsample_class(x2, y2)
         # put data back together - don't need to shuffle as deltas algorithm isn't affected by this
         return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1, num_reduced2
 
@@ -311,20 +325,21 @@ class downsample_deltas(base_deltas):
     @staticmethod
     def _test_single(args):
         '''wrapper for trialing downsample for use with multiprocessing'''
-        self_arg, X, y, costs, alpha, num_runs = args
+        X, y, costs, alpha, num_runs, contraint_func, loss_func, delta2_from_delta1 = args
         losses = []
         data_infos = []
         all_results = []
         for _ in range(num_runs):
             # downsample
-            _X, _y, num_reduced1, num_reduced2 = self_arg.random_downsample_data(
+            _X, _y, num_reduced1, num_reduced2 = downsample_deltas.random_downsample_data(
                 X, y)
             # see if we can fit deltas
-            data_info = self_arg.get_data_info(
-                _X, _y, self_arg.clf, costs, _print=False)
+            data_info = downsample_deltas.get_data_info(
+                _X, _y, costs=costs, _print=False)
             data_info['num_reduced'] = num_reduced1 + num_reduced2
             data_info['alpha'] = alpha
-            results = self_arg._check_and_optimise_data(data_info)
+            results = downsample_deltas.static_check_and_optimise(
+                data_info, contraint_func, loss_func, delta2_from_delta1)
             if results != None:
                 losses.append(results['loss'])
                 data_infos.append(data_info)
@@ -334,7 +349,7 @@ class downsample_deltas(base_deltas):
 
 
 
-    def fit(self, X, y, costs=(1, 1), alpha=1, max_trials=10000, force_downsample=False, parallel=False, _plot=False, _print=False):
+    def fit(self, X, y, costs=(1, 1), alpha=1, max_trials=10000, force_downsample=False, parallel=True, _plot=False, _print=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
@@ -359,13 +374,19 @@ class downsample_deltas(base_deltas):
             all_results.append(results)
             
         if results == None or force_downsample == True:
+            # pre project data
+            if hasattr(self.clf, 'get_projection'):
+                X_projected = self.clf.get_projection(X)
+            else:
+                raise AttributeError(f"Classifier {self.clf} needs 'get_projection' method")
+                
             if parallel == True:
-                n_cpus = int(multiprocessing.cpu_count())
+                n_cpus = multiprocessing.cpu_count()
                 with multiprocessing.Pool(processes=n_cpus) as pool:
                     # add an argument of how many trials for each worker to do 
-                    num_runs = 100  # runs each worker does (counter overhead of spawning a process)
+                    num_runs = 100  # runs each worker does (counters the overhead of spawning a process)
                     scaled_trials = max_trials//num_runs
-                    args = [[self, X, y, costs, alpha, num_runs]] * \
+                    args = [[X_projected, y, costs, alpha, num_runs, self.contraint_func, self.loss_func, self.delta2_from_delta1]] * \
                         scaled_trials
                     trials = list(tqdm(pool.imap_unordered(self._test_single, args), 
                                   total=scaled_trials, desc='Trying random downsampling deltas'))
@@ -376,9 +397,9 @@ class downsample_deltas(base_deltas):
                 for _ in tqdm(range(max_trials), desc='Trying random downsampling deltas', leave=True):
                     # downsample
                     _X, _y, num_reduced1, num_reduced2 = self.random_downsample_data(
-                        X, y)
+                        X_projected, y)
                     # see if we can fit deltas
-                    data_info = self.get_data_info(_X, _y, self.clf, costs, _print=False)
+                    data_info = self.get_data_info(_X, _y, costs=costs, _print=False)
                     data_info['num_reduced'] = num_reduced1 + num_reduced2
                     data_info['alpha'] = alpha
                     results = self._check_and_optimise_data(data_info)
@@ -419,24 +440,27 @@ class downsample_deltas(base_deltas):
         return self
 
     @staticmethod
-    def static_check_and_optimise(self_arg, data_info):
-        self_arg._check_and_optimise_data(self_arg, data_info)
-
-    def _check_and_optimise_data(self, data_info):
+    def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1):
         '''return optim results, will be None if not solvable'''
-        if self.check_if_solvable(data_info) == True:
-            res = self._optimise(data_info,
-                                 self.loss_func,
-                                 self.contraint_func,
-                                 self.delta2_from_delta1,
-                                 _plot=False,
-                                 _print=False)
+        if downsample_deltas.check_if_solvable_static(data_info, contraint_func) == True:
+            res = downsample_deltas._optimise(data_info,
+                                              loss_func,
+                                              contraint_func,
+                                              delta2_from_delta1,
+                                              _plot=False,
+                                              _print=False)
             # add penalty to the loss
-            if data_info['num_reduced'] != 0:
+            if res != None and data_info['num_reduced'] != 0:
                 res['loss'] += data_info['alpha']*data_info['num_reduced']
         else:
             res = None
         return res 
+    
+    def _check_and_optimise_data(self, data_info):
+        return self.static_check_and_optimise(data_info,
+                                              self.contraint_func,
+                                              self.loss_func,
+                                              self.delta2_from_delta1)
 
     
     def _save_as_best(self, results, data_info):

@@ -11,7 +11,7 @@ import deltas.utils.radius as radius
 import deltas.plotting.plots as plots
 
 
-def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_deltas=1, grid_search=False, _print=True, _plot=True):
+def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_deltas=1, _print=True, _plot=True, grid_search=False, grid_2D=False):
     # get initial deltas
     delta1 = np.random.uniform()
     delta1 = 1   # use min error distance to give it the best chance to optimise correctly
@@ -78,7 +78,8 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         J[constraints < -tol_constraint] = np.max(J)
         deltas = [delta1s[np.argmin(J)]]
         optim_msg = 'Grid Search Optimisation Complete'
-    elif grid_search == True and solution_possible == False:
+    elif grid_search == True and solution_possible == False and grid_2D == True:
+        # be careful as this method can use a lot of RAM!
         if _print == True:
             print('Solution not possible so ignoring contraint and using decoupled loss function for each delta')
         # do a 2D grid search without the contraint as it's impossible to satisfy
@@ -89,6 +90,10 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         deltas = [delta1s[np.argmin(J)], delta2s[np.argmin(J)]]
         optim_msg = 'Contraint not possible so used uncoupled delta grid Search Optimisation'
         num_deltas = 2
+    elif grid_search == True and solution_possible == False and grid_2D == False:
+        if _print == True:
+            print('solution not possible with 1D grid search, returning None')
+        return None
     else:
         res = minimize(loss_func,
                        deltas_init,
