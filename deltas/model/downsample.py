@@ -124,8 +124,13 @@ class downsample_deltas(base.base_deltas):
                         scaled_trials
                     trials = list(tqdm(pool.imap_unordered(self._test_single, args),
                                   total=scaled_trials, desc='Trying random downsampling deltas'))
-                    # now merge all the results together
-                    print(trials)
+                # now merge all the results together
+                for result in trials:
+                    for i in range(len(result[0])):
+                        # results returned in format: losses, data_infos, all_results
+                        losses.append(result[0][i])
+                        data_infos.append(result[1][i])
+                        all_results.append(result[2][i])
 
             else:
                 for _ in tqdm(range(max_trials), desc='Trying random downsampling deltas', leave=True):
