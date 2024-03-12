@@ -30,7 +30,7 @@ def projections_from_data_clfs(clfs, X, y, ax=None):
         
 
 def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, deltas_to_plot=[1, 0.5, 0.1, 0.001], calc_data=True):
-    ax, show = _get_axes(ax)
+    ax, _ = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
     y = -0.1

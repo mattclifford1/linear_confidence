@@ -54,7 +54,7 @@ class downsample_deltas(base.base_deltas):
         num_down_to = random.randint(1, num_samples)
         num_reduced = num_samples - num_down_to
         # now downsample
-        _X, _y = resample(X, y, n_samples=num_down_to)
+        _X, _y = resample(X, y, n_samples=num_down_to, replace=False)
         return _X, _y, num_reduced
 
     @staticmethod
