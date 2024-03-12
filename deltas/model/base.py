@@ -213,5 +213,11 @@ class base_deltas:
         else:
             print("Not fit to any data yet, call 'fit(X, y)' or  method first")
 
-
+    def print_deltas(self):
+        if self.is_fit == True:
+            print(f""""
+                  delta1: {self.delta1} 
+                  delta2: {self.delta2}
+                  constraint: {self.contraint_func(self.delta1, self.delta2, self.data_info)}
+                  """)
 

@@ -115,7 +115,7 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         print(f'    delta1 : {delta1} \n    delta2: {delta2}')
         print(f'    constraint satisfied: {solution_found}')
 
-    if _plot == True:
+    if _plot == True and grid_search == True:
         # plot loss function
         if num_deltas == 1:
             _, ax = plt.subplots(1, 1)
