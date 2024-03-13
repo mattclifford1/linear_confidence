@@ -158,7 +158,7 @@ class base_deltas:
                   grid_search=True,
                   _plot=False, 
                   _print=False):
-        # optimise for the deltas. N.B. keep data_info as arg for flexibility
+        # optimise for the deltas.
         res = optimise_deltas.optimise(
             data_info=data_info,
             loss_func=loss_func,
@@ -175,7 +175,7 @@ class base_deltas:
         if self.data_info_made == True:
             self._plot_data(self.data_info, self.clf, data_clf=data_clf, m1=m1, m2=m2)
         else:
-            print("Not fit to any data yet, call 'fit(X, y)' or  method first")
+            print("Not fit to any data yet, call 'fit(X, y)'  method first")
 
     @staticmethod
     def _plot_data(data_info, clf, data_clf=None, m1=None, m2=None):
