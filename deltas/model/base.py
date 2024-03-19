@@ -22,11 +22,14 @@ class base_deltas:
         self.is_fit = False
         # deltas optimisation functions
         self.loss_func = ds.loss_one_delta
+        # for scipy minimize
+        self.loss_func = (ds.loss_one_delta, ds.J_derivative)
+
         self.contraint_func = ds.contraint_eq7
         self.delta2_from_delta1 = ds.delta2_given_delta1_matt
         self.delta1_from_delta2 = ds.delta1_given_delta2_matt
 
-    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False):
+    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False, grid_search=False):
         # Make data_info - R_ests, D, etc.
         self.data_info = self.get_data_info(X, y, self.clf, costs, _print=_print)
         self.data_info_made = True
@@ -36,6 +39,7 @@ class base_deltas:
                              self.loss_func,
                              self.contraint_func,
                              self.delta2_from_delta1,
+                             grid_search=grid_search,
                              _plot=_plot, 
                              _print=_print)
         self.delta1 = res['delta1']
@@ -154,7 +158,6 @@ class base_deltas:
                   loss_func, 
                   contraint_func,
                   delta2_from_delta1=None,
-                  num_deltas=1, 
                   grid_search=True,
                   _plot=False, 
                   _print=False):
@@ -164,7 +167,6 @@ class base_deltas:
             loss_func=loss_func,
             contraint_func=contraint_func,
             delta2_from_delta1=delta2_from_delta1, 
-            num_deltas=num_deltas,
             grid_search=grid_search, 
             _print=_print, 
             _plot=_plot)

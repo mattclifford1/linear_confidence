@@ -77,14 +77,14 @@ class downsample_deltas(base.base_deltas):
             data_info['prop_penalty'] = args['prop_penalty']
 
             results = downsample_deltas.static_check_and_optimise(
-                data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'])
+                data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'], args['grid_search'])
             if results != None:
                 losses.append(results['loss'])
                 data_infos.append(data_info)
                 all_results.append(results)
         return losses, data_infos, all_results
 
-    def fit(self, X, y, costs=(1, 1), alpha=1, prop_penalty=True, max_trials=10000, force_downsample=False, parallel=True, _plot=False, _print=False):
+    def fit(self, X, y, costs=(1, 1), alpha=1, prop_penalty=True, max_trials=10000, force_downsample=False, parallel=True, grid_search=True, _plot=False, _print=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
@@ -132,7 +132,8 @@ class downsample_deltas(base.base_deltas):
                                 'num_runs': num_runs,
                                 'contraint_func': self.contraint_func,
                                 'loss_func': self.loss_func,
-                                'delta2_from_delta1': self.delta2_from_delta1}
+                                'delta2_from_delta1': self.delta2_from_delta1,
+                                'grid_search': grid_search}
                     args = [arg_dict] * scaled_trials
                     trials = list(tqdm(pool.imap_unordered(self._test_single, args),
                                     total=scaled_trials, desc='Trying random downsampling deltas (multiprocessing)', leave=False))
@@ -186,13 +187,14 @@ class downsample_deltas(base.base_deltas):
         return self
 
     @staticmethod
-    def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1):
+    def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1, grid_search=True):
         '''return optim results, will be None if not solvable'''
         if downsample_deltas.check_if_solvable_static(data_info, contraint_func) == True:
             res = downsample_deltas._optimise(data_info,
                                               loss_func,
                                               contraint_func,
                                               delta2_from_delta1,
+                                              grid_search=grid_search,
                                               _plot=False,
                                               _print=False)
             # add penalty to the loss

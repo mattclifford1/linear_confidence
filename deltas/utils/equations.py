@@ -168,7 +168,7 @@ def delta2_given_delta1_wolf(N1, N2, M, delta1, R):
     return l * np.exp(brac)
 
 
-def dd2_dd1(N1, N2, M_emp, delta1, R, delta2):
+def dd2_dd1_dario(N1, N2, M_emp, delta1, R, delta2):
     # above eq.10
     # left = delta2_given_delta1(N1, N2, M_emp, delta1, R)
     left = delta2
@@ -176,20 +176,25 @@ def dd2_dd1(N1, N2, M_emp, delta1, R, delta2):
             ((1/(N1*delta1)) * (1/(np.sqrt((2*np.log(1/delta1))/N1))))
     return left * right
 
+
+def dd2_dd1(delta1, data_info):
+    # eq. 10 
+    # Matt's derivation
+    N1 = data_info['N1']
+    N2 = data_info['N2']
+
+    dA = (np.sqrt(N2)/(delta1*np.sqrt(N1))) * (1/(np.sqrt(2 * np.log(1/delta1))))
+    return dA * delta2_given_delta1_matt(delta1, data_info)
+
 def J_derivative(delta1, data_info):
     # eq. 10
     N1 = data_info['N1']
     N2 = data_info['N2']
     c1 = data_info['c1']
     c2 = data_info['c2']
-    R = data_info['R all data']
-    M_emp = data_info['empirical margin']
-    delta2_given_delta1_func = data_info['delta2_given_delta1_func']
-
-    delta2 = delta2_given_delta1_func(delta1, data_info)
 
     left = c1*(N1/(N1+1))
-    right = dd2_dd1(N1, N2, M_emp, delta1, R, delta2) * (c2*(N2/(N2+1)))
+    right = dd2_dd1(delta1, data_info) * (c2*(N2/(N2+1)))
     return left + right
 
 

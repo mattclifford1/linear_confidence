@@ -4,50 +4,37 @@ simple grid search to find deltas wrt a contraint tolerance
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize, Bounds
+from scipy.optimize import minimize, Bounds, minimize_scalar
 import deltas.optimisation.optimise_contraint as optimise_contraint
 import deltas.utils.equations as ds
 import deltas.utils.radius as radius
 import deltas.plotting.plots as plots
 
 
-def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_deltas=1, _print=True, _plot=True, grid_search=False, grid_2D=False):
+def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _print=True, _plot=True, grid_search=False, grid_2D=False):
     # get initial deltas
     delta1 = np.random.uniform()
-    delta1 = 1   # use min error distance to give it the best chance to optimise correctly
-    if num_deltas == 2:
-        bounds = Bounds([0, 0], [1, 1])
-        if delta2_from_delta1 != None:
-            delta2 = delta2_from_delta1(delta1, data_info)
-        else:
-            # get from the contraint function
-            delta1, delta2 = optimise_contraint.get_init_deltas(
-                contraint_func, data_info)
-        deltas_init = [delta1, delta2]
-        if _print == True:
-            print(f'deltas init: {deltas_init}')
-    else:
-        bounds = Bounds([0], [1])
-        deltas_init = [delta1]
-        if _print == True:
-            print(
-                f'deltas init: {[deltas_init[0], delta2_from_delta1(deltas_init[0], data_info)]}')
+    delta1 = 0.999999999999999   # use min error distance to give it the best chance to optimise correctly
 
+    bounds = Bounds([0], [1])
+    deltas_init = [delta1]
+    if _print == True:
+        print(
+            f'deltas init: {[deltas_init[0], delta2_from_delta1(deltas_init[0], data_info)]}')
+
+    # extract loss and grad from scipy format
     if isinstance(loss_func, tuple) or isinstance(loss_func, list):
-        use_grad = True
+        loss = loss_func[0]
+        grad = loss_func[1]
     else:
-        use_grad = False
+        loss = loss_func
+        grad = None
 
     # set up contraints
     data_info['delta2_given_delta1_func'] = delta2_from_delta1
-    if num_deltas == 2:
-        def contraint_wrapper(deltas):
-            return contraint_func(deltas[0], deltas[1], data_info)
-
-    else:
-        def contraint_wrapper(deltas):
-            delta2 = delta2_from_delta1(deltas[0], data_info)
-            return contraint_func(deltas[0], delta2, data_info)
+    def contraint_wrapper(deltas):
+        delta2 = delta2_from_delta1(deltas[0], data_info)
+        return contraint_func(deltas[0], delta2, data_info)
 
     solution_possible = True if contraint_func(1, 1, data_info) <= 0 else False
     if _print == True:
@@ -57,17 +44,22 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
+    
+    def constraint_less_1(deltas):
+        return deltas[0] - 1  # check this is what you want
 
     contrs = [
         {'type': 'eq', 'fun': contraint_wrapper},
+        # {'type': 'ineq', 'fun': constraint_less_1},
         # {'type':'eq', 'fun': contraint_real},  # more equality contraints that independaent variables
     ]
     resolution = 10000
     tol_constraint = 1e-6
     if grid_search == True and solution_possible == True:
         # line search for optimal value - only works for one delta atm
-        delta1s = np.linspace(1/resolution, 1, resolution)
-        J = loss_func(delta1s, data_info)
+        tol_search = 1/resolution
+        delta1s = np.linspace(tol_search, 1-tol_search, resolution)
+        J = loss(delta1s, data_info)
         # eliminate any deltas which don't satisfy the constraint
         constraints = np.array([contraint_wrapper([d]) for d in delta1s])
         J[constraints > tol_constraint] = np.max(J)
@@ -85,18 +77,18 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         J = ds.loss(delta1s_grid, delta2s_grid, data_info)
         deltas = [delta1s[np.argmin(J)], delta2s[np.argmin(J)]]
         optim_msg = 'Contraint not possible so used uncoupled delta grid Search Optimisation'
-        num_deltas = 2
     elif grid_search == True and solution_possible == False and grid_2D == False:
         if _print == True:
             print('solution not possible with 1D grid search, returning None')
         return None
+    # use scipy optimisation
     else:
-        res = minimize(loss_func,
+        res = minimize(loss,
                        deltas_init,
                        (data_info),
-                       #    method='SLSQP',
+                    #    method='trust-constr',
                        bounds=bounds,
-                       jac=use_grad,  # use gradient
+                       jac=grad,  # use gradient
                        constraints=contrs
                        )
         deltas = res.x
@@ -115,12 +107,18 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
         print(f'    delta1 : {delta1} \n    delta2: {delta2}')
         print(f'    constraint satisfied: {solution_found}')
 
+
     if _plot == True and grid_search == True:
         # plot loss function
-        if num_deltas == 1:
+        if grid_2D == False:
             _, ax = plt.subplots(1, 1)
             ax.plot(delta1s, J, label='Loss')
             ax.plot(delta1s, constraints, label='constraint')
+            if grad != None:
+                grads = grad(delta1s, data_info)
+                grads[constraints > tol_constraint] = np.max(J)
+                grads[constraints < -tol_constraint] = np.max(J)
+                ax.plot(delta1s, grads, label='gradient')
             ax.set_xlabel('delta1')
             ax.legend()
             plt.show()
@@ -138,4 +136,4 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, num_
             'delta2': delta2, 
             'solution_possible': solution_possible, 
             'solution_found': solution_found,
-            'loss': loss_func(delta1, data_info)}
+            'loss': loss(delta1, data_info)}
