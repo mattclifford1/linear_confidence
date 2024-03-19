@@ -108,28 +108,29 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _pri
         print(f'    constraint satisfied: {solution_found}')
 
 
-    if _plot == True and grid_search == True:
-        # plot loss function
-        if grid_2D == False:
-            _, ax = plt.subplots(1, 1)
-            ax.plot(delta1s, J, label='Loss')
-            ax.plot(delta1s, constraints, label='constraint')
-            if grad != None:
-                grads = grad(delta1s, data_info)
-                grads[constraints > tol_constraint] = np.max(J)
-                grads[constraints < -tol_constraint] = np.max(J)
-                ax.plot(delta1s, grads, label='gradient')
-            ax.set_xlabel('delta1')
-            ax.legend()
-            plt.show()
-        else:
-            _, ax = plt.subplots(1, 1)
-            c = ax.contourf(delta1s_grid, delta2s_grid, J)
-            ax.set_xlabel('delta1')
-            ax.set_ylabel('delta2')
-            cbar = plt.colorbar(c)
-            cbar.ax.set_ylabel('Loss')
-            plt.show()
+    if _plot == True: 
+        if grid_search == True:
+            # plot loss function
+            if grid_2D == False:
+                _, ax = plt.subplots(1, 1)
+                ax.plot(delta1s, J, label='Loss')
+                ax.plot(delta1s, constraints, label='constraint')
+                # if grad != None:
+                #     grads = grad(delta1s, data_info)
+                #     grads[constraints > tol_constraint] = np.max(J)
+                #     grads[constraints < -tol_constraint] = np.max(J)
+                #     ax.plot(delta1s, grads, label='gradient')
+                ax.set_xlabel('delta1')
+                ax.legend()
+                plt.show()
+            else:
+                _, ax = plt.subplots(1, 1)
+                c = ax.contourf(delta1s_grid, delta2s_grid, J)
+                ax.set_xlabel('delta1')
+                ax.set_ylabel('delta2')
+                cbar = plt.colorbar(c)
+                cbar.ax.set_ylabel('Loss')
+                plt.show()
         plots.deltas_projected_boundary(delta1, delta2, data_info)
 
     return {'delta1': delta1, 

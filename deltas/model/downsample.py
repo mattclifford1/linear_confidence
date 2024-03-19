@@ -110,6 +110,7 @@ class downsample_deltas(base.base_deltas):
             all_results.append(results)
 
         if results == None or force_downsample == True:
+            downsampled = True
             # pre project data
             if hasattr(self.clf, 'get_projection'):
                 X_projected = self.clf.get_projection(X)
@@ -136,7 +137,7 @@ class downsample_deltas(base.base_deltas):
                                 'grid_search': grid_search}
                     args = [arg_dict] * scaled_trials
                     trials = list(tqdm(pool.imap_unordered(self._test_single, args),
-                                    total=scaled_trials, desc='Trying random downsampling deltas (multiprocessing)', leave=False))
+                                       total=scaled_trials, desc=f'Trying random downsampling deltas (multiprocessing batches of {num_runs})', leave=False))
             else:
                 arg_dict = {'X': X_projected,
                             'y': y,
@@ -157,6 +158,7 @@ class downsample_deltas(base.base_deltas):
                     data_infos.append(result[1][i])
                     all_results.append(result[2][i])
         else:
+            downsampled = False
             if _print == True:
                 print(
                     "Original dataset is solvable so not downsampling, set 'force_downsample' to 'True' to try and find a lower loss via downsampling anyway")
@@ -170,18 +172,21 @@ class downsample_deltas(base.base_deltas):
             best_ind = np.argmin(losses)
             self._save_as_best(all_results[best_ind], data_infos[best_ind])
 
-            if _print == True:
+            if _print == True and downsampled == True:
                 print(
                     f'With budget {max_trials} have found {len(losses)} viable downsampled solutions')
             # make boundary
             self.boundary, self.class_nums = self._make_boundary(
                 self.delta1, self.delta2)
             self.is_fit = True
-            if _print == True:
+            if _print == True and downsampled == True:
                 print(
                     f"Best solution found by removing {self.data_info['num_reduced']} data points")
             if _plot == True:
-                print('Downsampled data:')
+                if downsampled == True:
+                    print('Downsampled Data:')
+                else:
+                    print('Original Data:')
                 plots.deltas_projected_boundary(
                     self.delta1, self.delta2, self.data_info)
         return self

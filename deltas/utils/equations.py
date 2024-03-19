@@ -128,9 +128,29 @@ def delta1_given_delta2_matt(delta2, data_info):
     def error(R, N, d, f):
         return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
 
-    B = D_emp - R2_emp - R1_emp - error(R, N2, delta2, factor)
+    B = D_emp - R2_emp - R1_emp - error(R, N2, delta2, factor) 
+
     delta1 = 1/np.exp(0.5*(np.square(((B*np.sqrt(N1))/(factor*R)) - 2)))
     return delta1
+
+
+def get_B_delta1(delta1, data_info):
+    N1 = data_info['N1']
+    R = data_info['R all data']
+    R1_emp = data_info['empirical R1']
+    R2_emp = data_info['empirical R2']
+    D_emp = data_info['empirical D']
+
+    if USE_TWO == True:
+        factor = 2
+    else:
+        factor = 1
+
+    def error(R, N, d, f):
+        return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
+
+    B = D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
+    return B
 
 def eq7_matt(delta1, delta2, data_info):
     N1 = data_info['N1']
@@ -182,9 +202,22 @@ def dd2_dd1(delta1, data_info):
     # Matt's derivation
     N1 = data_info['N1']
     N2 = data_info['N2']
+    R = data_info['R all data']
 
-    dA = (np.sqrt(N2)/(delta1*np.sqrt(N1))) * (1/(np.sqrt(2 * np.log(1/delta1))))
-    return dA * delta2_given_delta1_matt(delta1, data_info)
+    if USE_TWO == True:
+        factor = 2
+    else:
+        factor = 1
+
+    B = get_B_delta1(delta1, data_info)
+    A = ((B*np.sqrt(N1))/(factor*R)) - 2
+
+    dB = ((factor*R)/np.sqrt(N1)) * -(1/ (np.sqrt(2)*delta1*np.sqrt(np.log(1/delta1))) )
+    dA = (dB*np.sqrt(N2)) / (factor*R)
+    
+    # dA = (np.sqrt(N2)/(delta1*np.sqrt(N1))) * (1/(np.sqrt(2 * np.log(1/delta1))))
+
+    return -A * dA * delta2_given_delta1_matt(delta1, data_info)
 
 def J_derivative(delta1, data_info):
     # eq. 10
