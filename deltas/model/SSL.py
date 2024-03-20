@@ -11,38 +11,87 @@ from sklearn.utils import resample
 import deltas.plotting.plots as plots
 from deltas.model import base, downsample
 
+import time
+
 
 class SSL_deltas(downsample.downsample_deltas):
     '''
     Super Set Learning (SSL) on deltas data
     '''
 
-    def __init__(self, clf, *args, superset_classes=(0, 1), **kwargs):
+    def __init__(self, clf, *args, superset_classes=(0, 1, 2), **kwargs):
         self.superset_classes = superset_classes
         super().__init__(clf, *args, **kwargs)
 
     @staticmethod
-    def random_swap_classes(y, superset_classes):
+    def random_swap_classes(X, y, superset_classes):
         '''randomly select classes from superset the dataset'''
-        return np.random.choice(superset_classes, y.shape[0])
+        # split into each class
+        x1 = X[y == 0, :]
+        x2 = X[y == 1, :]
+        y1 = y[y == 0]
+        y2 = y[y == 1]
+        # SSL each class
+        superset = set(superset_classes)
+        _x1, _y1 = SSL_deltas.random_swap_class(
+            # x1, y1, {2})
+            x1, y1, superset-{0})
+        _x2, _y2 = SSL_deltas.random_swap_class(
+            # x2, y2, {2})
+            x2, y2, superset-{1})
+
+        return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0)
+
+    @staticmethod
+    def random_swap_class(X, y, superset_classes):
+        ' given only one class'
+        _y = np.copy(y)
+        superlist = list(superset_classes)
+        num_samples = len(y)
+        num_change = random.randint(1, num_samples-1)
+        single_change = num_change//len(superlist)
+        for clas in superlist:
+            mask = np.random.permutation(np.array([True]*single_change + [False]*(y.size-single_change))).reshape(y.shape)
+            _y[mask] = clas # update random elements
+        return X, _y
     
     @staticmethod
     def _test_single(args, disable_tqdm=True):
+        # n = 1000000
+        # t0 = time.time()
+        # for i in tqdm(range(n)):
+        #     # downsample
+        #     _y = SSL_deltas.random_swap_classes(
+        #         args['y'], args['superset_classes'])
+        #     # see if we can fit deltas
+        #     data_info = base.base_deltas.get_data_info(
+        #         args['X'], _y, costs=args['costs'], _print=False)
+
+        #     # results = downsample.downsample_deltas.static_check_and_optimise(
+        #     #     data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'], args['grid_search'])
+
+        # t1 = time.time()
+        # print(t1-t0)
+
         '''wrapper for trialing downsample for use with multiprocessing'''
         losses = []
         data_infos = []
         all_results = []
         for _ in tqdm(range(args['num_runs']), desc='Trying random SSL deltas', leave=False, disable=disable_tqdm):
-            # downsample
-            _y = SSL_deltas.random_swap_classes(args['y'], args['superset_classes'])
+            # SSL
+            _X, _y = SSL_deltas.random_swap_classes(args['X'], args['y'], args['superset_classes'])
             # see if we can fit deltas
-            data_info = base.base_deltas.get_data_info(args['X'], _y, costs=args['costs'], _print=False)
+            data_info = base.base_deltas.get_data_info(_X, _y, costs=args['costs'], 
+                                                       _print=False, supports=False)
             data_info['alpha'] = args['alpha']
             data_info['prop_penalty'] = args['prop_penalty']
+
+            # print(f"{data_info['N1']+data_info['N2']}, {data_info['N1']}, {data_info['N2']}")
 
             results = downsample.downsample_deltas.static_check_and_optimise(
                 data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'], args['grid_search'])
             if results != None:
+                # print('found')
                 losses.append(results['loss'])
                 data_infos.append(data_info)
                 all_results.append(results)
@@ -58,7 +107,6 @@ class SSL_deltas(downsample.downsample_deltas):
         '''
         # check we don't already have solvable without downsampling
         data_info = self.get_data_info(X, y, self.clf, costs, _print=False)
-        data_info['num_reduced'] = 0
         results = self._check_and_optimise_data(data_info)
         if _plot == True:
             print('Original Data')
@@ -116,7 +164,7 @@ class SSL_deltas(downsample.downsample_deltas):
                             'grid_search': grid_search,
                             'superset_classes': self.superset_classes}
                 trials = [self._test_single(arg_dict, disable_tqdm=False)]
-                # total=max_trials, desc='Trying random downsampling deltas'), leave=False)
+
             # now merge all the results together
             for result in trials:
                 for i in range(len(result[0])):
@@ -133,7 +181,7 @@ class SSL_deltas(downsample.downsample_deltas):
         # finished search, now make new boundary if we found a solution
         if len(losses) == 0:
             if _print == True:
-                print('Unable to find result with SSL, increase the budget')
+                print('Unable to find result with SSL, increase the max_trials')
             self.is_fit = False
         else:
             best_ind = np.argmin(losses)

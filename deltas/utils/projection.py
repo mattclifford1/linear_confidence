@@ -17,11 +17,16 @@ def make_calcs(projected_data, supports=False):
     xp2 = projected_data['X'][projected_data['y'] == 1, :]
 
     if supports == True:
-        Y = cdist(xp1, xp2, 'euclidean')
-        projected_data['supports'] = np.array(
-            [xp1[np.argmin(Y, axis=0)[0]],
-             xp2[np.argmin(Y, axis=1)[0]]
-            ])
+        try:
+            Y = cdist(xp1, xp2, 'euclidean')
+            projected_data['supports'] = np.array(
+                [xp1[np.argmin(Y, axis=0)[0]],
+                xp2[np.argmin(Y, axis=1)[0]]
+                ])
+        except ValueError:
+            pass
+        except IndexError:
+            pass
         
     projected_data['X1'] = xp1
     projected_data['X2'] = xp2

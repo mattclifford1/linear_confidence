@@ -10,6 +10,8 @@ from sklearn.utils import resample
 
 import deltas.plotting.plots as plots
 from deltas.model import base
+
+import time
  
 
 class downsample_deltas(base.base_deltas):
@@ -69,7 +71,7 @@ class downsample_deltas(base.base_deltas):
                 args['X'], args['y'])
             # see if we can fit deltas
             data_info = base.base_deltas.get_data_info(
-                _X, _y, costs=args['costs'], _print=False)
+                _X, _y, costs=args['costs'], _print=False, supports=False)
             data_info['num_reduced'] = num_reduced1 + num_reduced2
             data_info['num_reduced_1'] = num_reduced1
             data_info['num_reduced_2'] = num_reduced2
@@ -167,7 +169,7 @@ class downsample_deltas(base.base_deltas):
         # finished search, now make new boundary if we found a solution
         if len(losses) == 0:
             if _print == True:
-                print('Unable to find result with downsample, increase the budget')
+                print('Unable to find result with downsample, increase the max_trials')
             self.is_fit = False
         else:
             best_ind = np.argmin(losses)
@@ -204,7 +206,11 @@ class downsample_deltas(base.base_deltas):
                                               _plot=False,
                                               _print=False)
             # add penalty to the loss
-            if res != None and data_info['num_reduced'] != 0:
+            if 'num_reduced' in data_info.keys():
+                num_reduced = data_info['num_reduced']
+            else:
+                num_reduced = 0
+            if res != None and num_reduced != 0:
                 if data_info['prop_penalty'] == True:
                     for i, c in enumerate([1, 2]):
                         # see if we have single or alpha per class

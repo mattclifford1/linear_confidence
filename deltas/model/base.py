@@ -108,20 +108,17 @@ class base_deltas:
         return self._predict(X, boundary, class_nums)
 
     @staticmethod
-    def get_data_info(X, y, clf=None, costs=(1, 1), _print=False):
+    def get_data_info(X, y, clf=None, costs=(1, 1), _print=False, supports=True):
         # get projection information
         data = {'X': X, 'y': y}
         if clf != None:
             # project data according to classifier and calculate data attributes needed
-            proj_data = projection.from_clf(data, clf, supports=True)
+            proj_data = projection.from_clf(data, clf, supports=supports)
         elif X.shape[1] == 1:
-            proj_data = projection.make_calcs(data, supports=True)
+            proj_data = projection.make_calcs(data, supports=supports)
         else:
             raise AttributeError('Provide classifier to project or already projected data X (one dimensional)')
         
-        # Empircal M
-        M_emp = np.abs(proj_data['supports'][1]-proj_data['supports'][0]).squeeze()
-
         # get Rs
         # R_sup = radius.supremum(data['X'])
         R_sup = radius.supremum(proj_data['X'])
@@ -133,6 +130,12 @@ class base_deltas:
 
         # Empirical D
         D_emp = np.abs(emp_xp1 - emp_xp2)
+
+        # Empircal M
+        if 'supports' in proj_data.keys():
+            M_emp = np.abs(proj_data['supports'][1]-proj_data['supports'][0]).squeeze()
+        else:
+            M_emp = D_emp - R1_emp - R2_emp
 
         data_info = {'projected_data': proj_data,
                      'empirical margin': M_emp,

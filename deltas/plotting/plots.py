@@ -46,8 +46,9 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                 marker='x', label='Empircal Means')
         # supports
-        ax.scatter(data['supports'], [y, y], c='k', s=100,
-                marker='+', label='Supports')
+        if 'supports' in data.keys():
+            ax.scatter(data['supports'], [y, y], c='k', s=100,
+                    marker='+', label='Supports')
         
     # expected means
     if means != None:
