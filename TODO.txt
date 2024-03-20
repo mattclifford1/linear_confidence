@@ -4,11 +4,3 @@ Add more datasets
     - Rauls'
 
 Set boundary proportional to the confidence (1-d)
-
-Naive downsampling of data
-    - all combinations
-    - start with supports
-
-    - pick based on loss?
-    - add penality to loss for removing points like slack variables?
-

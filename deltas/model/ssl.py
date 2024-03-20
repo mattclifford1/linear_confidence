@@ -1,5 +1,5 @@
 '''
-scikit-learn style class to fit deltas with downsampling dataset when not separable
+scikit-learn style class to fit deltas with super set learning (SSL) dataset when not separable
 '''
 import random
 import multiprocessing
@@ -9,53 +9,16 @@ from tqdm import tqdm
 from sklearn.utils import resample
 
 import deltas.plotting.plots as plots
-from deltas.model import base
- 
+from deltas.model import base, downsample
 
-class downsample_deltas(base.base_deltas):
+
+class SSL_deltas(downsample.downsample_deltas):
     '''
-    Downsample the dataset (randomly) until we find a good solution
+    Super Set Learning (SSL) on deltas data
     '''
 
     def __init__(self, clf, *args, **kwargs):
         super().__init__(clf, *args, **kwargs)
-
-    def check_if_solvable(self, data_info):
-        return downsample_deltas.check_if_solvable_static(data_info, self.contraint_func)
-
-    @staticmethod
-    def check_if_solvable_static(data_info, contraint_func):
-        '''check the constraint to see if we have a viable solution'''
-        if contraint_func(1, 1, data_info) <= 0:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def random_downsample_data(X, y):
-        '''randomly downsample the dataset'''
-        # split into each class
-        x1 = X[y == 0, :]
-        x2 = X[y == 1, :]
-        y1 = y[y == 0]
-        y2 = y[y == 1]
-        # downsample each class
-        _x1, _y1, num_reduced1 = downsample_deltas.random_downsample_class(
-            x1, y1)
-        _x2, _y2, num_reduced2 = downsample_deltas.random_downsample_class(
-            x2, y2)
-        # put data back together - don't need to shuffle as deltas algorithm isn't affected by this
-        return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1, num_reduced2
-
-    @staticmethod
-    def random_downsample_class(X, y):
-        ' given only one class'
-        num_samples = len(y)
-        num_down_to = random.randint(1, num_samples)
-        num_reduced = num_samples - num_down_to
-        # now downsample
-        _X, _y = resample(X, y, n_samples=num_down_to, replace=False)
-        return _X, _y, num_reduced
 
     @staticmethod
     def _test_single(args, disable_tqdm=True):
@@ -65,7 +28,7 @@ class downsample_deltas(base.base_deltas):
         all_results = []
         for _ in tqdm(range(args['num_runs']), desc='Trying random downsampling deltas', leave=False, disable=disable_tqdm):
             # downsample
-            _X, _y, num_reduced1, num_reduced2 = downsample_deltas.random_downsample_data(
+            _X, _y, num_reduced1, num_reduced2 = SSL_deltas.random_downsample_data(
                 args['X'], args['y'])
             # see if we can fit deltas
             data_info = base.base_deltas.get_data_info(
@@ -76,7 +39,7 @@ class downsample_deltas(base.base_deltas):
             data_info['alpha'] = args['alpha']
             data_info['prop_penalty'] = args['prop_penalty']
 
-            results = downsample_deltas.static_check_and_optimise(
+            results = downsample.downsample_deltas.static_check_and_optimise(
                 data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'], args['grid_search'])
             if results != None:
                 losses.append(results['loss'])
@@ -149,7 +112,7 @@ class downsample_deltas(base.base_deltas):
                             'loss_func': self.loss_func,
                             'delta2_from_delta1': self.delta2_from_delta1}
                 trials = [self._test_single(arg_dict, disable_tqdm=False)]
-                                    # total=max_trials, desc='Trying random downsampling deltas'), leave=False)
+                # total=max_trials, desc='Trying random downsampling deltas'), leave=False)
             # now merge all the results together
             for result in trials:
                 for i in range(len(result[0])):
@@ -190,55 +153,3 @@ class downsample_deltas(base.base_deltas):
                 plots.deltas_projected_boundary(
                     self.delta1, self.delta2, self.data_info)
         return self
-
-    @staticmethod
-    def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1, grid_search=True):
-        '''return optim results, will be None if not solvable'''
-        if downsample_deltas.check_if_solvable_static(data_info, contraint_func) == True:
-            res = downsample_deltas._optimise(data_info,
-                                              loss_func,
-                                              contraint_func,
-                                              delta2_from_delta1,
-                                              grid_search=grid_search,
-                                              _plot=False,
-                                              _print=False)
-            # add penalty to the loss
-            if res != None and data_info['num_reduced'] != 0:
-                if data_info['prop_penalty'] == True:
-                    for i, c in enumerate([1, 2]):
-                        # see if we have single or alpha per class
-                        alpha = data_info['alpha']
-                        if hasattr(data_info['alpha'], '__len__'):
-                            if len(data_info['alpha']) == 2:
-                                alpha = data_info['alpha'][i]
-                        # add proportional loss
-                        res['loss'] += alpha * \
-                            (data_info[f'num_reduced_{c}'] /
-                            (data_info[f'N{c}']+data_info[f'num_reduced_{c}']))
-                else:
-                    # add regular loss
-                    res['loss'] += data_info['alpha']*data_info['num_reduced']
-        else:
-            res = None
-        return res
-
-    def _check_and_optimise_data(self, data_info):
-        return self.static_check_and_optimise(data_info,
-                                              self.contraint_func,
-                                              self.loss_func,
-                                              self.delta2_from_delta1)
-
-    def _save_as_best(self, results, data_info):
-        self.data_info = data_info
-        self.data_info_made = True
-        self.delta1 = results['delta1']
-        self.delta2 = results['delta2']
-        self.solution_possible = results['solution_possible']
-        self.solution_found = results['solution_found']
-
-    def try_fit_downsample(self, X, y, costs):
-        # Make data_info - R_ests, D, etc.
-        data_info = self.get_data_info(
-            X, y, self.clf, costs, _print=False)
-
-        return self.check_if_solvable(self, data_info), data_info
