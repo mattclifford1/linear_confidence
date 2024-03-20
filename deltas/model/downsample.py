@@ -147,7 +147,8 @@ class downsample_deltas(base.base_deltas):
                             'num_runs': max_trials,
                             'contraint_func': self.contraint_func,
                             'loss_func': self.loss_func,
-                            'delta2_from_delta1': self.delta2_from_delta1}
+                            'delta2_from_delta1': self.delta2_from_delta1,
+                            'grid_search': grid_search}
                 trials = [self._test_single(arg_dict, disable_tqdm=False)]
                                     # total=max_trials, desc='Trying random downsampling deltas'), leave=False)
             # now merge all the results together
