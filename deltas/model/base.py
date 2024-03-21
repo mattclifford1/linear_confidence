@@ -11,10 +11,11 @@ import deltas.optimisation.optimise_deltas as optimise_deltas
 
 
 class base_deltas:
-    def __init__(self, clf):
+    def __init__(self, clf, dim_reducer=None):
         if not hasattr(clf, 'get_projection'):
             raise AttributeError(f"Classifier {clf} needs 'get_projection' method")
         self.clf = clf
+        self.dim_reducer = dim_reducer
         self._setup()
 
     def _setup(self):
@@ -81,7 +82,9 @@ class base_deltas:
     
     def predict(self, X):
         if self.is_fit == False:
-            raise AttributeError("Not fit to any data yet, call 'fit(X, y)' or  method first")
+            print("Not fit to any data yet, call 'fit(X, y)' or  method first")
+            return self.clf.predict(X)
+            # raise AttributeError("Not fit to any data yet, call 'fit(X, y)' or  method first")
         return self._predict(X, self.boundary, self.class_nums)
         
     def _predict(self, X, boundary, class_nums):

@@ -6,6 +6,7 @@ scipy
 tqdm
 ipywidgets
 imbalanced-learn
+umap-learn
 # cvxpy
 # torch
 # plotly

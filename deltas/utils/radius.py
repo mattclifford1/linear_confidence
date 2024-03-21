@@ -1,5 +1,6 @@
 import numpy as np
 from deltas.misc.use_two import USE_TWO
+import warnings
 
 
 def R_upper_bound(R_emp, R_sup, N, delta, two=USE_TWO):
@@ -8,7 +9,10 @@ def R_upper_bound(R_emp, R_sup, N, delta, two=USE_TWO):
 
 
 def error_upper_bound(R_sup, N, delta, two=USE_TWO):
-    error = (R_sup/np.sqrt(N)) * (2 + (np.sqrt( 2*np.log(1/delta) )))
+    with warnings.catch_warnings(record=True) as w:
+        error = (R_sup/np.sqrt(N)) * (2 + (np.sqrt( 2*np.log(1/delta) )))
+        if len(w) > 0:
+            raise ValueError
     if two == True:
         error *= 2
     return error

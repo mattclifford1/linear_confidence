@@ -34,6 +34,8 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _pri
     data_info['delta2_given_delta1_func'] = delta2_from_delta1
     def contraint_wrapper(deltas):
         delta2 = delta2_from_delta1(deltas[0], data_info)
+        if delta2 <= 0:
+            return 1
         return contraint_func(deltas[0], delta2, data_info)
 
     solution_possible = True if contraint_func(1, 1, data_info) <= 0 else False

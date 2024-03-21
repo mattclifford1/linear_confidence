@@ -108,9 +108,20 @@ def delta2_given_delta1_matt(delta1, data_info):
         return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
 
     B = D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
-    delta2 = 1/np.exp(0.5*(np.square(((B*np.sqrt(N2))/(factor*R)) - 2)))
+    inside_exp = 0.5*(np.square(((B*np.sqrt(N2))/(factor*R)) - 2))
+    if isinstance(inside_exp, np.ndarray):
+        dont_mask = inside_exp > 709  # overflow as np.inf
+        do_mask = inside_exp <= 709
+        delta2 = inside_exp.copy()
+        delta2[do_mask] = 1/np.exp(inside_exp[do_mask])
+        delta2[dont_mask] = 0.0
+    else:
+        if inside_exp > 709:
+            delta2 = 0.0
+        else:
+            delta2 = 1/np.exp(inside_exp)
     return delta2
-
+    
 def delta1_given_delta2_matt(delta2, data_info):
     # eq.9 but re doing the maths - refer to notes for letters
     N1 = data_info['N1']

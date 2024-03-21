@@ -28,7 +28,6 @@ def projections_from_data_clfs(clfs, X, y, ax=None):
                 s=10, label='Class 2', marker='x')
         y_plt -= 0.2
         
-
 def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, deltas_to_plot=[1, 0.5, 0.1, 0.001], calc_data=True):
     ax, _ = _get_axes(ax)
 
