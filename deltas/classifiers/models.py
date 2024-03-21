@@ -27,10 +27,12 @@ class SVM(SVC):
 
             # simpler format below as otherwise can do dig around in libSVM
             # can use this for linear too in the future
-            projected = self.decision_function(np.array(X)) - self.intercept_
+            projected = self.decision_function(X) - self.intercept_
             projected = np.expand_dims(projected, axis=1)
         return projected
-
+    
+    def get_bias(self):
+        return self.intercept_
 
 
 class linear(LogisticRegression):
@@ -41,6 +43,9 @@ class linear(LogisticRegression):
         # normalised projection
         projected = np.dot(X, self.coef_.T)/np.linalg.norm(self.coef_.T)
         return projected
+    
+    def get_bias(self):
+        return self.intercept_
     
 
 class NN(MLPClassifier):
@@ -74,6 +79,9 @@ class NN(MLPClassifier):
         # get projection from last layer
         projected = safe_sparse_dot(activation, self.coefs_[-1])/np.linalg.norm(self.coefs_[-1].T)
         return projected
+    
+    def get_bias(self):
+        return self.intercepts_[-1]
 
 
 class delta_adjusted_clf:
@@ -95,3 +103,6 @@ class delta_adjusted_clf:
         preds[X <= self.boundary] = self.class_nums[0]
         preds[X > self.boundary] = self.class_nums[1]
         return preds
+    
+    def get_bias(self):
+        return self.boundary

@@ -229,3 +229,15 @@ class base_deltas:
                   constraint: {self.contraint_func(self.delta1, self.delta2, self.data_info)}
                   """)
 
+    def get_bias(self):
+        if self.is_fit == True:
+            return self.boundary
+        else:
+            if hasattr(self.clf, 'get_bias'):
+                print('Giving bias from original classifier')
+                return self.clf.get_bias()
+            else:
+                print('Not fit to give bias')
+
+    def get_projection(self, X):
+        return self.clf.get_projection(X)

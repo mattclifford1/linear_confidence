@@ -40,7 +40,8 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
         for name, clf in clfs.items():
             print(name)
             ax, _ = plots._get_axes(None)
-            data = {'X': test_data['X'], 'y': preds[name]}
+            # data = {'X': test_data['X'], 'y': preds[name]}
+            data = test_data
             # data = test_data
             plots.plot_classes(data, ax=ax, dim_reducer=dim_reducer)
             plots.plot_decision_boundary(
@@ -57,35 +58,52 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
             y_plot -= 0.1
 
             if grid == True:
-                names = [f'{name} clf 1', None]
                 m = 'x'
             else:
-                names = [f'{name} pred 1', f'{name} pred 2']
                 m = 'o'
             ax.scatter(xp1, np.ones_like(xp1)*y_plot, c='b', s=10,
-                       label=names[0], marker=m)
+                       marker=m)
             ax.scatter(xp2, np.ones_like(xp2)*y_plot, c='r', s=10,
-                       label=names[1], marker=m)
+                       marker=m)
+            return y_plot
+
+        def _plot_projection_test_data(test_data, clf_projecter, y_plot, ax=None):
+            proj_data = {'X': clf_projecter.get_projection(test_data['X']),
+                         'y': test_data['y']}
+
+            xp1, xp2 = projection.get_classes(proj_data)
+            y_plot -= 0.1
+
+            ax.scatter(xp1, np.ones_like(xp1)*y_plot, c='b', s=10,
+                       marker='o')
+            ax.scatter(xp2, np.ones_like(xp2)*y_plot, c='r', s=10,
+                       marker='o')
             return y_plot
 
         _, ax = plt.subplots(1, 1)
         y_plot = 0
         for name, clf in clfs.items():
             # plot test data
-            X = test_data['X']
-            y_plot = _plot_projection_test_and_grid(
-                X, clf, clfs['original'], y_plot, name, False, ax)
-
-            # plot linspace/grid
-            X, _ = plots.get_grid_pred(
-                clf, test_data, probs=False, flat=True, res=25)
-            y_plot = _plot_projection_test_and_grid(
-                X, clf, clfs['original'], y_plot, name, True, ax)
+            y_plot = _plot_projection_test_data(test_data, clf, y_plot, ax)
+            if hasattr(clf, 'get_bias'):
+                bias = clf.get_bias()
+                if bias != None:
+                    ax.scatter([bias], [y_plot], marker='|', c='k', s=200,
+                            label=f'{name} Boundary')
+                else:
+                    continue
+            elif test_data['X'].shape[1] < 32:  # too big for meshgrid otherwise
+                # plot linspace/grid
+                X, _ = plots.get_grid_pred( clf, test_data, probs=False, flat=True, res=25)
+                y_plot = _plot_projection_test_and_grid(
+                    test_data['X'], clf, clfs['original'], y_plot, name, True, ax)
+            else:
+                print(f'Classifier {name} has no get_bias method and the feature space it too big to show boundary via meshgrid')
 
             y_plot -= 0.2
 
         ax.legend()
         ax.plot([0], [-1.5], c='w')
         ax.set_title(
-            'original (top) vs deltas (bottom) on test dataset in projected space')
+            'Boundaries on test dataset in projected space')
         plots.plt.show()

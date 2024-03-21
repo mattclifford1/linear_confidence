@@ -28,6 +28,10 @@ class downsample_deltas(base.base_deltas):
     @staticmethod
     def check_if_solvable_static(data_info, contraint_func):
         '''check the constraint to see if we have a viable solution'''
+        # quick check if Rs are over lapping - can return quicker if they are
+        if data_info['empirical R1'] + data_info['empirical R2'] > data_info['empirical D']:
+            return False
+        # now check constraint/ if error terms overlap too
         if contraint_func(1, 1, data_info) <= 0:
             return True
         else:
