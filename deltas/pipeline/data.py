@@ -8,6 +8,7 @@ import deltas.data.utils as utils
 import deltas.data.normal as normal
 import deltas.data.madelon as madelon
 import deltas.data.sklearn_synthetic as synthetic
+from deltas.data.loaders import sklearn_toy, diabetes, sonar_rocks, banknote, abalone_gender, ionosphere, wheat_seeds, costcla
 
 
 def make_data_dim_reducer(data_getter):
@@ -87,6 +88,44 @@ def get_synthetic_sep_data(N1=10000,
     data = synthetic.get_moons((N1, N2))
     data_test = synthetic.get_moons(test_nums)
     return {'data': data, 'data_test': data_test}
+
+
+@make_data_dim_reducer
+def get_real_dataset(dataset='Breast Cancer', scale=False):
+    AVAILABLE_DATASETS = {
+        # 'Gaussian': sample_dataset_to_proportions(get_gaussian),
+        # 'Moons': sample_dataset_to_proportions(get_moons),
+        'Breast Cancer': sklearn_toy.get_breast_cancer,
+        'Iris': sklearn_toy.get_iris,
+        'Wine': sklearn_toy.get_wine,
+        'Pima Indian Diabetes': diabetes.get_diabetes_indian,
+        'Sonar Rocks vs Mines': sonar_rocks.get_sonar,
+        'Banknote Authentication': banknote.get_banknote,
+        'Abalone Gender': abalone_gender.get_abalone,
+        'Ionosphere': ionosphere.get_ionosphere,
+        'Wheat Seeds': wheat_seeds.get_wheat_seeds,
+        'Credit Scoring 1': costcla.costcla_dataset('CreditScoring_Kaggle2011_costcla'),
+        'Credit Scoring 2': costcla.costcla_dataset('CreditScoring_PAKDD2009_costcla'),
+        'Direct Marketing': costcla.costcla_dataset('DirectMarketing_costcla'),
+        # 'Circles': sample_dataset_to_proportions(get_circles),
+        # 'Blobs': sample_dataset_to_proportions(get_blobs),
+    }
+
+    # check input correct dataset name
+    if dataset not in AVAILABLE_DATASETS.keys():
+        raise ValueError(f'dataset needs to be one of:{AVAILABLE_DATASETS.keys()}')
+
+    # load dataset
+    train_data, test_data = AVAILABLE_DATASETS[dataset]()
+
+    # scale
+    scaler = utils.normaliser(train_data)
+    if scale == True:
+        train_data = scaler(train_data)
+        test_data = scaler(test_data)
+
+    # return in dict format needed 
+    return {'data': train_data, 'data_test': test_data}
 
 
 def get_SMOTE_data(data):

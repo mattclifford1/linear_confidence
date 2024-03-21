@@ -7,6 +7,7 @@ tqdm
 ipywidgets
 imbalanced-learn
 umap-learn
+pandas
 # cvxpy
 # torch
 # plotly
