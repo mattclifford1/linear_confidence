@@ -17,11 +17,4 @@ pip install -e .
 ```
 
 ## Running code/ experiments
-### Seperable
-The seperable example is found in the run.ipynb example
-
-### Non-Seperable
-Found in run_non_sep.ipynb
-
-### Equations
-Equation from the paper can be interactived with in the equations.ipynb for intuitions
+Go to the notebooks folder
