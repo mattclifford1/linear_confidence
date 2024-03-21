@@ -132,6 +132,19 @@ def eval_test(clfs, test_data, _print=True, _plot=True):
             print('')
 
     if _plot == True:
+        # plot in original space
+        for name, clf in clfs.items():
+            print(name)
+            ax, _ = plots._get_axes(None)
+            data = {'X': test_data['X'], 'y': preds[name]}
+            # data = test_data
+            plots.plot_classes(data, ax=ax)
+            plots.plot_decision_boundary(
+                clf, test_data, ax=ax, probs=False)
+            ax.set_title(name)
+            plots.plt.show()
+
+        # plot in projected space
         def _plot_projection_test_and_grid(X, clf, clf_projecter, y_plot, name, grid=False, ax=None):
             proj_data = {'X': clf_projecter.get_projection(X),
                          'y': clf.predict(X)}
@@ -171,17 +184,4 @@ def eval_test(clfs, test_data, _print=True, _plot=True):
         ax.plot([0], [-1.5], c='w')
         ax.set_title('original (top) vs deltas (bottom) on test dataset in projected space')
         plots.plt.show()
-
-        # plot in original space
-        for name, clf in clfs.items():
-            print(name)
-            ax, _ = plots._get_axes(None)
-            data = {'X': test_data['X'], 'y': preds[name]}
-            # data = test_data
-            plots.plot_classes(data, ax=ax)
-            plots.plot_decision_boundary(
-                clf, test_data, ax=ax, probs=False)
-            ax.set_title(name)
-            plots.plt.show()
-
 
