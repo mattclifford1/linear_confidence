@@ -44,11 +44,11 @@ class reprojection_deltas(base.base_deltas):
 
     def __init__(self, clf, projection_model=reprojectioner, *args, **kwargs):
         super().__init__(clf, *args, **kwargs)
-        self.projection_model = projection_model
+        self.projection_model = projection_model()
 
     def fit(self, X, y, _plot=False, **kwargs):
         clf_copy = self.clf
-        self.clf = self.projection_model.fit_projection(clf_copy, X, y)
+        self.clf = self.projection_model.fit_projection(clf=clf_copy, X=X, y=y)
 
         if _plot == True:
             plots.projections_from_data_clfs([clf_copy, self.clf], X, y)

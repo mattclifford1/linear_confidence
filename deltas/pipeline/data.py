@@ -5,6 +5,7 @@ from imblearn.over_sampling import SMOTE
 import umap
 
 import deltas.data.utils as utils
+import deltas.data.XOR as XOR
 import deltas.data.normal as normal
 import deltas.data.madelon as madelon
 import deltas.data.sklearn_synthetic as synthetic
@@ -39,14 +40,31 @@ def get_data(m1=[1, 1],
                                        covs=[cov1, cov2],
                                        num_samples=[test_nums[0], test_nums[1]])
 
-    scaler = utils.normaliser(data)
     if scale == True:
+        scaler = utils.normaliser(data)
         data = scaler(data)
         data_test = scaler(data_test)
         m1 = scaler.transform_instance(m1)
         m2 = scaler.transform_instance(m2)
 
     return {'data': data, 'mean1': m1, 'mean2': m2, 'data_test': data_test}
+
+
+def get_XOR(N1, 
+            N2,
+            scale=True,
+            test_nums=[10000, 10000]):
+    # sample data
+    data = XOR.get_XOR(num_samples=[N1, N2])
+    data_test = XOR.get_XOR(num_samples=test_nums)
+    
+    #scale
+    if scale == True:
+        scaler = utils.normaliser(data)
+        data = scaler(data)
+        data_test = scaler(data_test)
+
+    return {'data': data, 'data_test': data_test}
 
 
 def get_non_sep_data(N1=10000,

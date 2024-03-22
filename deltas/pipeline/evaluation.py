@@ -72,12 +72,19 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
                          'y': test_data['y']}
 
             xp1, xp2 = projection.get_classes(proj_data)
+            if xp1.shape[0] > xp2.shape[1]:
+                colours = ['r', 'b']
+                plot_order = [xp2, xp1]
+            else:
+                colours = ['b', 'r']
+                plot_order = [xp1, xp2]
+
             y_plot -= 0.1
 
-            ax.scatter(xp1, np.ones_like(xp1)*y_plot, c='b', s=10,
+            ax.scatter(plot_order[0], np.ones_like(plot_order[0])*y_plot, c=colours[0], s=10,
                        marker='o')
-            ax.scatter(xp2, np.ones_like(xp2)*y_plot, c='r', s=10,
-                       marker='o')
+            ax.scatter(plot_order[1], np.ones_like(plot_order[1])*y_plot, c=colours[1], s=10,
+                       marker='x')
             return y_plot
 
         _, ax = plt.subplots(1, 1)
