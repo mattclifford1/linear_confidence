@@ -17,7 +17,6 @@ class downsample_deltas(base.base_deltas):
     '''
     Downsample the dataset (randomly) until we find a good solution
     '''
-
     def __init__(self, clf, *args, **kwargs):
         super().__init__(clf, *args, **kwargs)
 
@@ -58,7 +57,10 @@ class downsample_deltas(base.base_deltas):
         return np.concatenate([_x1, _x2], axis=0), np.concatenate([_y1, _y2], axis=0), num_reduced1, num_reduced2
 
     @staticmethod
-    def supports_downsample_data(X, y, num_to_reduce, remove_method='equal'):
+    def supports_downsample_data(X, y, 
+                                 num_to_reduce, 
+                                 remove_method='equal', 
+                                 update_means=False):
         '''downsample the dataset one support at a time'''
         # check support method selected
         supported_methods = ['equal', 'proportional']
@@ -67,37 +69,57 @@ class downsample_deltas(base.base_deltas):
 
         # split into each class
         x1, x2, y1, y2 = data_utils.split_classes(X, y)
-        num_original_1  = y1.shape[0]
-        num_original_2  = y2.shape[0]
+        Xs = [x1, x2]
+        ys = [y1, y2]
+        num_originals = (y1.shape[0], y2.shape[0])
 
         # use original means in supports calc
-        m1 = np.mean(x1, axis=0)
-        m2 = np.mean(x2, axis=0)
+        if update_means == True:
+            ms = [np.mean(x1, axis=0), np.mean(x2, axis=0)]
+        else:
+            ms = [None, None]
 
-        num_reduced1 = 0
-        num_reduced2 = 0
-        while num_reduced1 + num_reduced2 < num_to_reduce:
+        num_reduced = [0, 0]
+
+        while sum(num_reduced) < num_to_reduce:
             # TODO: make more effecient by using slicing views instead of delete which creates a new arrays
-            if y1.shape[0] > 1:
-                ind1 = data_utils.get_support_of_class_ind(x1, m1)
-                x1 = np.delete(x1, [ind1])
-                if len(x1.shape) == 1:
-                    x1 = np.expand_dims(x1, axis=1)
-                y1 = np.delete(y1, [ind1])
-                num_reduced1 += 1
-                if num_reduced1 + num_reduced2 == num_to_reduce:
-                    break
-            if y2.shape[0] > 1:
-                ind2 = data_utils.get_support_of_class_ind(x2, m2)
-                x2 = np.delete(x2, [ind2])
-                if len(x2.shape) == 1:
-                    x2 = np.expand_dims(x2, axis=1)
-                y2 = np.delete(y2, [ind2])
-                num_reduced2 += 1
-                if num_reduced1 + num_reduced2 == num_to_reduce:
-                    break
 
-        return np.concatenate([x1, x2], axis=0), np.concatenate([y1, y2], axis=0), num_reduced1, num_reduced2
+            # loop over each class
+            for order in [[0, 1], [1, 0]]:
+                # make sure we have some data points left
+                if ys[order[0]].shape[0] > 1:
+                    # remove to keep the correct class ratios 
+                    while ys[order[0]].shape[0]/ys[order[1]].shape[0] >= num_originals[order[0]]/num_originals[order[1]]:
+                        # find the curent support
+                        ind = data_utils.get_support_of_class_ind(Xs[order[0]], ms[order[0]])
+                        # delete the support found
+                        Xs[order[0]] = np.delete(Xs[order[0]], [ind])
+                        ys[order[0]] = np.delete(ys[order[0]], [ind])
+                        # correct the numpy array dims
+                        if len(Xs[order[0]].shape) == 1:
+                            Xs[order[0]] = np.expand_dims(Xs[order[0]], axis=1)
+
+                        # keep count of the number reduced for this class
+                        num_reduced[order[0]] += 1
+
+                        # break if we dont care about class ratios
+                        if remove_method == 'equal':
+                            break
+                        # break if weve reached the reduction limit
+                        if sum(num_reduced) == num_to_reduce:
+                            break
+                    # break if weve reached the reduction limit
+                    if sum(num_reduced) == num_to_reduce:
+                        break
+        
+        # print for dev to make sure the proportions looks good for prop method
+        # total_orig = num_originals[0] + num_originals[1]
+        # print([num_originals[0]/total_orig, num_originals[1]/total_orig])
+        # total_new = ys[0].shape[0] + ys[1].shape[0]
+        # print([ys[0].shape[0]/total_new, ys[1].shape[0]/total_new])
+        # print('')
+
+        return np.concatenate([Xs[0], Xs[1]], axis=0), np.concatenate([ys[0], ys[1]], axis=0), num_reduced[0], num_reduced[1]
 
 
     @staticmethod
@@ -106,15 +128,25 @@ class downsample_deltas(base.base_deltas):
         losses = []
         data_infos = []
         all_results = []
-        for i in tqdm(range(args['num_runs']), desc='Trying random downsampling deltas', leave=False, disable=disable_tqdm):
+        for i in tqdm(range(args['num_runs']), desc=f"Trying {args['downsample_method']} downsampling deltas", leave=False, disable=disable_tqdm):
             # downsample
             if args['downsample_method'] == 'random':
                 _X, _y, num_reduced1, num_reduced2 = downsample_deltas.random_downsample_data(args['X'], args['y'])
-            elif args['downsample_method'] == 'supports':
+            elif 'supports' in args['downsample_method']:
+                # get type of supports removeal
+                if 'prop' in args['downsample_method']:
+                    remove_method = 'proportional'
+                else:
+                    remove_method = 'equal'
+                if 'update_mean' in args['downsample_method']:
+                    update_means = True
+                else:
+                    update_means = False
                 # see where we are at in terms of workers
                 num_to_reduce = i + args['order_in_queue']*args['num_runs']
                 # remove correct amount of supports
-                _X, _y, num_reduced1, num_reduced2 = downsample_deltas.supports_downsample_data(args['X'], args['y'], num_to_reduce)
+                _X, _y, num_reduced1, num_reduced2 = downsample_deltas.supports_downsample_data(
+                    args['X'], args['y'], num_to_reduce, remove_method=remove_method, update_means=update_means)
             
 
             # see if we can fit deltas
@@ -135,17 +167,31 @@ class downsample_deltas(base.base_deltas):
         return losses, data_infos, all_results
     
 
-    def fit(self, X, y, costs=(1, 1), alpha=1, prop_penalty=True, method='random', max_trials=10000, force_downsample=False, parallel=True, grid_search=True, _plot=False, _print=False):
+    def fit(self, X, y, 
+            costs=(1, 1), 
+            alpha=1, 
+            prop_penalty=True, 
+            method='random', 
+            max_trials=10000, 
+            force_downsample=False, 
+            parallel=True, 
+            grid_search=True, 
+            _plot=False, 
+            _print=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
             prop_penalty:     scale penality per class based on proportion of samples removed
             max_trials:       the number of downsampled datasets to try 
             force_downsample: try downsampling even if the original projection is solvable
-            method:           which method of downsampling to use
+            method:           which method of downsampling to use from: ['supports', 'supports-update_mean', 'supports-prop', 'supports-prop-update_mean', 'random']
         '''
         # check method is supported
-        methods_supported = ['random', 'supports']
+        methods_supported = ['supports',
+                             'supports-update_mean',
+                             'supports-prop',
+                             'supports-prop-update_mean',
+                             'random']
         if method not in methods_supported:
             raise ValueError(f'method must be one of {methods_supported} not {method}')
 
@@ -169,9 +215,9 @@ class downsample_deltas(base.base_deltas):
         if results == None or force_downsample == True:
             downsampled = True
             
-            # only do as many trails as data points for non random methods
-            supports_methods = ['supports']
-            if method in supports_methods:
+            # only do as many trials as data points for non random methods
+            methods_supported.remove('random')
+            if method in methods_supported:
             # if method != 'random':
                 max_able = X.shape[0] - 2
                 if max_trials >= max_able:
@@ -243,7 +289,7 @@ class downsample_deltas(base.base_deltas):
         # finished search, now make new boundary if we found a solution
         if len(losses) == 0:
             if _print == True:
-                if method not in supports_methods or support_max_hit == False:
+                if method not in methods_supported or support_max_hit == False:
                     print('Unable to find result with downsample, increase the max_trials')
                 else:
                     print('Dataset projection incompatible with deltas downsample supports method')
