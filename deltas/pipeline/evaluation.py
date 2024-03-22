@@ -95,13 +95,12 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
             if hasattr(clf, 'get_bias'):
                 bias = clf.get_bias()
                 if bias != None:
-                    ax.scatter([bias], [y_plot], marker='|', c='k', s=200,
+                    ax.scatter([-bias], [y_plot], marker='|', c='k', s=200,
                             label=f'{name} Boundary')
                 else:
                     continue
             elif test_data['X'].shape[1] < 32:  # too big for meshgrid otherwise
                 # plot linspace/grid
-                X, _ = plots.get_grid_pred( clf, test_data, probs=False, flat=True, res=25)
                 y_plot = _plot_projection_test_and_grid(
                     test_data['X'], clf, clfs['original'], y_plot, name, True, ax)
             else:

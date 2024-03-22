@@ -34,9 +34,9 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     xp1, xp2 = projection.get_classes(data)
     y = -0.1
     ax.scatter(xp1, np.ones_like(xp1)*y, c='b', 
-               s=10, label='Class 1', marker='o')
+               s=10, label=f'Class 1: {xp1.shape[0]}', marker='o')
     ax.scatter(xp2, np.ones_like(xp2)*y, c='r',
-               s=10, label='Class 2', marker='x')
+               s=10, label=f'Class 2: {xp2.shape[0]}', marker='x')
 
     # data empircal results
     if calc_data == True:

@@ -22,16 +22,16 @@ class downsample_deltas(base.base_deltas):
         super().__init__(clf, *args, **kwargs)
 
     def check_if_solvable(self, data_info):
-        return downsample_deltas.check_if_solvable_static(data_info, self.contraint_func)
+        return downsample_deltas.check_if_solvable_static(data_info, self.contraint_func, self.delta2_from_delta1)
 
     @staticmethod
-    def check_if_solvable_static(data_info, contraint_func):
+    def check_if_solvable_static(data_info, contraint_func, delta2_from_delta1):
         '''check the constraint to see if we have a viable solution'''
         # quick check if Rs are over lapping - can return quicker if they are
         if data_info['empirical R1'] + data_info['empirical R2'] > data_info['empirical D']:
             return False
         # now check constraint/ if minimum error terms overlap too
-        if contraint_func(1, 1, data_info) <= 0:
+        if contraint_func(1, delta2_from_delta1(1, data_info), data_info) <= 0:
             return True
         else:
             return False
@@ -274,7 +274,7 @@ class downsample_deltas(base.base_deltas):
     @staticmethod
     def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1, grid_search=True):
         '''return optim results, will be None if not solvable'''
-        if downsample_deltas.check_if_solvable_static(data_info, contraint_func) == True:
+        if downsample_deltas.check_if_solvable_static(data_info, contraint_func, delta2_from_delta1) == True:
             res = downsample_deltas._optimise(data_info,
                                               loss_func,
                                               contraint_func,

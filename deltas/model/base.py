@@ -231,7 +231,7 @@ class base_deltas:
 
     def get_bias(self):
         if self.is_fit == True:
-            return self.boundary
+            return -self.boundary
         else:
             if hasattr(self.clf, 'get_bias'):
                 print('Giving bias from original classifier')

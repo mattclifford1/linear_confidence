@@ -38,11 +38,14 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _pri
             return 1
         return contraint_func(deltas[0], delta2, data_info)
 
-    solution_possible = True if contraint_func(1, 1, data_info) <= 0 else False
+    # check if solvable
+    solution_possible = False
+    if contraint_wrapper([1]) == 0:
+            solution_possible = True
+    # solution_possible = True if contraint_func(1, 1, data_info) <= 0 else False
+            
     if _print == True:
-        print(
-            f'eq. 7 can be satisfied: {solution_possible}')
-        print(f'constraint init: {solution_possible}')
+        print(f'eq. 7 can be satisfied: {solution_possible}')
 
     def contraint_real(deltas):
         return np.sum(np.iscomplex(deltas))
@@ -60,12 +63,15 @@ def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _pri
     if grid_search == True and solution_possible == True:
         # line search for optimal value - only works for one delta atm
         tol_search = 1/resolution
-        delta1s = np.linspace(tol_search, 1-tol_search, resolution)
+        # delta1s = np.linspace(tol_search, 1-tol_search, resolution)
+        delta1s = np.linspace(tol_search, 1, resolution)
         J = loss(delta1s, data_info)
         # eliminate any deltas which don't satisfy the constraint
         constraints = np.array([contraint_wrapper([d]) for d in delta1s])
-        J[constraints > tol_constraint] = np.max(J)
-        J[constraints < -tol_constraint] = np.max(J)
+        max_loss = np.max(J)
+        # J[constraints > tol_constraint] = max_loss + 1
+        # J[constraints < -tol_constraint] = max_loss + 1
+        J[constraints != 0] = max_loss + 1
         deltas = [delta1s[np.argmin(J)]]
         optim_msg = 'Grid Search Optimisation Complete'
     elif grid_search == True and solution_possible == False and grid_2D == True:
