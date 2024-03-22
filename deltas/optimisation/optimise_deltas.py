@@ -11,7 +11,7 @@ import deltas.utils.radius as radius
 import deltas.plotting.plots as plots
 
 
-def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _print=True, _plot=True, grid_search=False, grid_2D=False):
+def optimise(data_info, loss_func, contraint_func, delta2_from_delta1=None, _print=True, _plot=True, grid_search=True, grid_2D=False):
     # get initial deltas
     delta1 = np.random.uniform()
     delta1 = 0.999999999999999   # use min error distance to give it the best chance to optimise correctly
