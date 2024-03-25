@@ -52,6 +52,10 @@ def contraint_eq7(delta1, delta2, data_info):
     # should now be equal to zero (ideally)
 
     equal_to_0 = R1_est + R2_est - D_emp
+
+    # trying out double D to allow for non separable
+    # equal_to_0 = R1_est + R2_est - 2*D_emp
+    
     return equal_to_0
 
 
@@ -108,6 +112,10 @@ def delta2_given_delta1_matt(delta1, data_info):
         return f*(R/np.sqrt(N)) * (2 + np.sqrt(2*np.log(1/d)))
 
     B = D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
+
+    # trying out double D to allow for non separable
+    # B = 2*D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
+
     inside_exp = 0.5*(np.square(((B*np.sqrt(N2))/(factor*R)) - 2))
     if isinstance(inside_exp, np.ndarray):
         dont_mask = inside_exp > 709  # overflow as np.inf

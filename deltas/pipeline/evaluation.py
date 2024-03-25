@@ -27,8 +27,8 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
     if _print == True:
         metrics = {'accuracy': accuracy_score,
                    'F1': f1_score,
-                   'precision0': precision0,
-                   'precision1': precision1,
+                   'precision1 (red)': precision0,
+                   'precision2 (blue)' : precision1,
                    }
         for metric, func in metrics.items():
             for name, y_preds in preds.items():
@@ -81,7 +81,7 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
 
             y_plot -= 0.1
 
-            ax.scatter(plot_order[0], np.ones_like(plot_order[0])*y_plot, c=colours[0], s=10,
+            ax.scatter(plot_order[0], np.ones_like(plot_order[0])*y_plot, c=colours[0], s=25,
                        marker='o')
             ax.scatter(plot_order[1], np.ones_like(plot_order[1])*y_plot, c=colours[1], s=10,
                        marker='x')

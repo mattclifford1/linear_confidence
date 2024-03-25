@@ -1,0 +1,98 @@
+1. Title: Cervical Cancer (Risk Factors)
+
+2. Sources:
+   (a) Donor:   Kelwin Fernandes
+   (b) Date:    2017
+
+3. Past Usage:
+   1. Transfer Learning with Partial Observability Applied to Cervical Cancer Screening
+   By Kelwin Fernandes, Jaime S. Cardoso, Jessica C. Fernandes. 2017
+   Published in Iberian Conference on Pattern Recognition and Image Analysis
+
+4. Relevant Information:
+   The dataset was collected at 'Hospital Universitario de Caracas' in Caracas, Venezuela. 
+   The dataset comprises demographic information, habits, and historic medical records 
+   of 858 patients. Several patients decided not to answer some of the questions because 
+   of privacy concerns (missing values).
+
+5. Number of Instances: 858
+
+6. Number of Attributes: 36 (including the class attribute)
+
+7. Attribute Information:
+   1.  Age
+   2.  Number of sexual partners
+   3.  First sexual intercourse
+   4.  Num of pregnancies
+   5.  Smokes
+   6.  Smokes (years)
+   7.  Smokes (packs/year)
+   8.  Hormonal Contraceptives
+   9.  Hormonal Contraceptives (years)
+   10. IUD
+   11. IUD (years)
+   12. STDs
+   13. STDs (number)
+   14. STDs:condylomatosis
+   15. STDs:cervical condylomatosis
+   16. STDs:vaginal condylomatosis
+   17. STDs:vulvo-perineal condylomatosis
+   18. STDs:syphilis
+   19. STDs:pelvic inflammatory disease
+   20. STDs:genital herpes
+   21. STDs:molluscum contagiosum
+   22. STDs:AIDS
+   23. STDs:HIV
+   24. STDs:Hepatitis B
+   25. STDs:HPV
+   26. STDs: Number of diagnosis
+   27. STDs: Time since first diagnosis
+   28. STDs: Time since last diagnosis
+   29. Dx:Cancer
+   30. Dx:CIN
+   31. Dx:HPV
+   32. Dx
+   33. Hinselmann (target)
+   34. Schiller (target)
+   35. Citology (target)
+   36. Biopsy1 (target)
+   
+ Additional Information:
+  (int) Age
+  (int) Number of sexual partners
+  (int) First sexual intercourse (age)
+  (int) Num of pregnancies
+  (bool) Smokes
+  (bool) Smokes (years)
+  (bool) Smokes (packs/year)
+  (bool) Hormonal Contraceptives
+  (int) Hormonal Contraceptives (years)
+  (bool) IUD
+  (int) IUD (years)
+  (bool) STDs
+  (int) STDs (number)
+  (bool) STDs:condylomatosis
+  (bool) STDs:cervical condylomatosis
+  (bool) STDs:vaginal condylomatosis
+  (bool) STDs:vulvo-perineal condylomatosis
+  (bool) STDs:syphilis
+  (bool) STDs:pelvic inflammatory disease
+  (bool) STDs:genital herpes
+  (bool) STDs:molluscum contagiosum
+  (bool) STDs:AIDS
+  (bool) STDs:HIV
+  (bool) STDs:Hepatitis B
+  (bool) STDs:HPV
+  (int) STDs: Number of diagnosis
+  (int) STDs: Time since first diagnosis
+  (int) STDs: Time since last diagnosis
+  (bool) Dx:Cancer
+  (bool) Dx:CIN
+  (bool) Dx:HPV
+  (bool) Dx
+  (bool) Hinselmann: target variable
+  (bool) Schiller: target variable
+  (bool) Cytology: target variable
+  (bool) Biopsy: target variable
+
+8. Missing Attribute Values: Yes

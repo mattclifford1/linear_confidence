@@ -9,7 +9,15 @@ import deltas.data.XOR as XOR
 import deltas.data.normal as normal
 import deltas.data.madelon as madelon
 import deltas.data.sklearn_synthetic as synthetic
-from deltas.data.loaders import sklearn_toy, diabetes, sonar_rocks, banknote, abalone_gender, ionosphere, wheat_seeds, costcla
+from deltas.data.loaders import (sklearn_toy, 
+                                 diabetes, 
+                                 Habermans_breast_cancer, 
+                                 sonar_rocks, 
+                                 banknote, 
+                                 abalone_gender, 
+                                 ionosphere, 
+                                 wheat_seeds, 
+                                 costcla)
 
 
 def make_data_dim_reducer(data_getter):
@@ -117,6 +125,7 @@ def get_real_dataset(dataset='Breast Cancer', scale=False):
         'Iris': sklearn_toy.get_iris,
         'Wine': sklearn_toy.get_wine,
         'Pima Indian Diabetes': diabetes.get_diabetes_indian,
+        'Habermans breast cancer': Habermans_breast_cancer.get_Habermans_breast_cancer,
         'Sonar Rocks vs Mines': sonar_rocks.get_sonar,
         'Banknote Authentication': banknote.get_banknote,
         'Abalone Gender': abalone_gender.get_abalone,
