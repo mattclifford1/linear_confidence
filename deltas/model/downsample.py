@@ -60,7 +60,8 @@ class downsample_deltas(base.base_deltas):
     def supports_downsample_data(X, y, 
                                  num_to_reduce, 
                                  remove_method='equal', 
-                                 update_means=False):
+                                 update_means=False,
+                                 remove_margin_only=False):
         '''downsample the dataset one support at a time'''
         # check support method selected
         supported_methods = ['equal', 'proportional']
@@ -73,11 +74,11 @@ class downsample_deltas(base.base_deltas):
         ys = [y1, y2]
         num_originals = (y1.shape[0], y2.shape[0])
 
-        # use original means in supports calc
+        # use original means in supports calc or not
         if update_means == True:
             ms = [np.mean(x1, axis=0), np.mean(x2, axis=0)]
         else:
-            ms = [None, None]
+            ms = [None, None] # this will tell it to calculate the mean based on downsampled data
 
         num_reduced = [0, 0]
 
@@ -91,7 +92,13 @@ class downsample_deltas(base.base_deltas):
                     # remove to keep the correct class ratios 
                     while ys[order[0]].shape[0]/ys[order[1]].shape[0] >= num_originals[order[0]]/num_originals[order[1]]:
                         # find the curent support
-                        ind = data_utils.get_support_of_class_ind(Xs[order[0]], ms[order[0]])
+                        if remove_margin_only == False:
+                            ind = data_utils.get_support_of_class_ind(Xs[order[0]], ms[order[0]])
+                        else:
+                            ind = data_utils.get_support_of_class_ind_margin_only(Xs[order[0]], 
+                                                                                  Xs[order[1]],
+                                                                                  ms[order[1]])
+
                         # delete the support found
                         Xs[order[0]] = np.delete(Xs[order[0]], [ind])
                         ys[order[0]] = np.delete(ys[order[0]], [ind])
@@ -142,11 +149,19 @@ class downsample_deltas(base.base_deltas):
                     update_means = True
                 else:
                     update_means = False
+                if 'margin_only' in args['downsample_method']:
+                    remove_margin_only = True
+                else:
+                    remove_margin_only = False
                 # see where we are at in terms of workers
                 num_to_reduce = i + args['order_in_queue']*args['num_runs']
                 # remove correct amount of supports
                 _X, _y, num_reduced1, num_reduced2 = downsample_deltas.supports_downsample_data(
-                    args['X'], args['y'], num_to_reduce, remove_method=remove_method, update_means=update_means)
+                    args['X'], args['y'], 
+                    num_to_reduce, 
+                    remove_method=remove_method, 
+                    update_means=update_means,
+                    remove_margin_only=remove_margin_only)
             
 
             # see if we can fit deltas
@@ -191,9 +206,10 @@ class downsample_deltas(base.base_deltas):
                              'supports-update_mean',
                              'supports-prop',
                              'supports-prop-update_mean',
+                             'supports-prop-update_mean-margin_only',
                              'random']
-        if method not in methods_supported:
-            raise ValueError(f'method must be one of {methods_supported} not {method}')
+        # if method not in methods_supported:
+        #     raise ValueError(f'method must be one of {methods_supported} not {method}')
 
         # check we don't already have solvable without downsampling
         data_info = self.get_data_info(X, y, self.clf, costs, _print=False)
