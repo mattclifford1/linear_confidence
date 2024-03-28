@@ -30,7 +30,7 @@ class base_deltas:
         self.delta2_from_delta1 = ds.delta2_given_delta1_matt
         self.delta1_from_delta2 = ds.delta1_given_delta2_matt
 
-    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False, grid_search=True):
+    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False, grid_search=True, **kwargs):
         # Make data_info - R_ests, D, etc.
         self.data_info = self.get_data_info(X, y, self.clf, costs, _print=_print)
         self.data_info_made = True

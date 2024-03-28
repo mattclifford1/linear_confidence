@@ -33,6 +33,12 @@ class reprojectioner:
         X_orig_clf = self.clf_original.get_projection(X)
         # reproject with second model (hopefully separated/bigger margin)
         return self.projecter.get_projection(X_orig_clf)
+    
+    def get_suppport_inds(self):
+        return self.projecter.support_
+    
+    def get_support_vectors(self):
+        return self.projecter.support_vectors_
 
 
 class reprojection_deltas(base.base_deltas):
@@ -48,6 +54,8 @@ class reprojection_deltas(base.base_deltas):
 
     def fit(self, X, y, _plot=False, **kwargs):
         clf_copy = self.clf
+
+        # fit model (SVM) to the projection
         self.clf = self.projection_model.fit_projection(clf=clf_copy, X=X, y=y)
 
         if _plot == True:
