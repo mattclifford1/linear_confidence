@@ -199,7 +199,7 @@ class base_deltas:
                 data_info['projected_data'], 
                 proj_means,
                 data_info['empirical R1'],
-                data_info['empirical R1'],
+                data_info['empirical R2'],
                 deltas_to_plot=[1],
                 data_info=data_info)
             plots.plt.show()

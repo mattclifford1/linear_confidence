@@ -3,7 +3,7 @@ import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
 
 
-def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
+def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True, _plot_data=False):
     data = data_clf['data']
     # dim reducer (PCA) for plotting in higher dims
     if data['X'].shape[1] > 2:
@@ -41,7 +41,15 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True):
             SMOTE_data['X'], SMOTE_data['y'])
     else:
         raise ValueError(f"model: {model} not in list of available models")
+
     # PLOT
+    if _plot_data == True:
+        for name, classif, t_data in zip(['clf', 'SMOTE'], [clf, clf_SMOTE], [data, SMOTE_data]):
+            print(name)
+            ax, _ = plots._get_axes(None)
+            plots.plot_classes(t_data, ax=ax, dim_reducer=dim_reducer)
+            ax.set_title(name)
+            plots.plt.show()
     if _plot == True:
         for name, classif, t_data in zip(['clf', 'SMOTE'], [clf, clf_SMOTE], [data, SMOTE_data]):
             print(name)
