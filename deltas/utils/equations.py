@@ -3,7 +3,7 @@ functions for cost, derivative and finding deltas from one another
 '''
 import numpy as np
 import deltas.utils.radius as radius
-from deltas.misc.use_two import USE_TWO
+from deltas.misc.use_two import USE_TWO, USE_GLOBAL_R
 
 
 def class_cost(c=1, delta=0.5, N=100):
@@ -63,11 +63,17 @@ def contraint_eq8(delta1, delta2, data_info):
     # eq. 8 in scipy contraint form that it equals 0
     N1 = data_info['N1']
     N2 = data_info['N2']
-    R = data_info['R all data']
     M_emp = data_info['empirical margin']
+    
+    if USE_GLOBAL_R == True:
+        R1 = data_info['R all data']
+        R2 = data_info['R all data']
+    else:
+        R1 = data_info['empirical R1']
+        R2 = data_info['empirical R2']
 
     equal_to_0 = radius.error_upper_bound(
-        R, N1, delta1) + radius.error_upper_bound(R, N2, delta2) - M_emp
+        R1, N1, delta1) + radius.error_upper_bound(R2, N2, delta2) - M_emp
     return equal_to_0
 
 
@@ -183,9 +189,16 @@ def eq7_matt(delta1, delta2, data_info):
         factor = 2
     else:
         factor = 1
-        
-    R1_est = R1_emp + factor*(R/np.sqrt(N1))*(2 + np.sqrt(2*np.log(1/delta1)))
-    R2_est = R2_emp + factor*(R/np.sqrt(N2))*(2 + np.sqrt(2*np.log(1/delta2)))
+
+    if USE_GLOBAL_R == True:
+        R1 = R
+        R2 = R
+    else:
+        R1 = R1_emp
+        R2 = R2_emp
+
+    R1_est = R1_emp + factor*(R1/np.sqrt(N1))*(2 + np.sqrt(2*np.log(1/delta1)))
+    R2_est = R2_emp + factor*(R2/np.sqrt(N2))*(2 + np.sqrt(2*np.log(1/delta2)))
     return R1_est + R2_est - D_emp
 
 

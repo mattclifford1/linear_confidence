@@ -1,11 +1,15 @@
 import numpy as np
-from deltas.misc.use_two import USE_TWO
+from deltas.misc.use_two import USE_TWO, USE_GLOBAL_R
 import warnings
 
 
 def R_upper_bound(R_emp, R_sup, N, delta, two=USE_TWO):
     # eq. 5
-    return R_emp + error_upper_bound(R_sup, N, delta, two)
+    if USE_GLOBAL_R == True:
+        R = R_sup
+    else:
+        R = R_emp
+    return R_emp + error_upper_bound(R, N, delta, two)
 
 
 def error_upper_bound(R_sup, N, delta, two=USE_TWO):
