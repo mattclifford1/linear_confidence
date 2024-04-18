@@ -8,6 +8,7 @@ ipywidgets
 imbalanced-learn
 umap-learn
 pandas
+costcla
 # cvxpy
 # torch
 # plotly

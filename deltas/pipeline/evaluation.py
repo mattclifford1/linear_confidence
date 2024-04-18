@@ -68,6 +68,9 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
             return y_plot
 
         def _plot_projection_test_data(test_data, clf_projecter, y_plot, ax=None):
+            # if not hasattr(clf_projecter, 'get_projection'):
+            #     return y_plot
+            
             proj_data = {'X': clf_projecter.get_projection(test_data['X']),
                          'y': test_data['y']}
 
