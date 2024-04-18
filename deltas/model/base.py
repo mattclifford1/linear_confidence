@@ -28,7 +28,7 @@ class base_deltas:
 
         self.contraint_func = ds.contraint_eq7
         self.delta2_from_delta1 = ds.delta2_given_delta1_matt
-        self.delta1_from_delta2 = ds.delta1_given_delta2_matt
+        # self.delta1_from_delta2 = ds.delta1_given_delta2_matt
 
     def fit(self, X, y, costs=(1, 1), _plot=False, _print=False, grid_search=True, **kwargs):
         # Make data_info - R_ests, D, etc.
