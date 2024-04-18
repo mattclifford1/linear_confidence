@@ -18,11 +18,12 @@ model = 'SVM-rbf'
 balance_clf = True
 balance_clf = False
 
-data_clf['clf'], clf_SMOTE = classifier.get_classifier(
+classifiers_dict = classifier.get_classifier(
     data_clf=data_clf,
     model=model,
     balance_clf=balance_clf,
     _plot=False)
+data_clf['clf'] = classifiers_dict['original']
 
 X = data_clf['data']['X']
 y = data_clf['data']['y']

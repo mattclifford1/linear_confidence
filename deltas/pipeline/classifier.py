@@ -60,4 +60,4 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, _plot=True, _plo
             ax.set_title(name)
             plots.plt.show()
 
-    return clf, clf_SMOTE
+    return {'original': clf, 'SMOTE': clf_SMOTE}
