@@ -126,5 +126,8 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
         ax.set_title(
             'Boundaries on test dataset in projected space')
         plots.plt.show()
-    
+
+    if _print == True:
+        print('LATEX table format\n\n')
+        print(scores_df.to_latex())
     return scores_df
