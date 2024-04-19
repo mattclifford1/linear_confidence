@@ -151,6 +151,16 @@ def get_real_dataset(dataset='Breast Cancer', scale=False):
         train_data = scaler(train_data)
         test_data = scaler(test_data)
 
+    train0 = len(train_data['y'])-sum(train_data['y'])
+    train1 = sum(train_data['y'])
+
+    test0 = len(test_data['y'])-sum(test_data['y'])
+    test1 = sum(test_data['y'])
+    print(f"{dataset}: {test0+train0+test1+train1}")
+    print( f"Classes total: {test0+train0} - {test1+train1}\n")
+    print(f"Classes train: {train0} - {train1}")
+    print(f"Classes test:  {test0} - {test1}")
+    
     # return in dict format needed 
     return {'data': train_data, 'data_test': test_data}
 
