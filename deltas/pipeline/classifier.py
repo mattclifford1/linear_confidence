@@ -47,18 +47,13 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
             'balanced_weights': clf_weighted}
     if costcla_methods == True:
         # Bayes Minimum Risk 
-        # docs say to use test data but that is cheating...?
-        # maybe use the training data as that is fair??? - performs poorly on without test ...
-        data_test = data_clf['data_test']
-        X = data_test['X']
-        y = data_test['y']
-        # X = data['X']
-        # y = data['y']
+        X = data['X']
+        y = data['y']
         clf_bmr = BMR(clf).fit(X, y)
         clf_bmr_non_cal = BMR(clf, calibration=False).fit(X, y)
 
         # Thresholding
-        clf_tresh = Thresholding(clf).fit(data['X'], data['y'])
+        clf_tresh = Thresholding(clf, calibration=False).fit(data['X'], data['y'])
 
         clfs['Bayes Minimum Risk'] = clf_bmr
         clfs['Bayes Minimum Risk (Not calibrated)'] = clf_bmr_non_cal
