@@ -17,9 +17,10 @@ def loss(delta1, delta2, data_info):
     N2 = data_info['N2']
     c1 = data_info['c1']
     c2 = data_info['c2']
-
+    # print('pre')
     J = class_cost(c1, delta1, N1) + \
         class_cost(c2, delta2, N2)
+    # print('post')
     return J
 
 
@@ -29,6 +30,12 @@ def loss_one_delta(delta1, data_info):
     delta2_given_delta1_func = data_info['delta2_given_delta1_func']
 
     delta2 = delta2_given_delta1_func(delta1, data_info)
+    # if isinstance(delta2, np.ndarray):
+    #     print(min(delta2))
+    #     print(min(delta1))
+    # else:
+    #     print(delta2)
+    #     print(delta1)
     return loss(delta1, delta2, data_info)
 
 
@@ -135,7 +142,6 @@ def delta2_given_delta1_matt(delta1, data_info):
 
     # trying out double D to allow for non separable
     # B = 2*D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
-
     inside_exp = 0.5*(np.square(((B*np.sqrt(N2))/(factor*R2)) - 2))
     if isinstance(inside_exp, np.ndarray):
         dont_mask = inside_exp > 709  # overflow as np.inf

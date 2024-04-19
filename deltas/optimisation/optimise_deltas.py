@@ -70,6 +70,7 @@ def optimise(data_info,
     if grid_search == True and solution_possible == True:
         # line search for optimal value - only works for one delta atm
         tol_search = 1/resolution
+
         # delta1s = np.linspace(tol_search, 1-tol_search, resolution)
         delta1s = np.linspace(tol_search, 1, resolution)
         J = loss(delta1s, data_info)

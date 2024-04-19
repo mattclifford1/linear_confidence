@@ -11,6 +11,7 @@ from sklearn.utils import resample
 import deltas.plotting.plots as plots
 from deltas.model import base
 from deltas.utils import data as data_utils
+from deltas.misc.use_two import USE_GLOBAL_R
 
 
 class downsample_deltas(base.base_deltas):
@@ -29,8 +30,26 @@ class downsample_deltas(base.base_deltas):
         # quick check if Rs are over lapping - can return quicker if they are
         if data_info['empirical R1'] + data_info['empirical R2'] > data_info['empirical D']:
             return False
+        
+        # make sure no diving by zero
+        if USE_GLOBAL_R == True:
+            if data_info['empirical R1'] == 0 or data_info['empirical R2'] == 0:
+                return False
+        
+        # make sure instances of both classes
+        if data_info['N1'] == 0 or data_info['N2'] == 0:
+            return False
+        
         # now check constraint/ if minimum error terms overlap too
-        if contraint_func(1, delta2_from_delta1(1, data_info), data_info) <= 0:
+        try: # wrap to find out if solvable sometimes divides by zero
+            highest_delta1 = 0.99999999999999999999999999999
+            contraint_val = contraint_func(highest_delta1, delta2_from_delta1(
+                highest_delta1, data_info), data_info)
+        except ZeroDivisionError:
+            return False
+        
+        # see if solvable
+        if contraint_val <= 0:
             return True
         else:
             return False
@@ -336,7 +355,9 @@ class downsample_deltas(base.base_deltas):
     @staticmethod
     def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1, grid_search=True):
         '''return optim results, will be None if not solvable'''
-        if downsample_deltas.check_if_solvable_static(data_info, contraint_func, delta2_from_delta1) == True:
+        # solve if solvable
+        solvable = downsample_deltas.check_if_solvable_static(data_info, contraint_func, delta2_from_delta1)
+        if solvable == True:
             res = downsample_deltas._optimise(data_info,
                                               loss_func,
                                               contraint_func,
