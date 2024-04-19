@@ -21,36 +21,30 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
     # SMOTE ==================================================================
     SMOTE_data = pipe_data.get_SMOTE_data(data)
 
-    # Weighted Classifier ====================================================
-    if balance_clf == True:
-        weights = 'balanced'
-    else:
-        weights = None
 
     # Train Model ============================================================
     if model in ['SVM', 'SVM-linear']:
-        clf = models.SVM(kernel='linear', class_weight=weights).fit(
-            data['X'], data['y'])
-        clf_SMOTE = models.SVM(kernel='linear', class_weight=weights).fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        clf = models.SVM(kernel='linear').fit(data['X'], data['y'])
+        clf_weighted = models.SVM(class_weight='balanced', kernel='linear').fit(data['X'], data['y'])
+        clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
-        clf = models.SVM(kernel='rbf', class_weight=weights).fit(
-            data['X'], data['y'])
-        clf_SMOTE = models.SVM(kernel='rbf', class_weight=weights).fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        clf = models.SVM(kernel='rbf').fit( data['X'], data['y'])
+        clf_weighted = models.SVM(class_weight='balanced', kernel='rbf').fit( data['X'], data['y'])
+        clf_SMOTE = models.SVM(kernel='rbf').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'Linear':
-        clf = models.linear(class_weight=weights).fit(data['X'], data['y'])
-        clf_SMOTE = models.linear(class_weight=weights).fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        clf = models.linear().fit(data['X'], data['y'])
+        clf_weighted = models.linear(class_weight='balanced').fit(data['X'], data['y'])
+        clf_SMOTE = models.linear().fit( SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MLP':
-        clf = models.NN(class_weight=weights).fit(data['X'], data['y'])
-        clf_SMOTE = models.NN(class_weight=weights).fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        clf = models.NN().fit(data['X'], data['y'])
+        clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
+        clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
     else:
         raise ValueError(f"model: {model} not in list of available models")
     
     # Model adjsutment methods from the literature ===========================
-    clfs = {'original': clf, 'SMOTE': clf_SMOTE}
+    clfs = {'original': clf, 'SMOTE': clf_SMOTE,
+            'balanced_weights': clf_weighted}
     if costcla_methods == True:
         # Bayes Minimum Risk 
         # docs say to use test data but that is cheating...?
