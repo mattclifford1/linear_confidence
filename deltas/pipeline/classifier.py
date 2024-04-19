@@ -55,11 +55,13 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         # X = data['X']
         # y = data['y']
         clf_bmr = BMR(clf).fit(X, y)
+        clf_bmr_non_cal = BMR(clf, calibration=False).fit(X, y)
 
         # Thresholding
         clf_tresh = Thresholding(clf).fit(data['X'], data['y'])
 
         clfs['Bayes Minimum Risk'] = clf_bmr
+        clfs['Bayes Minimum Risk (Not calibrated)'] = clf_bmr_non_cal
         clfs['Thresholding'] = clf_tresh
     # PLOT ===================================================================
     # data for plotting purposes only

@@ -3,14 +3,22 @@
 import numpy as np
 from deltas.costcla_local.directcost import BayesMinimumRiskClassifier, ThresholdingOptimization
 
-''' Methods from costcla to compare against '''
+''' Methods from costcla to compare against 
+******************************
+cost_mat: array-like of shape = [n_samples, 4]
+                Cost matrix of the classification problem
+                Where the columns represents the costs of: false positives, false negatives,
+                true positives and true negatives, for each example.
 
+                -> usually cost of true pos and true neg is 0
+                -> see minute 12 onwards of https://www.youtube.com/watch?v=UUVRdRpPhJU&ab_channel=PyData for more info
+'''
 
 class BMR(BayesMinimumRiskClassifier):
     ''' docs say to use test set for fitting ... '''
 
-    def __init__(self, clf):
-        super().__init__()
+    def __init__(self, clf, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.clf = clf
 
     def get_projection(self, *args, **kwargs):
@@ -34,8 +42,8 @@ class BMR(BayesMinimumRiskClassifier):
 
 
 class Thresholding(ThresholdingOptimization):
-    def __init__(self, clf):
-        super().__init__()
+    def __init__(self, clf, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.clf = clf
 
     def get_projection(self, *args, **kwargs):
