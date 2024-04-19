@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, precision_score
 import matplotlib.pyplot as plt
 import umap
@@ -24,16 +25,25 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
     for name, clf in clfs.items():
         preds[name] = clf.predict(test_data['X'])
 
+
+    metrics = {'accuracy': accuracy_score,
+                'F1': f1_score,
+                'precision1 (red)': precision0,
+                'precision2 (blue)' : precision1,
+                }
+    
+    index_name = 'Method'
+    d = {index_name: list(preds.keys())}
+    for metric, func in metrics.items():
+        _scores = []
+        for name, y_preds in preds.items():
+            _scores.append(func(test_data['y'], y_preds))
+        d[metric] = _scores
+
+    scores_df = pd.DataFrame(d).set_index(index_name)
+
     if _print == True:
-        metrics = {'accuracy': accuracy_score,
-                   'F1': f1_score,
-                   'precision1 (red)': precision0,
-                   'precision2 (blue)' : precision1,
-                   }
-        for metric, func in metrics.items():
-            for name, y_preds in preds.items():
-                print(f"{name} {metric}: {func(test_data['y'], y_preds)}")
-            print('')
+        print(scores_df, '\n\n')
 
     if _plot == True:
         # plot in original space
@@ -116,3 +126,5 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
         ax.set_title(
             'Boundaries on test dataset in projected space')
         plots.plt.show()
+    
+    return scores_df
