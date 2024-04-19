@@ -16,7 +16,6 @@ class SVM_supports_deltas(downsample.downsample_deltas):
     '''
 
     def __init__(self, clf, 
-                 method='supports-prop-update_mean-margin_only', 
                  kernel='linear',
                  *args, 
                  **kwargs):
@@ -24,7 +23,7 @@ class SVM_supports_deltas(downsample.downsample_deltas):
         self.projection_model = reprojection.reprojectioner(
             projecter=models.SVM(kernel=kernel))
 
-    def fit(self, X, y, _plot=False, costs=(1,1), **kwargs):
+    def fit(self, X, y, method='supports-prop-update_mean-margin_only', _plot=False, costs=(1, 1), **kwargs):
         clf_copy = self.clf
         data_info = self.get_data_info(X, y, clf_copy, _print=False, costs=costs)
         if _plot == True:
@@ -49,6 +48,6 @@ class SVM_supports_deltas(downsample.downsample_deltas):
             self._plot_data(data_info, self.clf)
 
         print('Fitting deltas using slacks if required')
-        super().fit(X, y, _plot=_plot, **kwargs)
+        super().fit(X, y, method=method, _plot=_plot, **kwargs)
         return self
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, f1_score, precision_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, auc, roc_auc_score, precision_recall_fscore_support
+from imblearn.metrics import geometric_mean_score
 import matplotlib.pyplot as plt
 import umap
 
@@ -16,6 +17,18 @@ def precision0(*args, **kwargs):
 def precision1(*args, **kwargs):
     return precision_score(*args, **kwargs, pos_label=1)
 
+def fscore(*args, **kwargs):
+    prec, recal, fscor, sup = precision_recall_fscore_support(*args, **kwargs)
+    return fscor
+
+def precision(*args, **kwargs):
+    prec, recal, fscor, sup = precision_recall_fscore_support(*args, **kwargs)
+    return prec[0]
+
+def recall(*args, **kwargs):
+    prec, recal, fscor, sup = precision_recall_fscore_support(*args, **kwargs)
+    return recal[0]
+
 
 def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
     # using new class for deltas format
@@ -27,9 +40,14 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
 
 
     metrics = {'accuracy': accuracy_score,
-                'F1': f1_score,
+               'G-Mean': geometric_mean_score,
+                'ROC-AUC': roc_auc_score,
                 'precision1 (red)': precision0,
                 'precision2 (blue)' : precision1,
+                'precision': precision,
+                'recall': recall,
+                'F1': f1_score,
+                'F-score-1': fscore,
                 }
     
     index_name = 'Method'
