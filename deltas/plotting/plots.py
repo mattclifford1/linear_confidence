@@ -32,11 +32,11 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     ax, _ = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
-    y = -0.1
+    y = 0
     ax.scatter(xp1, np.ones_like(xp1)*y, c='b', 
                s=10, label=f'Class 1: {xp1.shape[0]}', marker='o')
     ax.scatter(xp2, np.ones_like(xp2)*y, c='r',
-               s=10, label=f'Class 2: {xp2.shape[0]}', marker='x')
+               s=10, label=f'Class 2: {xp2.shape[0]}', marker='o')
 
     # data empircal results
     if calc_data == True:
@@ -44,10 +44,12 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         emp_xp1, emp_xp2 = projection.get_emp_means(data)
         ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                 marker='x', label='Empircal Means')
+        ax.text(emp_xp1, y+.1, r'$\bar{\phi}_{S_1}$', fontsize=12)
+        ax.text(emp_xp2, y+.1, r'$\bar{\phi}_{S_2}$', fontsize=12)
         # supports
-        if 'supports' in data.keys():
-            ax.scatter(data['supports'], [y, y], c='k', s=100,
-                    marker='+', label='Supports')
+        # if 'supports' in data.keys():
+        #     ax.scatter(data['supports'], [y, y], c='k', s=100,
+        #             marker='+', label='Supports')
         
     # expected means
     if means != None:
@@ -59,27 +61,46 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         name = 'Estimate'
     else:
         name = 'Empirical'
-    y = -0.2
+    y = -0.3
+    if R_est == False:
+        txt1 = r'$\bar{R}_1$'
+        txt2 = r'$\bar{R}_2$'
+    else:
+        txt1 = r'$\hat{\bar{R}}_1$'
+        txt2 = r'$\hat{\bar{R}}_2$'
     if R1_emp != None:
-        ax.plot([emp_xp1-R1_emp, emp_xp1+R1_emp], [y, y],
+        ax.plot([emp_xp1, emp_xp1+R1_emp], [y, y],
                 c='b', label=f'R1 {name}', marker='|')
+        ax.text(emp_xp1+(R1_emp/2), y+.05, txt1, fontsize=12)
     if R2_emp != None:
-        ax.plot([emp_xp2-R2_emp, emp_xp2+R2_emp], [y, y], 
+        ax.plot([emp_xp2-R2_emp, emp_xp2], [y, y], 
                 c='r', label=f'R2 {name}', marker='|')
+        ax.text(emp_xp2-(R2_emp/2), y+.05, txt2, fontsize=12)
     
     # plot R error estimates if given the data
+    deltas_to_plot = [0.9999999999999999999]
+    y = 0.4
     if data_info != None:
         for d in deltas_to_plot:
             R_ests = get_R_estimates(data_info, deltas=[d, d])
-            ax.plot([emp_xp1-R_ests[0], emp_xp1+R_ests[0]], [d, d],
+            ax.plot([emp_xp1, emp_xp1+R_ests[0]], [y, y],
                     c='b', marker='|', linestyle='dashed')
-            ax.plot([emp_xp2-R_ests[1], emp_xp2+R_ests[1]], [d, d],
+            ax.text(emp_xp1+((emp_xp1+R_ests[0])/2),
+                    y+.05, r'$\hat{\bar{R}}_1, \delta_1=0.\dot{9}$', fontsize=10)
+            ax.plot([emp_xp2-R_ests[1], emp_xp2], [y, y],
                     c='r', marker='|', linestyle='dashed')
+            ax.text(emp_xp2-((emp_xp2+R_ests[1])/2),
+                    y+.05, r'$\hat{\bar{R}}_2, \delta_2=0.\dot{9}$', fontsize=10)
         ax.set_ylabel('deltas (dashed)')
             
     # to make plot scale nice with a legend
-    ax.plot([0], [-1.5], c='w')
-    ax.legend()
+    ax.plot([0], [2], c='w')
+    # ax.legend(loc='upper right')
+
+    ax.set_xlabel(r'$< \phi(x), w >$')
+    ax.set_ylabel('')
+    ax.set_yticks([])
+    # ax.autoscale(enable=True, axis='y', tight=True)
     return ax
 
 def get_R_estimates(data_info, deltas=[1, 1]):
@@ -97,10 +118,14 @@ def plot_classes(data, ax=None, dim_reducer=None):
     if dim_reducer == None:
         x1 = list(data['X'][:, 0])
         x2 = list(data['X'][:, 1])
+        x_txt = 'Feature 1'
+        y_txt = 'Feature 2'
     else:
         X = dim_reducer.transform(data['X'])
         x1 = list(X[:, 0])
         x2 = list(X[:, 1])
+        x_txt = 'PCA 1'
+        y_txt = 'PCA 2'
     # count the occurrences of each point
     point_count = Counter(zip(x1, x2))
     # create a list of the sizes, here multiplied by 10 for scale
@@ -111,6 +136,8 @@ def plot_classes(data, ax=None, dim_reducer=None):
                c=data['y'], cmap=cm_bright, edgecolors="k", alpha=0.4,
                linewidths=2)
     ax.grid(False)
+    ax.set_xlabel(x_txt, size=ticks_size)
+    ax.set_ylabel(y_txt, size=ticks_size)
     if show == True:
         plt.show()
 

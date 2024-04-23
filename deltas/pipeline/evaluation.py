@@ -39,15 +39,15 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
         preds[name] = clf.predict(test_data['X'])
 
 
-    metrics = {'accuracy': accuracy_score,
+    metrics = {'Accuracy': accuracy_score,
                'G-Mean': geometric_mean_score,
                 'ROC-AUC': roc_auc_score,
-                'precision1 (red)': precision0,
-                'precision2 (blue)' : precision1,
-                'precision': precision,
-                'recall': recall,
+                # 'Precision1 (red)': precision0,
+                # 'Precision2 (blue)' : precision1,
+                # 'Precision': precision,
+                # 'Recall': recall,
                 'F1': f1_score,
-                'F-score-1': fscore,
+                # 'F-score-1': fscore,
                 }
     
     index_name = 'Method'
@@ -146,6 +146,7 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
         plots.plt.show()
 
     if _print == True:
+        df = scores_df.style.format(precision=4)
         print('LATEX table format\n\n')
-        print(scores_df.to_latex())
+        print(df.to_latex())
     return scores_df

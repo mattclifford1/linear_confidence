@@ -1,4 +1,7 @@
 import numpy as np
+from sklearn.model_selection import GridSearchCV
+
+
 # from costcla.models.directcost import BayesMinimumRiskClassifier
 from deltas.costcla_local.models import BMR, Thresholding
 import deltas.plotting.plots as plots
@@ -28,7 +31,18 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf_weighted = models.SVM(class_weight='balanced', kernel='linear').fit(data['X'], data['y'])
         clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
-        clf = models.SVM(kernel='rbf').fit( data['X'], data['y'])
+        # defining parameter range
+        param_grid = {'C': [0.1, 1, 10, 100, 1000, 10000],
+                    'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+                    'kernel': ['rbf']}
+
+        grid = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
+        # fitting the model for grid search
+        print('Tuning SVM params with 5 fold CV')
+        grid.fit(data['X'], data['y'])
+        clf = grid.best_estimator_
+        print(f'Best SVM params: {grid.best_params_}')
+        # clf = models.SVM(kernel='rbf').fit( data['X'], data['y'])
         clf_weighted = models.SVM(class_weight='balanced', kernel='rbf').fit( data['X'], data['y'])
         clf_SMOTE = models.SVM(kernel='rbf').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'Linear':
@@ -39,12 +53,17 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf = models.NN().fit(data['X'], data['y'])
         clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
         clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
+    elif model == 'MLP-deep':
+        clf = models.NN(hidden_layer_sizes=(10, 20, 50, 50, 50, 100, 200, 300,), activation='relu', solver='adam'
+                        ).fit(data['X'], data['y'])
+        clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
+        clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
     else:
         raise ValueError(f"model: {model} not in list of available models")
     
     # Model adjsutment methods from the literature ===========================
-    clfs = {'original': clf, 'SMOTE': clf_SMOTE,
-            'balanced_weights': clf_weighted}
+    clfs = {'Original': clf, 'SMOTE': clf_SMOTE,
+            'Balanced Weights': clf_weighted}
     if costcla_methods == True:
         # Bayes Minimum Risk 
         X = data['X']
@@ -55,8 +74,8 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         # Thresholding
         clf_tresh = Thresholding(clf, calibration=False).fit(data['X'], data['y'])
 
-        clfs['Bayes Minimum Risk'] = clf_bmr
-        clfs['Bayes Minimum Risk (Not calibrated)'] = clf_bmr_non_cal
+        clfs['Bayes Minimum Risk (calibrated)'] = clf_bmr
+        clfs['Bayes Minimum Risk'] = clf_bmr_non_cal
         clfs['Thresholding'] = clf_tresh
     # PLOT ===================================================================
     # data for plotting purposes only

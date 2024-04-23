@@ -21,6 +21,163 @@ class downsample_deltas(base.base_deltas):
     def __init__(self, clf, *args, **kwargs):
         super().__init__(clf, *args, **kwargs)
 
+    def fit(self, X, y,
+            costs=(1, 1),
+            alpha=1,
+            prop_penalty=True,
+            method='supports-prop-update_mean-margin_only',
+            max_trials=1000,
+            force_downsample=False,
+            parallel=True,
+            grid_search=True,
+            _plot=False,
+            _print=False):
+        '''
+        fit to downsampled datasets, then pick the lowest loss
+            alpha:            the penalty value on the loss for removing points
+            prop_penalty:     scale penality per class based on proportion of samples removed
+            max_trials:       the number of downsampled datasets to try 
+            force_downsample: try downsampling even if the original projection is solvable
+            method:           which method of downsampling to use from: ['supports', 'supports-update_mean', 'supports-prop', 'supports-prop-update_mean', 'random']
+        '''
+        # check method is supported
+        methods_supported = ['supports',
+                             'supports-update_mean',
+                             'supports-prop',
+                             'supports-prop-update_mean',
+                             'supports-prop-update_mean-margin_only',
+                             'random']
+        # if method not in methods_supported:
+        #     raise ValueError(f'method must be one of {methods_supported} not {method}')
+
+        # check we don't already have solvable without downsampling
+        data_info = self.get_data_info(X, y, self.clf, costs, _print=False)
+        data_info['num_reduced'] = 0
+        results = self._check_and_optimise_data(data_info)
+        if _plot == True:
+            print('Original Data')
+            self._plot_data(data_info, self.clf)
+
+        # now try as many random downsamples of the dataset as the budget allows
+        if 'supports' in method:
+            max_trials = min(len(y)//2, max_trials)
+
+        losses = []
+        data_infos = []
+        all_results = []
+        if results != None:
+            losses.append(results['loss'])
+            data_infos.append(data_info)
+            all_results.append(results)
+
+        if results == None or force_downsample == True:
+            downsampled = True
+
+            # only do as many trials as data points for non random methods
+            methods_supported.remove('random')
+            if method in methods_supported:
+                # if method != 'random':
+                max_able = X.shape[0] - 2
+                if max_trials >= max_able:
+                    max_trials = max_able
+                    support_max_hit = True
+                else:
+                    support_max_hit = False
+
+            # pre project data for efficiency
+            if hasattr(self.clf, 'get_projection'):
+                X_projected = self.clf.get_projection(X)
+            else:
+                raise AttributeError(
+                    f"Classifier {self.clf} needs 'get_projection' method")
+
+            # set up args
+            if parallel == True:
+                n_cpus = multiprocessing.cpu_count()
+                # see how many to run per batch (optimise for n_cpus)
+                num_runs_per_batch = min(100, max_trials//n_cpus)
+                num_runs = num_runs_per_batch
+            else:
+                num_runs = max_trials
+            arg_dict = {'X': X_projected,
+                        'y': y,
+                        'costs': costs,
+                        'alpha': alpha,
+                        'prop_penalty': prop_penalty,
+                        'num_runs': num_runs,
+                        'contraint_func': self.contraint_func,
+                        'loss_func': self.loss_func,
+                        'delta2_from_delta1': self.delta2_from_delta1,
+                        'grid_search': grid_search,
+                        'downsample_method': method,
+                        'order_in_queue': 0}
+
+            if parallel == True:
+                with multiprocessing.Pool(processes=n_cpus) as pool:
+                    # add an argument of how many trials for each worker to do
+                    # runs each worker does (counters the overhead of spawning a process)
+                    scaled_trials = max_trials//num_runs
+
+                    # get all the args per worker
+                    args = []
+                    for i in range(scaled_trials):
+                        args.append(arg_dict.copy())
+                        # order the jobs to each work knows what to compute
+                        args[i]['order_in_queue'] = i
+
+                    # run all workers
+                    trials = list(tqdm(pool.imap_unordered(self._test_single, args),
+                                       total=scaled_trials, desc=f'Trying random downsampling deltas (multiprocessing batches of {num_runs})', leave=False))
+            else:
+                trials = [self._test_single(arg_dict, disable_tqdm=False)]
+
+            # now merge all the results together
+            for result in trials:
+                for i in range(len(result[0])):
+                    # results returned in format: (losses, data_infos, all_results)
+                    losses.append(result[0][i])
+                    data_infos.append(result[1][i])
+                    all_results.append(result[2][i])
+        else:
+            downsampled = False
+            if _print == True:
+                print(
+                    "Original dataset is solvable so not downsampling, set 'force_downsample' to 'True' to try and find a lower loss via downsampling anyway")
+
+        # finished search, now make new boundary if we found a solution
+        if len(losses) == 0:
+            if _print == True:
+                if method not in methods_supported or support_max_hit == False:
+                    print(
+                        'Unable to find result with downsample, increase the max_trials')
+                else:
+                    print(
+                        'Dataset projection incompatible with deltas downsample supports method')
+            self.is_fit = False
+        else:
+            best_ind = np.argmin(losses)
+            self._save_as_best(all_results[best_ind], data_infos[best_ind])
+
+            if _print == True and downsampled == True:
+                print(
+                    f'Budget {max_trials} found {len(losses)} viable downsampled solutions')
+            # make boundary
+            self.boundary, self.class_nums = self._make_boundary(
+                self.delta1, self.delta2)
+            self.is_fit = True
+            if _print == True and downsampled == True:
+                print(
+                    f"Best solution found by removing {self.data_info['num_reduced']} data points")
+            if _plot == True:
+                if downsampled == True:
+                    print('Downsampled Data:')
+                else:
+                    print('Original Data:')
+                plots.deltas_projected_boundary(
+                    self.delta1, self.delta2, self.data_info)
+        return self
+
+
     def check_if_solvable(self, data_info):
         return downsample_deltas.check_if_solvable_static(data_info, self.contraint_func, self.delta2_from_delta1)
 
@@ -200,157 +357,6 @@ class downsample_deltas(base.base_deltas):
                 all_results.append(results)
         return losses, data_infos, all_results
     
-
-    def fit(self, X, y, 
-            costs=(1, 1), 
-            alpha=1, 
-            prop_penalty=True, 
-            method='supports-prop-update_mean-margin_only',
-            max_trials=10000, 
-            force_downsample=False, 
-            parallel=True, 
-            grid_search=True, 
-            _plot=False, 
-            _print=False):
-        '''
-        fit to downsampled datasets, then pick the lowest loss
-            alpha:            the penalty value on the loss for removing points
-            prop_penalty:     scale penality per class based on proportion of samples removed
-            max_trials:       the number of downsampled datasets to try 
-            force_downsample: try downsampling even if the original projection is solvable
-            method:           which method of downsampling to use from: ['supports', 'supports-update_mean', 'supports-prop', 'supports-prop-update_mean', 'random']
-        '''
-        # check method is supported
-        methods_supported = ['supports',
-                             'supports-update_mean',
-                             'supports-prop',
-                             'supports-prop-update_mean',
-                             'supports-prop-update_mean-margin_only',
-                             'random']
-        # if method not in methods_supported:
-        #     raise ValueError(f'method must be one of {methods_supported} not {method}')
-
-        # check we don't already have solvable without downsampling
-        data_info = self.get_data_info(X, y, self.clf, costs, _print=False)
-        data_info['num_reduced'] = 0
-        results = self._check_and_optimise_data(data_info)
-        if _plot == True:
-            print('Original Data')
-            self._plot_data(data_info, self.clf)
-
-        # now try as many random downsamples of the dataset as the budget allows
-        losses = []
-        data_infos = []
-        all_results = []
-        if results != None:
-            losses.append(results['loss'])
-            data_infos.append(data_info)
-            all_results.append(results)
-
-        if results == None or force_downsample == True:
-            downsampled = True
-            
-            # only do as many trials as data points for non random methods
-            methods_supported.remove('random')
-            if method in methods_supported:
-            # if method != 'random':
-                max_able = X.shape[0] - 2
-                if max_trials >= max_able:
-                    max_trials = max_able
-                    support_max_hit = True
-                else:
-                    support_max_hit = False
-
-            # pre project data for efficiency
-            if hasattr(self.clf, 'get_projection'):
-                X_projected = self.clf.get_projection(X)
-            else:
-                raise AttributeError(
-                    f"Classifier {self.clf} needs 'get_projection' method")
-            
-            # set up args
-            if parallel == True:
-                n_cpus = multiprocessing.cpu_count()
-                # see how many to run per batch (optimise for n_cpus)
-                num_runs_per_batch = min(100, max_trials//n_cpus)
-                num_runs = num_runs_per_batch
-            else:
-                num_runs = max_trials
-            arg_dict = {'X': X_projected,
-                        'y': y,
-                        'costs': costs,
-                        'alpha': alpha,
-                        'prop_penalty': prop_penalty,
-                        'num_runs': num_runs,
-                        'contraint_func': self.contraint_func,
-                        'loss_func': self.loss_func,
-                        'delta2_from_delta1': self.delta2_from_delta1,
-                        'grid_search': grid_search,
-                        'downsample_method': method,
-                        'order_in_queue': 0}
-
-            if parallel == True:
-                with multiprocessing.Pool(processes=n_cpus) as pool:
-                    # add an argument of how many trials for each worker to do
-                    # runs each worker does (counters the overhead of spawning a process)
-                    scaled_trials = max_trials//num_runs
-
-                    # get all the args per worker
-                    args = []
-                    for i in range(scaled_trials):
-                        args.append(arg_dict.copy())
-                        # order the jobs to each work knows what to compute
-                        args[i]['order_in_queue'] = i
-
-                    # run all workers
-                    trials = list(tqdm(pool.imap_unordered(self._test_single, args),
-                                       total=scaled_trials, desc=f'Trying random downsampling deltas (multiprocessing batches of {num_runs})', leave=False))
-            else:
-                trials = [self._test_single(arg_dict, disable_tqdm=False)]
-
-            # now merge all the results together
-            for result in trials:
-                for i in range(len(result[0])):
-                    # results returned in format: (losses, data_infos, all_results)
-                    losses.append(result[0][i])
-                    data_infos.append(result[1][i])
-                    all_results.append(result[2][i])
-        else:
-            downsampled = False
-            if _print == True:
-                print(
-                    "Original dataset is solvable so not downsampling, set 'force_downsample' to 'True' to try and find a lower loss via downsampling anyway")
-
-        # finished search, now make new boundary if we found a solution
-        if len(losses) == 0:
-            if _print == True:
-                if method not in methods_supported or support_max_hit == False:
-                    print('Unable to find result with downsample, increase the max_trials')
-                else:
-                    print('Dataset projection incompatible with deltas downsample supports method')
-            self.is_fit = False
-        else:
-            best_ind = np.argmin(losses)
-            self._save_as_best(all_results[best_ind], data_infos[best_ind])
-
-            if _print == True and downsampled == True:
-                print(
-                    f'Budget {max_trials} found {len(losses)} viable downsampled solutions')
-            # make boundary
-            self.boundary, self.class_nums = self._make_boundary(
-                self.delta1, self.delta2)
-            self.is_fit = True
-            if _print == True and downsampled == True:
-                print(
-                    f"Best solution found by removing {self.data_info['num_reduced']} data points")
-            if _plot == True:
-                if downsampled == True:
-                    print('Downsampled Data:')
-                else:
-                    print('Original Data:')
-                plots.deltas_projected_boundary(
-                    self.delta1, self.delta2, self.data_info)
-        return self
 
     @staticmethod
     def static_check_and_optimise(data_info, contraint_func, loss_func, delta2_from_delta1, grid_search=True):

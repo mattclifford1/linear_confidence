@@ -11,10 +11,13 @@ from imblearn.over_sampling import RandomOverSampler
 
 
 class SVM(SVC):
-    def __init__(self, kernel='rbf', **kwargs):
+    def __init__(self, kernel='rbf', C=1.0, gamma='scale', ** kwargs):
         self.kernel = kernel
         super().__init__(random_state=0, probability=True,
-                       kernel=self.kernel, **kwargs)
+                         kernel=self.kernel, 
+                         C=C,
+                         gamma=gamma,
+                         **kwargs)
         
     def get_projection(self, X):
         if not isinstance(X, np.ndarray):

@@ -1,8 +1,7 @@
 from sklearn import preprocessing
 from sklearn.utils import shuffle
 import numpy as np
-
-RANDOM_SEED = 1
+from deltas.misc.use_two import RANDOM_STATE
 
 
 class normaliser:
@@ -21,7 +20,7 @@ class normaliser:
 
 def set_seed(seed):
     if seed == True:
-        np.random.seed(seed=RANDOM_SEED)
+        np.random.seed(seed=RANDOM_STATE)
     elif seed == False:
         np.random.seed(seed=None)
     elif type(seed) == int:
@@ -29,7 +28,8 @@ def set_seed(seed):
 
 
 def shuffle_data(data):
-    data['X'], data['y'] = shuffle(data['X'], data['y'], random_state=1)
+    data['X'], data['y'] = shuffle(
+        data['X'], data['y'], random_state=RANDOM_STATE)
     return data
 
 

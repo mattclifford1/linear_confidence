@@ -18,7 +18,7 @@ classifiers_dict = classifier.get_classifier(
     _plot=False
     )
 
-data_clf['clf'] = classifiers_dict['original']
+data_clf['clf'] = classifiers_dict['Original']
 
 X = data_clf['data']['X']
 y = data_clf['data']['y']
