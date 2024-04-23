@@ -28,7 +28,7 @@ def get_breast_cancer(**kwargs):
     # data = deltas.data.utils.proportional_downsample(data, **kwargs)
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(
-        data, size=0.7, ratio=10)
+        data, size=0.701, ratio=10)
     return train_data, test_data
 
 def get_wine(**kwargs):
