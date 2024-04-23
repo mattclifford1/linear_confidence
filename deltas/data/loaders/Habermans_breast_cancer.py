@@ -18,14 +18,15 @@ def get_Habermans_breast_cancer(**kwargs):
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'Habermans_breast_cancer', 'data.csv'))
     data['y'] = df.pop('Survived_Longer_5_Years').to_numpy()
-    data['y'][data['y']==2] = 0
+    data['y'][data['y']==1] = 0  
+    data['y'][data['y']==2] = 1
     data['X'] = df.to_numpy()
     data['feature_names'] = df.columns.to_list()
     # add name and description
     with open(os.path.join(CURRENT_FILE, '..', 'datasets', 'Habermans_breast_cancer', 'description.txt'), 'r') as f:
         data['description'] = f.read()
     # shuffle the dataset
-        data = deltas.data.utils.shuffle_data(data)  # type: ignore
+    data = deltas.data.utils.shuffle_data(data)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split( # type: ignore
         data, size=0.7)  # type: ignore

@@ -49,11 +49,12 @@ def shuffle_dataset(data, seed=True):
     return data
 
 
-def proportional_split(data, size=0.8, seed=True):
+def proportional_split(data, size=0.8, seed=True, ratio=None):
     '''
     create a train, test split that preserves the class distributions
         data: data dict holder
         size: size of the train set (0.5 means equal train, test size)
+        ratio: make imbalance ratio in the train set - assumes class 1 is minority
     '''
     if size <= 0 or size > 1:
         raise ValueError(

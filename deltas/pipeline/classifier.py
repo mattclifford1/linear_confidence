@@ -32,8 +32,8 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
         # defining parameter range
-        param_grid = {'C': [0.1, 1, 10, 100, 1000, 10000],
-                    'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+        param_grid = {'C': [0.1, 1, 10, 100, 500, 2000, 10000],
+                      'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
                     'kernel': ['rbf']}
 
         grid = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
