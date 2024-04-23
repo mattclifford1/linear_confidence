@@ -37,5 +37,6 @@ def get_diabetes_indian(**kwargs):
     data = deltas.data.utils.shuffle_data(data)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split( # type: ignore
-        data, size=0.8)  # type: ignore
+        data, size=0.2, ratio=5)  # type: ignore
+    # size=0.2, ratio=5   works nicely
     return train_data, test_data

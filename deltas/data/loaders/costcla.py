@@ -20,15 +20,16 @@ class costcla_dataset:
                 f'dataset: {dataset} not in costcla available datasets: {available_datasets}')
         self.dataset = dataset
 
-    def __call__(self, **kwargs):
+    def __call__(self, percent_of_data=5, **kwargs):
         # get dataset
         data = _get_costcla_dataset(self.dataset)
         # shuffle the dataset
         data = deltas.data.utils.shuffle_data(data) # type: ignore
         # reduce the size of the dataset
-        data = deltas.data.utils.proportional_downsample(data, **kwargs) # type: ignore
+        data = deltas.data.utils.proportional_downsample(
+            data, percent_of_data=percent_of_data, **kwargs)  # type: ignore
         # split into train, test
-        train_data, test_data = deltas.data.utils.proportional_split(data, size=0.8) # type: ignore
+        train_data, test_data = deltas.data.utils.proportional_split(data, size=0.7, ratio=10) # type: ignore
         return train_data, test_data
 
 

@@ -157,6 +157,7 @@ def get_real_dataset(dataset='Breast Cancer', scale=False):
     test0 = len(test_data['y'])-sum(test_data['y'])
     test1 = sum(test_data['y'])
     print(f"{dataset}: {test0+train0+test1+train1}")
+    print(f"Number of attribues: {train_data['X'].shape[1]}")
     print( f"Classes total: {test0+train0} - {test1+train1}\n")
     print(f"Classes train: {train0} - {train1}")
     print(f"Classes test:  {test0} - {test1}")

@@ -8,12 +8,13 @@ from sklearn.datasets import load_breast_cancer, load_iris, load_wine
 import deltas
 
 
-def get_breast_cancer(size=0.7, **kwargs):
+def get_breast_cancer(**kwargs):
     '''
     breast cancer dataset
     returns:
         - data: dict containing 'X', 'y'
     '''
+    # size = 0.453 # for even test 
     # get dataset
     data = load_breast_cancer()
     data = {'X': data.data, 'y': data.target}
@@ -27,7 +28,7 @@ def get_breast_cancer(size=0.7, **kwargs):
     # data = deltas.data.utils.proportional_downsample(data, **kwargs)
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(
-        data, size=size)
+        data, size=0.7, ratio=10)
     return train_data, test_data
 
 def get_wine(**kwargs):

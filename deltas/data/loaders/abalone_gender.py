@@ -34,5 +34,5 @@ def get_abalone(**kwargs):
     data = deltas.data.utils.shuffle_data(data)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(  # type: ignore
-        data, size=0.7)  # type: ignore
+        data, size=0.5, ratio=10)  # type: ignore
     return train_data, test_data

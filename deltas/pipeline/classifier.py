@@ -34,17 +34,23 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         # defining parameter range
         param_grid = {'C': [0.1, 1, 10, 100, 500, 2000, 10000],
                       'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
-                    'kernel': ['rbf']}
+                      'kernel': ['rbf']}
 
-        grid = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
-        # fitting the model for grid search
         print('Tuning SVM params with 5 fold CV')
-        grid.fit(data['X'], data['y'])
-        clf = grid.best_estimator_
-        print(f'Best SVM params: {grid.best_params_}')
-        # clf = models.SVM(kernel='rbf').fit( data['X'], data['y'])
-        clf_weighted = models.SVM(class_weight='balanced', kernel='rbf').fit( data['X'], data['y'])
-        clf_SMOTE = models.SVM(kernel='rbf').fit(SMOTE_data['X'], SMOTE_data['y'])
+        # original
+        grid_original = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
+        grid_original.fit(data['X'], data['y'])
+        clf = grid_original.best_estimator_
+        print(f'Best SVM params: {grid_original.best_params_}')
+        # weighted
+        grid_weighted = GridSearchCV(models.SVM(
+            class_weight='balanced'), param_grid, refit=True, n_jobs=-1)
+        grid_weighted.fit(data['X'], data['y'])
+        clf_weighted = grid_weighted.best_estimator_
+        # SMOTE
+        grid_SMOTE = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
+        grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
+        clf_SMOTE = grid_SMOTE.best_estimator_
     elif model == 'Linear':
         clf = models.linear().fit(data['X'], data['y'])
         clf_weighted = models.linear(class_weight='balanced').fit(data['X'], data['y'])
@@ -74,9 +80,9 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         # Thresholding
         clf_tresh = Thresholding(clf, calibration=False).fit(data['X'], data['y'])
 
-        clfs['Bayes Minimum Risk (calibrated)'] = clf_bmr
-        clfs['Bayes Minimum Risk'] = clf_bmr_non_cal
-        clfs['Thresholding'] = clf_tresh
+        clfs['BMR'] = clf_bmr
+        # clfs['BMR (uncalibrated)'] = clf_bmr_non_cal
+        clfs['Threshold'] = clf_tresh
     # PLOT ===================================================================
     # data for plotting purposes only
     train_data = {'original': data, 'SMOTE': SMOTE_data}

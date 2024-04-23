@@ -62,6 +62,7 @@ def proportional_split(data, size=0.8, seed=True, ratio=None):
     set_seed(seed)
     # get current class proportions
     classes, counts = np.unique(data['y'], return_counts=True)
+    classes = sorted(classes)
     test_inds = []
     train_inds = []
     for i, cls in enumerate(classes):
@@ -72,6 +73,9 @@ def proportional_split(data, size=0.8, seed=True, ratio=None):
         np.random.shuffle(cls_inds)
         # now split the data inds into train/test
         split_point = int(counts[i]*size)
+        if cls == 1: # minority class
+            if not isinstance(ratio, type(None)):
+                split_point = max(len(train_inds[0])//ratio, 1)
         train_inds.append(list(cls_inds[:split_point]))
         test_inds.append(list(cls_inds[split_point:]))
     # concat all the inds from each class
