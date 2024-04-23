@@ -17,7 +17,7 @@ train_loader = torch_data.DataLoader(
                        transforms.Normalize((0.1307,), (0.3081,))
                    ])),
     # batch_size=256, shuffle=True, drop_last=True)
-    batch_size=256, shuffle=False, drop_last=True)
+    batch_size=256, shuffle=False, drop_last=False)
 
 test_loader = torch_data.DataLoader(
     datasets.MNIST('./data', train=False,

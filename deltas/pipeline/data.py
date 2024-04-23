@@ -17,7 +17,8 @@ from deltas.data.loaders import (sklearn_toy,
                                  abalone_gender, 
                                  ionosphere, 
                                  wheat_seeds, 
-                                 costcla)
+                                 costcla,
+                                 mnist)
 
 
 def make_data_dim_reducer(data_getter):
@@ -117,6 +118,11 @@ def get_synthetic_sep_data(N1=10000,
 
 
 @make_data_dim_reducer
+def get_MNIST(scale=False):
+    mnist.get_mnist()
+
+
+@make_data_dim_reducer
 def get_real_dataset(dataset='Breast Cancer', scale=False):
     AVAILABLE_DATASETS = {
         # 'Gaussian': sample_dataset_to_proportions(get_gaussian),
@@ -134,6 +140,7 @@ def get_real_dataset(dataset='Breast Cancer', scale=False):
         'Credit Scoring 1': costcla.costcla_dataset('CreditScoring_Kaggle2011_costcla'),
         'Credit Scoring 2': costcla.costcla_dataset('CreditScoring_PAKDD2009_costcla'),
         'Direct Marketing': costcla.costcla_dataset('DirectMarketing_costcla'),
+        'MNIST': mnist.get_mnist
         # 'Circles': sample_dataset_to_proportions(get_circles),
         # 'Blobs': sample_dataset_to_proportions(get_blobs),
     }
