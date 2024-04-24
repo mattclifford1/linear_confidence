@@ -49,7 +49,7 @@ def shuffle_dataset(data, seed=True):
     return data
 
 
-def proportional_split(data, size=0.8, seed=True, ratio=None):
+def proportional_split(data, size=0.8, seed=True, ratio=None, equal_test=False):
     '''
     create a train, test split that preserves the class distributions
         data: data dict holder
@@ -90,6 +90,16 @@ def proportional_split(data, size=0.8, seed=True, ratio=None):
             # extract and store the splits
             test_split[key] = val[test_inds]  # important to do this one first!
             data[key] = val[train_inds]       # as test data is now deleted
+    if equal_test == True:
+        classes, counts = np.unique(test_split['y'], return_counts=True)
+        max_inst = min(counts)
+        for cls in classes:
+            inds = np.arange(len(test_split['y']))
+            inds = inds[test_split['y']==cls]
+            inds_drop = inds[max_inst:]
+            test_split['y'] = np.delete(test_split['y'], inds_drop)
+            test_split['X'] = np.delete(test_split['X'], inds_drop, axis=0)
+    
     return data, test_split
 
 

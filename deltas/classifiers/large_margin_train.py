@@ -1,71 +1,18 @@
 import numpy as np
 from torch.optim import Adam
 import torch
-
 from deltas.classifiers.large_margin_loss import LargeMarginLoss
-from deltas.classifiers.large_margin_net import MnistNet, MnistNetBin
-
-
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# lm = LargeMarginLoss(
-#     gamma=10000,
-#     alpha_factor=4,
-#     top_k=1,
-#     dist_norm=np.inf
-# )
-
-
-# def train_lm(model, train_loader, optimizer, epoch, lm):
-#     model.train()
-#     for batch_idx, (data, target) in enumerate(train_loader):
-#         data = data.to(device)
-#         one_hot = torch.zeros(len(target), 10).scatter_(
-#             1, target.unsqueeze(1), 1.).float()
-#         one_hot = one_hot.cuda()
-#         optimizer.zero_grad()
-#         output, feature_maps = model(data)
-#         # loss = F.mse_loss(output, target) * 5e-4 # l2_loss_weght
-#         loss = lm(output, one_hot, feature_maps)
-#         loss.backward()
-#         optimizer.step()
-#         if batch_idx % 100 == 0:
-#             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-#                 epoch, batch_idx * len(data), len(train_loader.dataset),
-#                 100. * batch_idx / len(train_loader), loss.item()))
-
-
-
-def train_lm_numpy(model, X, y, optimizer, epoch, LML, device, hots=2):
-    model.train()
-    bs = 256
-    for batch_idx in enumerate(range(len(y)//bs)):
-        i = batch_idx[0]
-        data = torch.from_numpy(
-            X[i*bs:(i+1)*bs].reshape([bs, 1, 28, 28])
-            )
-        data = data.to(device)
-
-        target = torch.from_numpy(y[i*bs:(i+1)*bs])
-        one_hot = torch.zeros(len(target), hots).scatter_(
-            1, target.unsqueeze(1), 1.).float()
-        one_hot = one_hot.to(device)
-        optimizer.zero_grad()
-        output, feature_maps = model(data)
-        # loss = F.mse_loss(output, target) * 5e-4 # l2_loss_weght
-        loss = LML(output, one_hot, feature_maps)
-        loss.backward()
-        optimizer.step()
-        if i % 100 == 0:
-            print(f'Train Epoch: {epoch}: {loss.item()}')
+from deltas.classifiers.large_margin_net import MnistNet
 
 
 class LargeMarginClassifier():
-    def __init__(self, net_type='Mnist-Binary'):
-        if net_type == 'Mnist-Binary':
-            net = MnistNetBin
+    def __init__(self, binary=True):
+        if binary == True:
+            net = MnistNet(final=2)
+            self.hots = 2
         else:
-            net = MnistNet
+            net = MnistNet(final=10)
+            self.hots = 10
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.LML = LargeMarginLoss(
             gamma=10000,
@@ -73,78 +20,111 @@ class LargeMarginClassifier():
             top_k=1,
             dist_norm=np.inf
         )
-        self.net = net().to(self.device)
+        self.net = net.to(self.device)
         self.optim = Adam(self.net.parameters())
 
+
     def fit(self, X, y, epochs=5):
-        for i in range(0, epochs):
-            train_lm_numpy(self.net, X, y, self.optim, i, self.LML, self.device)
+        self.train_lm_numpy(X, y, epochs=epochs)
         self.net.eval()
         return self
+
     
-    def predict(self, X):
+    def train_lm_numpy(self, X, y, epochs=5):
+        self.net.train()
+        bs = 256
+        num_splits = (len(y)//bs) + 1
+        all_ids = np.arange(len(y))
+        for epoch in range(epochs):
+            np.random.shuffle(all_ids)
+            batch_ids = np.array_split(all_ids, num_splits)
+            for i, batch in enumerate(batch_ids):
+                data = torch.from_numpy(
+                    X[batch].reshape([len(batch), 1, 28, 28])
+                )
+                data = data.to(self.device)
+                target = torch.from_numpy(y[batch])
+                if self.hots != 1:
+                    one_hot = torch.zeros(len(target), self.hots).scatter_(
+                        1, target.unsqueeze(1), 1.).float()
+                    one_hot = one_hot.to(self.device)
+                else:
+                    one_hot = target.float().to(self.device)
+                self.optim.zero_grad()
+                probs, feature_maps = self.net(data)
+                loss = self.LML(probs, one_hot, feature_maps)
+                loss.backward()
+                self.optim.step()
+                # if i % 100 == 0:
+                #     print(f'Train Epoch: {epoch}: {loss.item()}')
+            print(f'Train Epoch: {epoch}: {loss.item()}')
+
+
+    def predict(self, X, bs=2048):
+        y = self.predict_proba(X, bs=bs)
+        # y = np.argmax(y, axis=1)
+        y = y[:, 1]
+        y[y<0.5] = 0
+        y[y>=0.5] = 1
+        # return y
+        proj = self.get_projection(X, bs=bs).squeeze()
+        proj[proj<0.5] = 0
+        proj[proj>=0.5] = 1
+        return proj.squeeze()
+
+
+    def predict_proba(self, X, bs=2048):
+        if self.hots == 1:
+            dims = 2
+        else:
+            dims = self.hots
+        return self._get_net_func(X, self.net.predict_probs, dims=dims, bs=bs)
+    
+
+    def get_projection(self, X, bs=2048):
+        # minority_class = 1
+        # proj = np.expand_dims(self._get_net_func(X, self.net.get_projection, dims=self.hots, bs=bs)[:, minority_class], axis=1)
+        # proj = np.expand_dims(self._get_net_func(X, self.net.get_projection, dims=1, bs=bs), axis=1)
+        proj = self._get_net_func(X, self.net.get_projection, dims=1, bs=bs)
+        return proj
+    
+    def get_bias(self):
+        return self.net.get_bias()
+    
+    
+    def _get_net_func(self, X, func, dims, bs=2048):
+        X = X.astype(np.float32)
         self.net.eval()
+        y = np.zeros([X.shape[0], dims])
+        num_splits = (len(y)//bs) + 1
+        all_ids = np.arange(len(y))
+        batch_ids = np.array_split(all_ids, num_splits)
         with torch.no_grad():
-            return self._predict(X)
-
-    def _predict(self, X):
-        bs = 2048
-        y = np.zeros(X.shape[0], dtype=np.int64)
-        counter = 0
-        for batch_idx in enumerate(range(X.shape[0]//bs)):
-            i = batch_idx[0]
-            data = torch.from_numpy(
-                X[i*bs:(i+1)*bs].reshape([bs, 1, 28, 28])
-            )
-            data = data.to(self.device)
-            output = self.net.predict_probs(data)
-            # output = output.numpy()
-            for j in range(output.shape[0]):
-                y[counter] = torch.argmax(output[j, :])
-                counter += 1
-
-
-        # final left over batch
-        left_over = len(y) - ((i+1)*bs)
-        data = torch.from_numpy(
-            X[(i+1)*bs:].reshape([left_over, 1, 28, 28])
-        )
-        data = data.to(self.device)
-        output = self.net.predict_probs(data)
-        # output = output.numpy()
-        for j in range(output.shape[0]):
-            y[counter] = torch.argmax(output[j, :])
-            print(output[j, :])
-            counter += 1
+            for batch in batch_ids:
+                # to torch data
+                data = torch.from_numpy(
+                    X[batch].reshape([len(batch), 1, 28, 28])
+                )
+                data = data.to(self.device)
+                # predict
+                output = func(data)
+                # save to return
+                y[batch, :] = output.cpu().numpy()
         return y
-        
 
-    def predict_proba(self, X):
-        pass
 
-    def get_projection(self, X):
-        pass
+    def test(self, X, y, bs=2024, data_s='test'):
+        self.net.eval()
+        correct = 0
+        with torch.no_grad():
+            num_splits = (len(y)//bs) + 1
+            all_ids = np.arange(len(y))
+            batch_ids = np.array_split(all_ids, num_splits)
+            for batch in batch_ids:
+                preds = self.predict(X[batch])
+                correct += (preds == y[batch]).sum().item()
+
+        print('{} set: Accuracy: {}/{} ({:.0f}%)'.format(
+            data_s, correct, len(y),
+            100. * correct / len(y)))
     
-    # def train(self, train_loader, test_loader):
-    #     for i in range(0, 5):
-    #         train_lm(self.net, train_loader, self.optim, i, self.LML)
-
-    #         # test(self.net, test_loader)
-    #     return self
-
-def test(model, test_loader, device):
-    model.eval()
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output, *_ = model(data)
-            # get the index of the max log-probability
-            pred = output.argmax(dim=1, keepdim=True)
-            _, idx = output.max(dim=1)
-            correct += (idx == target).sum().item()
-
-    print('Test set: Accuracy: {}/{} ({:.0f}%)\n'.format(
-        correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
-

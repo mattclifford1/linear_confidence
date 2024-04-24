@@ -264,7 +264,7 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
 
         _, ax = plt.subplots(1, 1)
         y_plot = 0
-        for clf, name in zip([data_clf['clf'], delta_clf], ['Original', 'Deltas']):
+        for clf, name in zip([data_clf['clf'], delta_clf], ['Baseline', 'Deltas']):
             # plot test data
             X = data_clf['data_test']['X']
             y_plot = _plot_projection_test_and_grid(
@@ -284,7 +284,7 @@ def eval_test(data_clf, data_info, delta1, delta2, _print=True, _plot=True):
 
         # plot in original space
         _, axs = plt.subplots(1, 2)
-        titles = ['Original', 'Deltas']
+        titles = ['Baseline', 'Deltas']
         clfs = [data_clf['clf'], delta_clf]
         for title, ax, clf in zip(titles, axs, clfs):
             clf_preds = clf.predict(data_clf['data_test']['X'])

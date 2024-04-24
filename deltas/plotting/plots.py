@@ -44,8 +44,8 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         emp_xp1, emp_xp2 = projection.get_emp_means(data)
         ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                 marker='x', label='Empircal Means')
-        ax.text(emp_xp1, y+.1, r'$\bar{\phi}_{S_1}$', fontsize=12)
-        ax.text(emp_xp2, y+.1, r'$\bar{\phi}_{S_2}$', fontsize=12)
+        ax.text(emp_xp1, y+.1, r'$<\bar{\phi}_{S_1}, w>$', fontsize=12)
+        ax.text(emp_xp2, y+.1, r'$<\bar{\phi}_{S_2}, w>$', fontsize=12)
         # supports
         # if 'supports' in data.keys():
         #     ax.scatter(data['supports'], [y, y], c='k', s=100,

@@ -352,6 +352,7 @@ class downsample_deltas(base.base_deltas):
             results = downsample_deltas.static_check_and_optimise(
                 data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'], args['grid_search'])
             if results != None:
+                # print('solution found')
                 losses.append(results['loss'])
                 data_infos.append(data_info)
                 all_results.append(results)

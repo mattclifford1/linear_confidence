@@ -4,12 +4,13 @@ from sklearn.model_selection import GridSearchCV
 
 # from costcla.models.directcost import BayesMinimumRiskClassifier
 from deltas.costcla_local.models import BMR, Thresholding
+from deltas.classifiers.large_margin_train import LargeMarginClassifier
 import deltas.plotting.plots as plots
 import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
 
 
-def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, _plot=True, _plot_data=False):
+def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, binary=True, epochs=2, _plot=True, _plot_data=False):
     data = data_clf['data']
 
     # dim reducer (PCA) for plotting in higher dims
@@ -25,6 +26,7 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
     SMOTE_data = pipe_data.get_SMOTE_data(data)
 
 
+    weighted = True
     # Train Model ============================================================
     if model in ['SVM', 'SVM-linear']:
         clf = models.SVM(kernel='linear').fit(data['X'], data['y'])
@@ -64,12 +66,19 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
                         ).fit(data['X'], data['y'])
         clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
         clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
+    elif model == 'MNIST':
+        clf = LargeMarginClassifier(binary=binary).fit(
+            data['X'], data['y'], epochs=epochs)
+        weighted = False
+        clf_SMOTE = LargeMarginClassifier(binary=binary).fit(
+            SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
     else:
         raise ValueError(f"model: {model} not in list of available models")
     
     # Model adjsutment methods from the literature ===========================
-    clfs = {'Original': clf, 'SMOTE': clf_SMOTE,
-            'Balanced Weights': clf_weighted}
+    clfs = {'Baseline': clf, 'SMOTE': clf_SMOTE}
+    if weighted == True:
+        clfs['Balanced Weights'] = clf_weighted
     if costcla_methods == True:
         # Bayes Minimum Risk 
         X = data['X']

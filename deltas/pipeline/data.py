@@ -123,7 +123,7 @@ def get_MNIST(scale=False):
 
 
 @make_data_dim_reducer
-def get_real_dataset(dataset='Breast Cancer', scale=False):
+def get_real_dataset(dataset='Breast Cancer', scale=False, **kwargs):
     AVAILABLE_DATASETS = {
         # 'Gaussian': sample_dataset_to_proportions(get_gaussian),
         # 'Moons': sample_dataset_to_proportions(get_moons),
@@ -150,7 +150,7 @@ def get_real_dataset(dataset='Breast Cancer', scale=False):
         raise ValueError(f'dataset needs to be one of:{AVAILABLE_DATASETS.keys()}')
 
     # load dataset
-    train_data, test_data = AVAILABLE_DATASETS[dataset]()
+    train_data, test_data = AVAILABLE_DATASETS[dataset](**kwargs)
 
     # scale
     scaler = utils.normaliser(train_data)

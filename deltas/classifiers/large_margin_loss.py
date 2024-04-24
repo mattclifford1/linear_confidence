@@ -60,7 +60,7 @@ class LargeMarginLoss:
         self.use_approximation = use_approximation
         self.loss_type = loss_type
 
-    def __call__(self, logits, onehot_labels, feature_maps):
+    def __call__(self, prob, onehot_labels, feature_maps):
         """Getting Large Margin loss
         
         Arguments : 
@@ -71,7 +71,6 @@ class LargeMarginLoss:
         Returns :
             loss:  Large Margin loss
         """
-        prob = F.softmax(logits, dim=1)
         correct_prob = prob * onehot_labels
 
         correct_prob = torch.sum(correct_prob, dim=1, keepdim=True)
@@ -84,7 +83,7 @@ class LargeMarginLoss:
 
         diff_prob = correct_prob - topk_prob
 
-        loss = torch.empty(0, device=logits.device)
+        loss = torch.empty(0, device=prob.device)
         for feature_map in feature_maps:
             diff_grad = torch.stack([_get_grad(diff_prob[:, i], feature_map) for i in range(self.top_k)],
                                     dim=1)
