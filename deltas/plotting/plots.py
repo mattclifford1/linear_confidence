@@ -28,7 +28,8 @@ def projections_from_data_clfs(clfs, X, y, ax=None):
                 s=10, label='Class 2', marker='x')
         y_plt -= 0.2
         
-def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, deltas_to_plot=[1, 0.5, 0.1, 0.001], calc_data=True):
+
+def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, deltas_to_plot=[0.9999999999999999999], calc_data=True):
     ax, _ = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
@@ -41,11 +42,12 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     # data empircal results
     if calc_data == True:
         # empirical means
+        yplus = 0.05
         emp_xp1, emp_xp2 = projection.get_emp_means(data)
         ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                 marker='x', label='Empircal Means')
-        ax.text(emp_xp1, y+.1, r'$<\bar{\phi}_{S_1}, w>$', fontsize=12)
-        ax.text(emp_xp2, y+.1, r'$<\bar{\phi}_{S_2}, w>$', fontsize=12)
+        ax.text(emp_xp1, y+yplus, r'$<\bar{\phi}_{S_1}, w>$', fontsize=10)
+        ax.text(emp_xp2, y+yplus, r'$<\bar{\phi}_{S_2}, w>$', fontsize=10)
         # supports
         # if 'supports' in data.keys():
         #     ax.scatter(data['supports'], [y, y], c='k', s=100,
@@ -62,46 +64,57 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     else:
         name = 'Empirical'
     y = -0.3
+    yplus = 0.05
+    # yplus = 0
     if R_est == False:
-        txt1 = r'$\bar{R}_1$'
-        txt2 = r'$\bar{R}_2$'
-    else:
         txt1 = r'$\hat{\bar{R}}_1$'
         txt2 = r'$\hat{\bar{R}}_2$'
+    else:
+        txt1 = r'$\hat{R}_1$'
+        txt2 = r'$\hat{R}_2$'
     if R1_emp != None:
         ax.plot([emp_xp1, emp_xp1+R1_emp], [y, y],
                 c='b', label=f'R1 {name}', marker='|')
-        ax.text(emp_xp1+(R1_emp/2), y+.05, txt1, fontsize=12)
+        ax.text(emp_xp1+(R1_emp/2), y+yplus, txt1, fontsize=12)
     if R2_emp != None:
         ax.plot([emp_xp2-R2_emp, emp_xp2], [y, y], 
                 c='r', label=f'R2 {name}', marker='|')
-        ax.text(emp_xp2-(R2_emp/2), y+.05, txt2, fontsize=12)
+        ax.text(emp_xp2-(R2_emp/2), y+yplus, txt2, fontsize=12)
     
     # plot R error estimates if given the data
-    deltas_to_plot = [0.9999999999999999999]
     y = 0.4
+    # yplus = 0.05
     if data_info != None:
         for d in deltas_to_plot:
             R_ests = get_R_estimates(data_info, deltas=[d, d])
             ax.plot([emp_xp1, emp_xp1+R_ests[0]], [y, y],
                     c='b', marker='|', linestyle='dashed')
             ax.text(emp_xp1+((emp_xp1+R_ests[0])/2),
-                    y+.05, r'$\hat{\bar{R}}_1, \delta_1=0.\dot{9}$', fontsize=10)
+                    y+yplus, r'$\hat{R}_1(\delta_1=0.\dot{9})$', fontsize=10)
             ax.plot([emp_xp2-R_ests[1], emp_xp2], [y, y],
                     c='r', marker='|', linestyle='dashed')
             ax.text(emp_xp2-((emp_xp2+R_ests[1])/2),
-                    y+.05, r'$\hat{\bar{R}}_2, \delta_2=0.\dot{9}$', fontsize=10)
+                    y+yplus, r'$\hat{R}_2(\delta_2=0.\dot{9})$', fontsize=10)
+        # y = 0.7
+        # ax.plot([emp_xp1, emp_xp2], [y, y],
+        #         c='k', marker='|')
+        # ax.text(0, y+yplus, r'$\hat{D}$', fontsize=10)
+        
+
         ax.set_ylabel('deltas (dashed)')
             
     # to make plot scale nice with a legend
-    ax.plot([0], [2], c='w')
+    if len(deltas_to_plot) > 0 and data_info != None:
+        ax.plot([0], [1], c='w')
+    else:
+        ax.plot([0], [0.2], c='w')
     # ax.legend(loc='upper right')
 
-    ax.set_xlabel(r'$< \phi(x), w >$')
+    ax.set_xlabel(r'$< \phi(x), w >$', size=12)
     ax.set_ylabel('')
     ax.set_yticks([])
     # ax.autoscale(enable=True, axis='y', tight=True)
-    return ax
+    return ax, plt.gcf()
 
 def get_R_estimates(data_info, deltas=[1, 1]):
     R1_est = radius.R_upper_bound(data_info['empirical R1'], data_info['R all data'], data_info['N1'], deltas[0])
@@ -149,17 +162,18 @@ def plot_decision_boundary_custom_pred(pred_func, data, ax=None, dim_reducer=Non
     _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=probs)
 
 
-def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, probs=True):
+def plot_decision_boundary(clf, data, ax=None, dim_reducer=None, labels=True, probs=True, colourbar=True):
     '''
     plot a decision boundary on axes
     input:
         - clf: sklearn classifier object
     '''
     xgrids, zz = get_grid_pred(clf, data, probs=probs, dim_reducer=dim_reducer)
-    _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=probs)
+    _plot_decision_boundary(xgrids, zz, ax=ax, labels=True,
+                            probs=probs, colourbar=colourbar)
 
 
-def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True):
+def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True, colourbar=True):
     
     # if dim_reducer != None:
     #     X = dim_reducer.transform(data['X'])
@@ -168,7 +182,6 @@ def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True):
     #     return
 
     ax, show = _get_axes(ax)
-    
     # plot the grid of x, y and z values as a surface
     c = ax.contourf(xgrids[0], xgrids[1], zz, cmap=cm,
                     vmin=0, vmax=1, alpha=0.7)
@@ -181,10 +194,12 @@ def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True):
     else:
         cbar_label = 'Predicted Class'
         ticks = [0, 1]
-    cbar = plt.colorbar(c, ticks=ticks)
-    if labels == True:
-        cbar.ax.tick_params(labelsize=ticks_size)
-        cbar.ax.set_ylabel(cbar_label, size=ticks_size)
+    if colourbar == True:
+        cbar = plt.colorbar(c, ticks=ticks)
+        if labels == True:
+            cbar.ax.tick_params(labelsize=ticks_size)
+            cbar.ax.set_ylabel(cbar_label, size=ticks_size)
+            # ax.get_yaxis().set_visible(False)
 
     # set labels
     # if labels == True:
@@ -194,8 +209,8 @@ def _plot_decision_boundary(xgrids, zz, ax=None, labels=True, probs=True):
     #     else:
     #         ax.set_xlabel('Feature 1', fontsize=font_size)
     #         ax.set_ylabel('Feature 2', fontsize=font_size)
+    if labels == True:
         ax.tick_params(axis='both', which='major', labelsize=ticks_size_small)
-
     if show == True:
         plt.show()
 
@@ -254,25 +269,31 @@ def get_grid_pred(clf, data, probs=True, dim_reducer=None, flat=False, res=25, c
         return flat_grid, yhat
 
 
-def _get_axes(ax):
+def _get_axes(ax=None):
     '''
     determine whether to make an axes or not, making axes also means show them
     input:
         - ax: None or matplotlib axes object
     '''
-    if ax == None:
+    if isinstance(ax, type(None)):
         ax = plt.gca()
         show = True
     else:
         show = False
     return ax, show
 
-def deltas_projected_boundary(delta1, delta2, data_info):
+def deltas_projected_boundary(delta1, delta2, data_info, ax=None, save_file=None):
     # calculate each R upper bound
     R1_est = radius.R_upper_bound(
         data_info['empirical R1'], data_info['R all data'], data_info['N1'], delta1)
     R2_est = radius.R_upper_bound(
         data_info['empirical R2'], data_info['R all data'], data_info['N2'], delta2)
-    _, ax = plt.subplots(1, 1)
+    if save_file == None:
+        _, ax = plt.subplots(1, 1)
+    else:
+        fig, ax = plt.subplots(figsize=(5.5, 2.5))
     _ = plot_projection(
-        data_info['projected_data'], None, R1_est, R2_est, R_est=True, ax=ax)
+        data_info['projected_data'], None, R1_est, R2_est, R_est=True, ax=ax, deltas_to_plot=[])
+    if save_file != None:
+        fig.tight_layout()
+        fig.savefig(save_file + '-optimised.png', dpi=500)

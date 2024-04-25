@@ -18,8 +18,8 @@ class downsample_deltas(base.base_deltas):
     '''
     Downsample the dataset (randomly) until we find a good solution
     '''
-    def __init__(self, clf, *args, **kwargs):
-        super().__init__(clf, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def fit(self, X, y,
             costs=(1, 1),
@@ -29,9 +29,11 @@ class downsample_deltas(base.base_deltas):
             max_trials=1000,
             force_downsample=False,
             parallel=True,
+            clf=None,
             grid_search=True,
             _plot=False,
-            _print=False):
+            _print=False,
+            save_file=None):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
@@ -40,6 +42,11 @@ class downsample_deltas(base.base_deltas):
             force_downsample: try downsampling even if the original projection is solvable
             method:           which method of downsampling to use from: ['supports', 'supports-update_mean', 'supports-prop', 'supports-prop-update_mean', 'random']
         '''
+        if not isinstance(clf, type(None)):
+            if not hasattr(clf, 'get_projection'):
+                raise AttributeError(
+                    f"Classifier {clf} needs 'get_projection' method")
+            self.clf = clf
         # check method is supported
         methods_supported = ['supports',
                              'supports-update_mean',
@@ -56,7 +63,7 @@ class downsample_deltas(base.base_deltas):
         results = self._check_and_optimise_data(data_info)
         if _plot == True:
             print('Original Data')
-            self._plot_data(data_info, self.clf)
+            self._plot_data(data_info, self.clf, save_file=save_file)
 
         # now try as many random downsamples of the dataset as the budget allows
         if 'supports' in method:
@@ -154,8 +161,10 @@ class downsample_deltas(base.base_deltas):
                     print(
                         'Dataset projection incompatible with deltas downsample supports method')
             self.is_fit = False
+            self.loss = np.inf
         else:
             best_ind = np.argmin(losses)
+            self.loss = np.min(losses)
             self._save_as_best(all_results[best_ind], data_infos[best_ind])
 
             if _print == True and downsampled == True:
@@ -174,9 +183,11 @@ class downsample_deltas(base.base_deltas):
                 else:
                     print('Original Data:')
                 plots.deltas_projected_boundary(
-                    self.delta1, self.delta2, self.data_info)
+                    self.delta1, self.delta2, self.data_info, save_file=save_file)
         return self
-
+    
+    def score(self, *args, **kwargs):
+        return self.loss
 
     def check_if_solvable(self, data_info):
         return downsample_deltas.check_if_solvable_static(data_info, self.contraint_func, self.delta2_from_delta1)

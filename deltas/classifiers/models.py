@@ -52,8 +52,8 @@ class linear(LogisticRegression):
     
 
 class NN(MLPClassifier):
-    def __init__(self, hidden_layer_sizes=(20, 50, 100,), class_weight=None, **kwargs):
-        super().__init__(hidden_layer_sizes=hidden_layer_sizes, **kwargs)
+    def __init__(self, hidden_layer_sizes=(20, 50, 100,), class_weight=None, max_iter=500, **kwargs):
+        super().__init__(hidden_layer_sizes=hidden_layer_sizes, max_iter=max_iter, **kwargs)
         self.class_weight = class_weight
 
     def fit(self, X, y, *args, **kwargs):

@@ -27,9 +27,11 @@ def set_seed(seed):
         np.random.seed(seed=seed)
 
 
-def shuffle_data(data):
+def shuffle_data(data, seed=True):
+    if seed == True:
+        seed = RANDOM_STATE
     data['X'], data['y'] = shuffle(
-        data['X'], data['y'], random_state=RANDOM_STATE)
+        data['X'], data['y'], random_state=seed)
     return data
 
 

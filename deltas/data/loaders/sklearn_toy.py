@@ -8,7 +8,7 @@ from sklearn.datasets import load_breast_cancer, load_iris, load_wine
 import deltas
 
 
-def get_breast_cancer(**kwargs):
+def get_breast_cancer(seed=True, **kwargs):
     '''
     breast cancer dataset
     returns:
@@ -23,12 +23,12 @@ def get_breast_cancer(**kwargs):
     data['y'][data['y'] == 0] = 1
     data['y'][data['y'] == 2] = 0
     # shuffle the dataset
-    data = deltas.data.utils.shuffle_data(data)
+    data = deltas.data.utils.shuffle_data(data, seed=seed)
     # reduce the size of the dataset
     # data = deltas.data.utils.proportional_downsample(data, **kwargs)
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(
-        data, size=0.701, ratio=10)
+        data, size=0.701, seed=seed, ratio=10)
     return train_data, test_data
 
 def get_wine(**kwargs):

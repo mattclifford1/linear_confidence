@@ -9,6 +9,7 @@ imbalanced-learn
 umap-learn
 pandas
 costcla
+ucimlrepo
 # cvxpy
 # torch
 # plotly

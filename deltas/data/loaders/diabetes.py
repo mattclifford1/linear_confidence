@@ -9,7 +9,7 @@ import deltas
 
 CURRENT_FILE = os.path.dirname(os.path.abspath(__file__))
 
-def get_diabetes_indian(**kwargs):
+def get_diabetes_indian(seed=True, **kwargs):
     data = {}
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'diabetes_pima_indians', 'data.csv'))
@@ -34,9 +34,9 @@ def get_diabetes_indian(**kwargs):
     with open(os.path.join(CURRENT_FILE, '..', 'datasets', 'diabetes_pima_indians', 'description.txt'), 'r') as f:
         data['description'] = f.read()
     # shuffle the dataset
-    data = deltas.data.utils.shuffle_data(data)  # type: ignore
+    data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split( # type: ignore
-        data, size=0.2, ratio=5)  # type: ignore
+        data, size=0.2, ratio=5, seed=seed)  # type: ignore
     # size=0.2, ratio=5   works nicely
     return train_data, test_data

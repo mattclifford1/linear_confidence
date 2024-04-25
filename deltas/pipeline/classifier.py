@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.model_selection import GridSearchCV
-
+import os
+import matplotlib.pyplot as plt
 
 # from costcla.models.directcost import BayesMinimumRiskClassifier
 from deltas.costcla_local.models import BMR, Thresholding
@@ -10,7 +11,7 @@ import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
 
 
-def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, binary=True, epochs=2, _plot=True, _plot_data=False):
+def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, binary=True, epochs=2, _plot=True, _print=False, _plot_data=False, save_file=None, diagram=False):
     data = data_clf['data']
 
     # dim reducer (PCA) for plotting in higher dims
@@ -37,13 +38,14 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         param_grid = {'C': [0.1, 1, 10, 100, 500, 2000, 10000],
                       'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
                       'kernel': ['rbf']}
-
-        print('Tuning SVM params with 5 fold CV')
+        if _print == True:
+            print('Tuning SVM params with 5 fold CV')
         # original
         grid_original = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
         grid_original.fit(data['X'], data['y'])
         clf = grid_original.best_estimator_
-        print(f'Best SVM params: {grid_original.best_params_}')
+        if _print == True:
+            print(f'Best SVM params: {grid_original.best_params_}')
         # weighted
         grid_weighted = GridSearchCV(models.SVM(
             class_weight='balanced'), param_grid, refit=True, n_jobs=-1)
@@ -114,6 +116,48 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
                 classif, data_plot, ax=ax, probs=False, dim_reducer=dim_reducer)
             ax.set_title(name)
             plots.plt.show()
+
+    if save_file != None:
+        # data
+        fig, axs = plt.subplots(figsize=(8,8))
+        # fig, axs = plt.subplots()
+        plots.plot_classes(data, ax=axs, dim_reducer=dim_reducer)
+        if diagram == True:
+            axs.plot([-2, 6], [6, -2], c='k', linewidth=5)
+            axs.plot([-6, 4], [4, -6], c='k', linestyle='dashed', linewidth=5)
+            # axs.annotate("", xy=(2, 2), dx=-2, xytext=(0, 0),
+            #             arrowprops=dict(arrowstyle="->"))
+            axs.arrow(1, 1, -1.2, -1.2, color='k', width=0.2)
+            axs.text(-0.8, -0.8, r'$< \phi(x), w > + b = 0$',
+                    fontsize=18, rotation=-45)
+            axs.text(-3.9, -3.9,
+                    r"$< \phi(x), w > + b^{'} = 0$", fontsize=18, rotation=-45)
+            fig.savefig(save_file+'_data_original.png')
+        else:
+            axs.text(-8, -2, r'$S_1$',
+                     fontsize=30)
+            axs.text(2, 6, r'$S_2$',
+                     fontsize=30)
+            fig.savefig(save_file+'_data_original_S.png')
+        # clfs
+        fig, axs = plt.subplots(1, 2, figsize=(
+            16, 8), sharey=True)  # width_ratios=[1, 1.5]
+        plots.plot_classes(data, ax=axs[0], dim_reducer=dim_reducer)
+        plots.plot_decision_boundary(
+            clf, data, ax=axs[0], probs=False, dim_reducer=dim_reducer, colourbar=True)
+        axs[0].set_title('Baseline', fontsize=28)
+
+        plots.plot_classes(SMOTE_data, ax=axs[1], dim_reducer=dim_reducer)
+        plots.plot_decision_boundary(
+            clf_SMOTE, SMOTE_data, ax=axs[1], probs=False, dim_reducer=dim_reducer)
+        axs[1].set_title('SMOTE', fontsize=28)
+
+        fig.tight_layout()
+        fig.savefig(save_file+'_data.png')
+        # plt.show()
+
+
+
 
     return clfs
    

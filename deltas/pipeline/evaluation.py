@@ -30,7 +30,7 @@ def recall(*args, **kwargs):
     return recal[0]
 
 
-def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
+def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_file=None):
     # using new class for deltas format
 
     # predict on both classifiers (original and delta adjusted)
@@ -144,6 +144,30 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None):
         ax.set_title(
             'Boundaries on test dataset in projected space')
         plots.plt.show()
+    
+    if save_file != None:
+        fig, axs = plt.subplots(3, 2, figsize=(
+            16, 8*3), sharey=True)
+        x_count = 0
+        y_count = 0
+        for name, clf in clfs.items():
+            print(name)
+            # data = {'X': test_data['X'], 'y': preds[name]}
+            data = test_data
+            # data = test_data
+            plots.plot_classes(data, ax=axs[y_count, x_count], dim_reducer=dim_reducer)
+            plots.plot_decision_boundary(
+                clf, test_data, ax=axs[y_count, x_count], probs=False, dim_reducer=dim_reducer)
+            axs[y_count, x_count].set_title(name, fontsize=28)
+            x_count += 1
+            if x_count == 2:
+                y_count += 1
+                x_count = 0
+            if y_count == 3: 
+                break
+        fig.tight_layout()
+        fig.savefig(save_file+'_eval.png')
+
 
     if _print == True:
         df = scores_df.style.format(precision=4)

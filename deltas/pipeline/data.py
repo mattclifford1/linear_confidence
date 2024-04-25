@@ -18,7 +18,10 @@ from deltas.data.loaders import (sklearn_toy,
                                  ionosphere, 
                                  wheat_seeds, 
                                  costcla,
-                                 mnist)
+                                 mnist,
+                                 breast_cancer_W,
+                                 hepititus,
+                                 heart_disease)
 
 
 def make_data_dim_reducer(data_getter):
@@ -123,7 +126,7 @@ def get_MNIST(scale=False):
 
 
 @make_data_dim_reducer
-def get_real_dataset(dataset='Breast Cancer', scale=False, **kwargs):
+def get_real_dataset(dataset='Breast Cancer', _print=True, scale=False, **kwargs):
     AVAILABLE_DATASETS = {
         # 'Gaussian': sample_dataset_to_proportions(get_gaussian),
         # 'Moons': sample_dataset_to_proportions(get_moons),
@@ -140,7 +143,10 @@ def get_real_dataset(dataset='Breast Cancer', scale=False, **kwargs):
         'Credit Scoring 1': costcla.costcla_dataset('CreditScoring_Kaggle2011_costcla'),
         'Credit Scoring 2': costcla.costcla_dataset('CreditScoring_PAKDD2009_costcla'),
         'Direct Marketing': costcla.costcla_dataset('DirectMarketing_costcla'),
-        'MNIST': mnist.get_mnist
+        'MNIST': mnist.get_mnist,
+        'Wisconsin Breast Cancer':  breast_cancer_W.get_Wisconsin_breast_cancer,
+        'Hepatitis': hepititus.get_hepatitis,
+        'Heart Disease': heart_disease.get_HD
         # 'Circles': sample_dataset_to_proportions(get_circles),
         # 'Blobs': sample_dataset_to_proportions(get_blobs),
     }
@@ -163,11 +169,12 @@ def get_real_dataset(dataset='Breast Cancer', scale=False, **kwargs):
 
     test0 = len(test_data['y'])-sum(test_data['y'])
     test1 = sum(test_data['y'])
-    print(f"{dataset}: {test0+train0+test1+train1}")
-    print(f"Number of attribues: {train_data['X'].shape[1]}")
-    print( f"Classes total: {test0+train0} - {test1+train1}\n")
-    print(f"Classes train: {train0} - {train1}")
-    print(f"Classes test:  {test0} - {test1}")
+    if _print == True:
+        print(f"{dataset}: {test0+train0+test1+train1}")
+        print(f"Number of attribues: {train_data['X'].shape[1]}")
+        print( f"Classes total: {test0+train0} - {test1+train1}\n")
+        print(f"Classes train: {train0} - {train1}")
+        print(f"Classes test:  {test0} - {test1}")
     
     # return in dict format needed 
     return {'data': train_data, 'data_test': test_data}

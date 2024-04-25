@@ -2,6 +2,7 @@
 scikit-learn style class to fit deltas
 '''
 import numpy as np
+import os
 
 import deltas.plotting.plots as plots
 import deltas.utils.projection as projection
@@ -11,12 +12,19 @@ import deltas.optimisation.optimise_deltas as optimise_deltas
 
 
 class base_deltas:
-    def __init__(self, clf, dim_reducer=None):
-        if not hasattr(clf, 'get_projection'):
-            raise AttributeError(f"Classifier {clf} needs 'get_projection' method")
+    def __init__(self, clf=None, dim_reducer=None):
         self.clf = clf
         self.dim_reducer = dim_reducer
         self._setup()
+
+    def get_params(self, deep=True):
+        # return {"clf": self.clf, "dim_reducer": self.dim_reducer}
+        return {}
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
 
     def _setup(self):
         self.data_info_made = False
@@ -30,7 +38,12 @@ class base_deltas:
         self.delta2_from_delta1 = ds.delta2_given_delta1_matt
         # self.delta1_from_delta2 = ds.delta1_given_delta2_matt
 
-    def fit(self, X, y, costs=(1, 1), _plot=False, _print=False, grid_search=True, **kwargs):
+    def fit(self, X, y, costs=(1, 1), clf=None, _plot=False, _print=False, grid_search=True, **kwargs):
+        if not isinstance(clf, type(None)):
+            if not hasattr(clf, 'get_projection'):
+                raise AttributeError(
+                    f"Classifier {clf} needs 'get_projection' method")
+            self.clf = clf
         # Make data_info - R_ests, D, etc.
         self.data_info = self.get_data_info(X, y, self.clf, costs, _print=_print)
         self.data_info_made = True
@@ -186,24 +199,37 @@ class base_deltas:
             print("Not fit to any data yet, call 'fit(X, y)'  method first")
 
     @staticmethod
-    def _plot_data(data_info, clf, data_clf=None, m1=None, m2=None):
+    def _plot_data(data_info, clf, data_clf=None, m1=None, m2=None, save_file=None):
         # project means if we have them
-            proj_means = None
-            if isinstance(data_clf, dict):
-                if 'mean1' in data_clf.keys() and 'mean2' in data_clf.keys():
-                    m1 = data_clf['mean1']
-                    m2 = data_clf['mean2']
-                    proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, clf)
-            # plot the data
-            _ = plots.plot_projection(
-                data_info['projected_data'], 
-                proj_means,
-                data_info['empirical R1'],
-                data_info['empirical R2'],
-                deltas_to_plot=[1],
-                data_info=data_info,
-                )
+        if isinstance(save_file, type(None)):
+            ax = plots._get_axes()
+            ds = [0.9999999999999999999]
+        else:
+            fig, ax = plots.plt.subplots(figsize=(5.5, 2.5))
+            ds = []
+            # ds = [0.9999999999999999999]
+        proj_means = None
+        if isinstance(data_clf, dict):
+            if 'mean1' in data_clf.keys() and 'mean2' in data_clf.keys():
+                m1 = data_clf['mean1']
+                m2 = data_clf['mean2']
+                proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, clf)
+        # plot the data
+        ax, fig = plots.plot_projection(
+            data_info['projected_data'], 
+            proj_means,
+            data_info['empirical R1'],
+            data_info['empirical R2'],
+            deltas_to_plot=ds,
+            data_info=data_info,
+            )
+        if isinstance(save_file, type(None)):
             plots.plt.show()
+        else:
+            fig.tight_layout()
+            fig.savefig(save_file +'-training.png', dpi=500)
+
+
 
 
     def print_params(self):
