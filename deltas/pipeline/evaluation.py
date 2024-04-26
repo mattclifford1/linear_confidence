@@ -146,8 +146,8 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
         plots.plt.show()
     
     if save_file != None:
-        fig, axs = plt.subplots(3, 2, figsize=(
-            16, 8*3), sharey=True)
+        fig, axs = plt.subplots(3, 2, figsize=(16, 8*3), 
+                                sharey=True)#, width_ratios=[4, 0.2, 4, 0.2], height_ratios=[4, 4, 4])
         x_count = 0
         y_count = 0
         for name, clf in clfs.items():
@@ -156,17 +156,27 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
             data = test_data
             # data = test_data
             plots.plot_classes(data, ax=axs[y_count, x_count], dim_reducer=dim_reducer)
-            plots.plot_decision_boundary(
-                clf, test_data, ax=axs[y_count, x_count], probs=False, dim_reducer=dim_reducer)
+            c = plots.plot_decision_boundary(
+                clf, test_data, ax=axs[y_count, x_count], probs=False, dim_reducer=dim_reducer, colourbar=True)
             axs[y_count, x_count].set_title(name, fontsize=28)
+                
+            # x_count += 1
+            # # cbar_label = 'Predicted Class'
+            # # ticks = [0, 1]
+            # # cbar = plt.colorbar(c, ticks=ticks)
+            # # cbar.ax.tick_params(labelsize=24)
+            # # cbar.ax.set_ylabel(cbar_label, size=24)
+            # plt.colorbar(c, cax=axs[y_count, x_count])
+
+
             x_count += 1
             if x_count == 2:
                 y_count += 1
                 x_count = 0
             if y_count == 3: 
                 break
-        fig.tight_layout()
-        fig.savefig(save_file+'_eval.png')
+        plt.tight_layout()
+        plt.savefig(save_file+'_eval.png')
 
 
     if _print == True:
