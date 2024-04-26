@@ -5,7 +5,7 @@ from deltas.pipeline import data, classifier, evaluation
 import os
 save_file = os.path.join(os.path.expanduser(
     '~'), 'Downloads', 'Gaussian')
-np.random.seed(10)
+np.random.seed(0)
 N1 = 1000
 N2 = 10
 m = 1
@@ -18,7 +18,7 @@ data_clf = data.get_data(
     cov2=[[1, 0], [0, 1]],
     N1=N1,
     N2=N2,
-    scale=True
+    scale=False
 )
 model = 'SVM-linear'
 model = 'SVM-rbf'
@@ -40,7 +40,10 @@ clf = data_clf['clf']
 # deltas_model = base.base_deltas(
 #     clf).fit(X, y, grid_search=True, _print=True, _plot=True)
 deltas_model = downsample.downsample_deltas(
-    clf).fit(X, y, costs=costs, _print=True, _plot=True, grid_search=True, save_file=save_file)
+    clf).fit(X, y, costs=costs, _print=True, _plot=True, grid_search=False, 
+             alpha=10,
+             method='supports-prop-update_mean',
+             save_file=save_file)
 
 
 

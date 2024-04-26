@@ -29,7 +29,7 @@ def projections_from_data_clfs(clfs, X, y, ax=None):
         y_plt -= 0.2
         
 
-def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, ax=None, deltas_to_plot=[0.9999999999999999999], calc_data=True):
+def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, D=False, ax=None, deltas_to_plot=[0.9999999999999999999], calc_data=True):
     ax, _ = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
@@ -42,12 +42,18 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     # data empircal results
     if calc_data == True:
         # empirical means
-        yplus = 0.05
+        if D == True:
+            yplus = 0.12
+        else:
+            yplus = 0.05
         emp_xp1, emp_xp2 = projection.get_emp_means(data)
+        xminus =   0.25#0  #1.5
         ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                 marker='x', label='Empircal Means')
-        ax.text(emp_xp1, y+yplus, r'$<\bar{\phi}_{S_1}, w>$', fontsize=10)
-        ax.text(emp_xp2, y+yplus, r'$<\bar{\phi}_{S_2}, w>$', fontsize=10)
+        ax.text(emp_xp1-xminus, y+yplus,
+                r'$<\bar{\phi}_{S_1}, w>$', fontsize=10)
+        ax.text(emp_xp2-xminus, y+yplus,
+                r'$<\bar{\phi}_{S_2}, w>$', fontsize=10)
         # supports
         # if 'supports' in data.keys():
         #     ax.scatter(data['supports'], [y, y], c='k', s=100,
@@ -75,33 +81,36 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     if R1_emp != None:
         ax.plot([emp_xp1, emp_xp1+R1_emp], [y, y],
                 c='b', label=f'R1 {name}', marker='|')
-        ax.text(emp_xp1+(R1_emp/2), y+yplus, txt1, fontsize=12)
+        ax.text(emp_xp1+(R1_emp)-0.85, y+yplus, txt1, fontsize=12)
     if R2_emp != None:
         ax.plot([emp_xp2-R2_emp, emp_xp2], [y, y], 
                 c='r', label=f'R2 {name}', marker='|')
-        ax.text(emp_xp2-(R2_emp/2), y+yplus, txt2, fontsize=12)
+        ax.text(emp_xp2-(R2_emp), y+yplus, txt2, fontsize=12)
     
+    # yplus = 0.05
+    if D == True:
+        y = 0.7
+        ax.plot([emp_xp1, emp_xp2], [y, y],
+                c='k', marker='|')
+        ax.text(0, y+yplus, r'$\hat{D}$', fontsize=10)
+        deltas_to_plot = [0.9999999999999999999]
+        
+
+        ax.set_ylabel('deltas (dashed)')
     # plot R error estimates if given the data
     y = 0.4
-    # yplus = 0.05
     if data_info != None:
         for d in deltas_to_plot:
             R_ests = get_R_estimates(data_info, deltas=[d, d])
             ax.plot([emp_xp1, emp_xp1+R_ests[0]], [y, y],
                     c='b', marker='|', linestyle='dashed')
-            ax.text(emp_xp1+((emp_xp1+R_ests[0])/2),
-                    y+yplus, r'$\hat{R}_1(\delta_1=0.\dot{9})$', fontsize=10)
+            ax.text(emp_xp1,
+                    y+yplus+0.02, r'$\hat{R}_1(\delta_1=0.\dot{9})$', fontsize=10)
             ax.plot([emp_xp2-R_ests[1], emp_xp2], [y, y],
                     c='r', marker='|', linestyle='dashed')
-            ax.text(emp_xp2-((emp_xp2+R_ests[1])/2),
-                    y+yplus, r'$\hat{R}_2(\delta_2=0.\dot{9})$', fontsize=10)
-        # y = 0.7
-        # ax.plot([emp_xp1, emp_xp2], [y, y],
-        #         c='k', marker='|')
-        # ax.text(0, y+yplus, r'$\hat{D}$', fontsize=10)
-        
-
-        ax.set_ylabel('deltas (dashed)')
+            ax.text(emp_xp2-R_ests[1],
+                    y+yplus+0.02, r'$\hat{R}_2(\delta_2=0.\dot{9})$', fontsize=10)
+            
             
     # to make plot scale nice with a legend
     if len(deltas_to_plot) > 0 and data_info != None:
@@ -145,9 +154,14 @@ def plot_classes(data, ax=None, dim_reducer=None):
     size = [scatter_point_size *
             point_count[(xx1, xx2)] for xx1, xx2 in zip(x1, x2)]
 
+    y = data['y']
+
+    y, x1, x2 = zip(*sorted(zip(y, x1, x2)))
+
     ax.scatter(x1, x2, s=scatter_point_size,
-               c=data['y'], cmap=cm_bright, edgecolors="k", alpha=0.4,
+               c=y, cmap=cm_bright, edgecolors="k", alpha=0.4,
                linewidths=2)
+    
     ax.grid(False)
     ax.set_xlabel(x_txt, size=ticks_size)
     ax.set_ylabel(y_txt, size=ticks_size)
