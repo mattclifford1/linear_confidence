@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 # from costcla.models.directcost import BayesMinimumRiskClassifier
 from deltas.costcla_local.models import BMR, Thresholding
 from deltas.classifiers.large_margin_train import LargeMarginClassifier
+from deltas.classifiers.mnist_train import MNIST_torch
 import deltas.plotting.plots as plots
 import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
@@ -69,10 +70,12 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
         clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MNIST':
-        clf = LargeMarginClassifier(binary=binary).fit(
+        model = MNIST_torch
+        # m = LargeMarginClassifier
+        clf = model(binary=binary).fit(
             data['X'], data['y'], epochs=epochs)
         weighted = False
-        clf_SMOTE = LargeMarginClassifier(binary=binary).fit(
+        clf_SMOTE = model(binary=binary).fit(
             SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
     else:
         raise ValueError(f"model: {model} not in list of available models")

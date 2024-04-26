@@ -76,7 +76,7 @@ def proportional_split(data, size=0.8, seed=True, ratio=None, equal_test=False):
         # now split the data inds into train/test
         split_point = int(counts[i]*size)
         if cls == 1: # minority class
-            if not isinstance(ratio, type(None)):
+            if not isinstance(ratio, type(None)) and ratio != False:
                 split_point = max(len(train_inds[0])//ratio, 1)
         train_inds.append(list(cls_inds[:split_point]))
         test_inds.append(list(cls_inds[split_point:]))
