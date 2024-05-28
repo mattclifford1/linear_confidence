@@ -10,8 +10,8 @@ umap-learn
 pandas
 costcla
 ucimlrepo
+torch
 # cvxpy
-# torch
 # plotly
 # chart_studio
 # jax[cpu]

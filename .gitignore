@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 dev/data
-data
+./data
 
 # VS code
 # .vscode
