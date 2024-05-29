@@ -13,7 +13,7 @@ def get_mnist(size=60000, minority_id=[0], binary=True, classes_remove=[], ratio
         datasets.MNIST(download_dir, train=True, download=True,
                     transform=transforms.Compose([
                         transforms.ToTensor(),
-                        transforms.Normalize((0.1307,), (0.3081,))
+                        # transforms.Normalize((0.1307,), (0.3081,))
                     ])),
         batch_size=256, shuffle=False, drop_last=False)
 
