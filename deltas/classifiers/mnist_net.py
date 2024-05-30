@@ -118,9 +118,9 @@ class MnistNet(nn.Module):
     #     return logits - self._get_bias()
 
     def get_projection(self, x):
-        # probs = self.forward(x)
-        # proj = probs[:, 1]
-        # return proj.unsqueeze(dim=1) - self.get_bias()
+        probs = self.forward(x)
+        proj = probs[:, 1]
+        return proj.unsqueeze(dim=1) - self.get_bias()
 
         # proj = probs - self.get_bias_probs()
         # # print(proj.shape)

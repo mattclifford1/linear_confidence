@@ -72,10 +72,10 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
     elif model == 'MNIST':
         model = MNIST_torch
         # m = LargeMarginClassifier
-        clf = model(binary=binary).fit(
+        clf = model(hots=2).fit(
             data['X'], data['y'], epochs=epochs)
         weighted = False
-        clf_SMOTE = model(binary=binary).fit(
+        clf_SMOTE = model(hots=2).fit(
             SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
     else:
         raise ValueError(f"model: {model} not in list of available models")

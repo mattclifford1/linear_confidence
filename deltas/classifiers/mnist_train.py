@@ -61,7 +61,8 @@ class MNIST_torch():
                         1, target.unsqueeze(1), 1.).float()
                     one_hot = one_hot.to(self.device)
                 else:
-                    one_hot = target.float().to(self.device)
+                    # one_hot = target.float().to(self.device)
+                    one_hot = target.unsqueeze(1).float().to(self.device)
                 self.optim.zero_grad()
                 # t = target.to(self.device)
                 probs = self.net(data)
@@ -71,10 +72,11 @@ class MNIST_torch():
                 # loss = self.loss(logits, probs)
                 loss.backward()
                 self.optim.step()
-                if i % 100 == 0:
+
+                # if i % 100 == 0:
                     # print(f'Train Epoch: {epoch}: {loss.item()}')
 
-                    self.test(X, y, data_s='train')
+                    # self.test(X, y, data_s='train')
             # self.scheduler.step()
             # print(f'Train Epoch: {epoch}: {loss.item()}')
 
