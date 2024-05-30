@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
     
-class MnistNet(nn.Module):
+class MnistNetLargeMargin(nn.Module):
     def __init__(self, final=10):
         super().__init__()
         self.final = final
@@ -33,6 +33,15 @@ class MnistNet(nn.Module):
         fc1 = self.fc1(flatten)
         logits = self.fc2(fc1)
         probs = F.softmax(logits, dim=1)
+        return probs
+    
+    def get_probs_and_features(self, x):
+        conv1 = self.conv1(x)
+        conv2 = self.conv2(conv1)
+        flatten = conv2.view(x.shape[0], -1)
+        fc1 = self.fc1(flatten)
+        logits = self.fc2(fc1)
+        probs = F.softmax(logits, dim=1)
         return probs, [conv1, conv2]
     
     def logits(self, x):
@@ -43,7 +52,7 @@ class MnistNet(nn.Module):
         return self.fc2(fc1)
     
     def predict_probs(self, x):
-        probs, _ = self.forward(x)
+        probs = self.forward(x)
         if self.final == 1:
             probs = torch.concatenate([probs, 1-probs], dim=1)
         return probs
@@ -73,6 +82,6 @@ class MnistNet(nn.Module):
         return 0.5
 
     # def predict_probs(self, x):
-    #     logits, _ = self.forward(x)
+    #     logits = self.forward(x)
     #     return F.softmax(logits, dim=1)
     
