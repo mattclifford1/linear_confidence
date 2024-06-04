@@ -191,6 +191,11 @@ class base_deltas:
             _plot=_plot)
         return res
 
+    @staticmethod
+    def _plot_projection(X, y, clf):
+        # use to plot without fitting
+        data_info = base_deltas.get_data_info(X, y, clf)
+        base_deltas._plot_data(data_info, clf)
 
     def plot_data(self, data_clf=None, m1=None, m2=None):
         if self.data_info_made == True:
