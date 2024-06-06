@@ -197,14 +197,14 @@ class base_deltas:
         data_info = base_deltas.get_data_info(X, y, clf)
         base_deltas._plot_data(data_info, clf)
 
-    def plot_data(self, data_clf=None, m1=None, m2=None):
+    def plot_data(self, data=None, data_clf=None, m1=None, m2=None):
         if self.data_info_made == True:
-            self._plot_data(self.data_info, self.clf, data_clf=data_clf, m1=m1, m2=m2)
+            self._plot_data(self.data_info, self.clf, data=data, data_clf=data_clf, m1=m1, m2=m2)
         else:
             print("Not fit to any data yet, call 'fit(X, y)'  method first")
 
     @staticmethod
-    def _plot_data(data_info, clf, data_clf=None, m1=None, m2=None, save_file=None):
+    def _plot_data(data_info, clf, data=None, data_clf=None, m1=None, m2=None, save_file=None):
         # project means if we have them
         if isinstance(save_file, type(None)):
             ax = plots._get_axes()
@@ -219,9 +219,14 @@ class base_deltas:
                 m1 = data_clf['mean1']
                 m2 = data_clf['mean2']
                 proj_means = projection.from_clf({'X': np.array([m1, m2]), 'y': [0, 1]}, clf)
+        if isinstance(data, dict):
+            proj_data = projection.from_clf(data, clf)
+        else:
+            print('plotting training data as data input')
+            proj_data = data_info['projected_data']
         # plot the data
         ax, fig = plots.plot_projection(
-            data_info['projected_data'], 
+            proj_data, 
             proj_means,
             data_info['empirical R1'],
             data_info['empirical R2'],

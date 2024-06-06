@@ -70,8 +70,8 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MNIST':
         model = MNIST_torch
-        model = LargeMarginClassifier
-        clf = model(hots=2).fit(
+        # model = LargeMarginClassifier
+        clf = model(hots=1, lr=0.01, cuda=True).fit(
             data['X'], data['y'], epochs=epochs)
         weighted = False
         clf_SMOTE = model(hots=2).fit(

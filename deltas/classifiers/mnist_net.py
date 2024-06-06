@@ -87,15 +87,6 @@ class MnistNet(nn.Module):
         else:
             return F.softmax(logits, dim=1)
 
-    
-    # def forward(self, x):
-    #     logits = self.logits(x)
-
-    #     if self.final == 1:
-    #         return torch.sigmoid(logits)
-    #     else:
-    #         return F.softmax(logits, dim=1)
-    
     def logits(self, x):
         x = self.conv1(x)
         x = F.relu(x)
@@ -110,11 +101,10 @@ class MnistNet(nn.Module):
         x = self.fc2(x)
         return x
     
-    
     def predict_probs(self, x):
         probs  = self.forward(x)
         if self.final == 1:
-            probs = torch.concatenate([probs, 1-probs], dim=1)
+            probs = torch.concatenate([1-probs, probs], dim=1)
         return probs
     
     # def get_projection(self, x):

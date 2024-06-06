@@ -102,7 +102,7 @@ class downsample_deltas(base.base_deltas):
             if parallel == True:
                 n_cpus = multiprocessing.cpu_count()
                 # see how many to run per batch (optimise for n_cpus)
-                num_runs_per_batch = min(100, max_trials//n_cpus)
+                num_runs_per_batch = max(min(100, max_trials//n_cpus), 1)
                 num_runs = num_runs_per_batch
             else:
                 num_runs = max_trials
@@ -209,10 +209,17 @@ class downsample_deltas(base.base_deltas):
             return False
         
         # now check constraint/ if minimum error terms overlap too
+        highest_delta = 0.99999999999999999999999999999
+        
         try: # wrap to find out if solvable sometimes divides by zero
-            highest_delta1 = 0.99999999999999999999999999999
-            contraint_val = contraint_func(highest_delta1, delta2_from_delta1(
-                highest_delta1, data_info), data_info)
+            # actual check
+            contraint_val = contraint_func(highest_delta, delta2_from_delta1(
+                highest_delta, data_info), data_info)
+            
+            # # loose check
+            # contraint_val = contraint_func(
+            #     highest_delta, highest_delta, data_info)
+            
         except ZeroDivisionError:
             return False
         
