@@ -82,7 +82,11 @@ class MnistNet(nn.Module):
     
     def forward(self, x):
         logits = self.logits(x)
-        return F.softmax(logits, dim=1)
+        if self.final == 1:
+            return F.sigmoid(logits)
+        else:
+            return F.softmax(logits, dim=1)
+
     
     # def forward(self, x):
     #     logits = self.logits(x)
@@ -119,8 +123,10 @@ class MnistNet(nn.Module):
 
     def get_projection(self, x):
         probs = self.forward(x)
-        proj = probs[:, 1]
-        return proj.unsqueeze(dim=1) - self.get_bias()
+        if probs.shape[1] > 1:
+            probs = probs[:, 1]
+            probs = probs.unsqueeze(dim=1)
+        return probs - self.get_bias()
 
         # proj = probs - self.get_bias_probs()
         # # print(proj.shape)
