@@ -8,8 +8,9 @@ from abc import abstractmethod
 
 
 class base_trainer():
-    def __init__(self, net, hots=1, cuda=False, lr=0.01):
-        self.simple = False # is we using flat data X
+    def __init__(self, net, hots=1, cuda=False, lr=0.01, images=True, image_size=28):
+        self.simple = images # if we are using flat data X
+        self.image_size = image_size
         self.hots = hots
         if cuda == True:
             self.device = torch.device(
@@ -38,7 +39,7 @@ class base_trainer():
                 if self.simple == True:
                     bX = X[batch]
                 else:
-                    bX = X[batch].reshape([len(batch), 1, 28, 28])
+                    bX = X[batch].reshape([len(batch), 1, self.image_size, self.image_size])
                 data = torch.from_numpy(bX)
                 data = data.to(self.device)
                 target = torch.from_numpy(y[batch])
@@ -123,7 +124,7 @@ class base_trainer():
                 if self.simple == True:
                     bX = X[batch]
                 else:
-                    bX = X[batch].reshape([len(batch), 1, 28, 28])
+                    bX = X[batch].reshape([len(batch), 1, self.image_size, self.image_size])
                 data = torch.from_numpy(bX)
                 data = data.to(self.device)
                 # predict

@@ -63,6 +63,17 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf = models.NN().fit(data['X'], data['y'])
         clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
         clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
+    elif model == 'MLP-small':
+        print('fitting MLP')
+        clf = models.NN(hidden_layer_sizes=(
+            10, 10), max_iter=10).fit(data['X'], data['y'])
+        print('fit MLP 1')
+        clf_weighted = models.NN(hidden_layer_sizes=(
+            10, 10), max_iter=10, class_weight='balanced').fit(data['X'], data['y'])
+        print('fit MLP 2')
+        clf_SMOTE = models.NN(hidden_layer_sizes=(
+            10, 10), max_iter=10).fit(SMOTE_data['X'], SMOTE_data['y'])
+        print('fit MLP 3')
     elif model == 'MLP-deep':
         clf = models.NN(hidden_layer_sizes=(10, 20, 50, 50, 50, 100, 200, 300,), activation='relu', solver='adam'
                         ).fit(data['X'], data['y'])

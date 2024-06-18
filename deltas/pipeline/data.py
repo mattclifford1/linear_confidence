@@ -21,7 +21,9 @@ from deltas.data.loaders import (sklearn_toy,
                                  mnist,
                                  breast_cancer_W,
                                  hepititus,
-                                 heart_disease)
+                                 heart_disease,
+                                 MIMIC_III,
+                                 MIMIC_IV)
 
 
 def make_data_dim_reducer(data_getter):
@@ -146,7 +148,9 @@ def get_real_dataset(dataset='Breast Cancer', _print=True, scale=False, **kwargs
         'MNIST': mnist.get_mnist,
         'Wisconsin Breast Cancer':  breast_cancer_W.get_Wisconsin_breast_cancer,
         'Hepatitis': hepititus.get_hepatitis,
-        'Heart Disease': heart_disease.get_HD
+        'Heart Disease': heart_disease.get_HD,
+        'MIMIC-III': MIMIC_III.get_mortality,
+        'MIMIC-IV': MIMIC_IV.get_ready_for_discharge,
         # 'Circles': sample_dataset_to_proportions(get_circles),
         # 'Blobs': sample_dataset_to_proportions(get_blobs),
     }
