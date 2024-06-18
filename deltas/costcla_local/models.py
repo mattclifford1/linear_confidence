@@ -29,11 +29,14 @@ class BMR(BayesMinimumRiskClassifier):
         return self.clf.get_bias(*args, **kwargs)
 
     def predict(self, X, cost_mat=None):
-        y_prob_pred = self.clf.predict_proba(X)
+        y_prob_pred = self.predict_proba(X)
         if isinstance(cost_mat, type(None)):
             cost_mat = get_cost_matrix(
                 n_samples=y_prob_pred.shape[0], P=self.P, N=self.N)
         return super().predict(y_prob_pred, cost_mat)
+    
+    def predict_proba(self, X):
+        return self.clf.predict_proba(X)
 
     def fit(self, X, y):
         y_prob_train = self.clf.predict_proba(X)
@@ -56,8 +59,11 @@ class Thresholding(ThresholdingOptimization):
         return self.clf.get_bias(*args, **kwargs)
 
     def predict(self, X):
-        y_prob_pred = self.clf.predict_proba(X)
+        y_prob_pred = self.predict_proba(X)
         return super().predict(y_prob_pred)
+    
+    def predict_proba(self, X):
+        return self.clf.predict_proba(X)
 
     def fit(self, X, y, cost_train=None):
         ''' use train for X and y '''

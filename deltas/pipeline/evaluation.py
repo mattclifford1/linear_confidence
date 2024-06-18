@@ -35,26 +35,36 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
 
     # predict on both classifiers (original and delta adjusted)
     preds = {}
+    probs = {}
     for name, clf in clfs.items():
         preds[name] = clf.predict(test_data['X'])
+        probs[name] = clf.predict_proba(test_data['X'])[:, 1]
 
 
-    metrics = {'Accuracy': accuracy_score,
-               'G-Mean': geometric_mean_score,
-                'ROC-AUC': roc_auc_score,
-                # 'Precision1 (red)': precision0,
-                # 'Precision2 (blue)' : precision1,
-                # 'Precision': precision,
-                # 'Recall': recall,
-                'F1': f1_score,
-                # 'F-score-1': fscore,
+    metrics = {
+        'Accuracy': accuracy_score,
+        'G-Mean': geometric_mean_score,
+        # 'ROC-AUC': roc_auc_score,
+        # 'Precision1 (red)': precision0,
+        # 'Precision2 (blue)' : precision1,
+        # 'Precision': precision,
+        # 'Recall': recall,
+        'F1': f1_score,
+        # 'F-score-1': fscore,
                 }
     
     index_name = 'Method'
     d = {index_name: list(preds.keys())}
     for metric, func in metrics.items():
         _scores = []
-        for name, y_preds in preds.items():
+
+        # make sure to use probabilities for ROC!!!
+        scoring = preds
+        if metric == 'ROC-AUC':
+            scoring = probs
+
+        # get metric for each classifier's scores
+        for name, y_preds in scoring.items():
             _scores.append(func(test_data['y'], y_preds))
         d[metric] = _scores
 

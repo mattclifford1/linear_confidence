@@ -99,6 +99,9 @@ class base_deltas:
             return self.clf.predict(X)
             # raise AttributeError("Not fit to any data yet, call 'fit(X, y)' or  method first")
         return self._predict(X, self.boundary, self.class_nums)
+    
+    def predict_proba(self, X):
+        return self.clf.predict_proba(X)
         
     def _predict(self, X, boundary, class_nums):
         # project data if not already
