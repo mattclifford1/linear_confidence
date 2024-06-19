@@ -1,3 +1,4 @@
+from sklearn.metrics import confusion_matrix
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, precision_score, auc, roc_auc_score, precision_recall_fscore_support
@@ -30,6 +31,11 @@ def recall(*args, **kwargs):
     return recal[0]
 
 
+def minority_accuracy(*args, **kwargs):
+    min_acc = confusion_matrix(*args, **kwargs, normalize="true").diagonal()[1]
+    return min_acc
+
+
 def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_file=None):
     # using new class for deltas format
 
@@ -43,6 +49,7 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
 
     metrics = {
         'Accuracy': accuracy_score,
+        'Minority Accuracy': minority_accuracy,
         'G-Mean': geometric_mean_score,
         'ROC-AUC': roc_auc_score,
         # 'Precision1 (red)': precision0,
