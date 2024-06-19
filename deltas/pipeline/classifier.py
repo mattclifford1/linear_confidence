@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 # from costcla.models.directcost import BayesMinimumRiskClassifier
 from deltas.costcla_local.models import BMR, Thresholding
 from deltas.classifiers.mnist_train import MNIST_torch, LargeMarginClassifier
+from deltas.classifiers.mimic_train import LargeMarginClassifierMIMIC
 import deltas.plotting.plots as plots
 import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
@@ -35,9 +36,11 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
         # defining parameter range
-        param_grid = {'C': [0.1, 1, 10, 100, 500, 2000, 10000],
+        param_grid = {
+            'C': [0.1, 1, 10, 100, 500, 2000, 10000],
                       'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
-                      'kernel': ['rbf']}
+                      'kernel': ['rbf']
+                      }
         if _print == True:
             print('Tuning SVM params with 5 fold CV')
         # original
@@ -87,6 +90,17 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         weighted = False
         clf_SMOTE = model(hots=2).fit(
             SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
+        
+    elif model == 'MIMIC':
+        # clf = MIMIC_torch(lr=0.001, cuda=False).fit(
+        #     data['X'], data['y'], epochs=50)
+        layers = (100, 500, 100)
+        layers = (100, 500, 1000, 500, 100)
+        clf = models.NN(hidden_layer_sizes=layers).fit(data['X'], data['y'])
+        clf_weighted = models.NN(hidden_layer_sizes=layers, class_weight='balanced').fit(data['X'], data['y'])
+        clf_SMOTE = models.NN(hidden_layer_sizes=layers).fit(
+            SMOTE_data['X'], SMOTE_data['y'])
+
     else:
         raise ValueError(f"model: {model} not in list of available models")
     

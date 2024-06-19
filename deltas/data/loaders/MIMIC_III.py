@@ -8,10 +8,16 @@ read the paper for full details: https://bmjopen.bmj.com/content/bmjopen/9/3/e02
 and the github repo https://github.com/UHBristolDataScience/smartt-algortihm/tree/main
 processing https://github.com/UHBristolDataScience/towards-decision-support-icu-discharge
 
-Resampled data we exclude: 
+
+Resampled data we exclude IMPUTED: 
     row 2 to 784 (outcome 0): original NRFD
     row 785 to 6606 (outcome 0): resampled NRFD (again should be in blocks of monotonically increasing ICUSTAY_ID, of which you could take one block).
     row 6607 to 13244 (outcome 1): RFD
+
+Resampled data we exclude COMPLETECASE:
+    row 2 to 2508: RFD
+    row 2509 to 2837: original NRFD
+    row 2838 onwards: resampled NRFD 
 
 '''
 # author: Matt Clifford <matt.clifford@bristol.ac.uk>
@@ -24,18 +30,26 @@ import deltas
 CURRENT_FILE = os.path.dirname(os.path.abspath(__file__))
 
 
-def get_mortality(seed=True, **kwargs):
+def get_mortality(seed=True, complete=False, **kwargs):
     data = {}
+    if complete == False:
+        file = 'fm_MIMIC_IMPUTED_extended.csv'
+    else:
+        file = 'fm_MIMIC_COMPLETECASE_extended.csv'
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..', '..', '..',
-                     'data', 'MIMIC-III', 'fm_MIMIC_IMPUTED_extended.csv'))
+                     'data', 'MIMIC-III', file))
     
     # remove resampled data we dont care about for the true dataset
-    df.drop(df.index[0:2], inplace=True)
-    df.drop(df.index[785:6606], inplace=True)
+    if complete == False:
+        df.drop(df.index[0:2], inplace=True)
+        df.drop(df.index[785:6606], inplace=True)
+    else:
+        df.drop(df.index[0:2], inplace=True)
+        df.drop(df.index[2837:], inplace=True)
 
     # not a feature
     df.pop('cohort')
-    # not as useful features 
+    # not useful features according to paper
     df.pop('age')
     df.pop('sex')
     df.pop('bmi')
@@ -57,5 +71,28 @@ def get_mortality(seed=True, **kwargs):
     data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(  # type: ignore
-        data, size=0.2, seed=seed, ratio=2)
+        data, size=0.7, seed=seed) # locked for results
+    return train_data, test_data
+
+
+def get_sepsis(seed=True, **kwargs):
+    data = {}
+    df = pd.read_csv(os.path.join(CURRENT_FILE, '..', '..', '..',
+                     'data', 'MIMIC-III', 'mimic_challenge_2019_sepsis.csv'))
+    
+
+    # not a feature
+    df.pop('ID')
+
+    # label
+    data['y'] = df.pop('SepsisLabel').to_numpy()
+
+    # features
+    data['X'] = df.to_numpy()
+    data['feature_names'] = df.columns.to_list()
+    # shuffle the dataset
+    data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
+    # split into train, test
+    train_data, test_data = deltas.data.utils.proportional_split(  # type: ignore
+        data, size=0.5, seed=seed)
     return train_data, test_data

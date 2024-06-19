@@ -150,6 +150,8 @@ def get_real_dataset(dataset='Breast Cancer', _print=True, scale=False, **kwargs
         'Hepatitis': hepititus.get_hepatitis,
         'Heart Disease': heart_disease.get_HD,
         'MIMIC-III': MIMIC_III.get_mortality,
+        'MIMIC-III-mortality': MIMIC_III.get_mortality,
+        'MIMIC-III-sepsis': MIMIC_III.get_sepsis,
         'MIMIC-IV': MIMIC_IV.get_ready_for_discharge,
         # 'Circles': sample_dataset_to_proportions(get_circles),
         # 'Blobs': sample_dataset_to_proportions(get_blobs),

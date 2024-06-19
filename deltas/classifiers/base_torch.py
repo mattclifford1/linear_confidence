@@ -9,7 +9,7 @@ from abc import abstractmethod
 
 class base_trainer():
     def __init__(self, net, hots=1, cuda=False, lr=0.01, images=True, image_size=28):
-        self.simple = images # if we are using flat data X
+        self.simple = not images # if we are using flat data X
         self.image_size = image_size
         self.hots = hots
         if cuda == True:
@@ -37,7 +37,7 @@ class base_trainer():
             batch_ids = np.array_split(all_ids, num_splits)
             for i, batch in enumerate(batch_ids):
                 if self.simple == True:
-                    bX = X[batch]
+                    bX = X[batch].astype('float32')
                 else:
                     bX = X[batch].reshape([len(batch), 1, self.image_size, self.image_size])
                 data = torch.from_numpy(bX)

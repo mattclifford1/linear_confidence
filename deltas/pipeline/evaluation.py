@@ -44,7 +44,7 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
     metrics = {
         'Accuracy': accuracy_score,
         'G-Mean': geometric_mean_score,
-        # 'ROC-AUC': roc_auc_score,
+        'ROC-AUC': roc_auc_score,
         # 'Precision1 (red)': precision0,
         # 'Precision2 (blue)' : precision1,
         # 'Precision': precision,
