@@ -1,13 +1,14 @@
-
-% Gaussian - 10\begin{tabular}{@{}lrrrr@{}}
+% 10/07/2024 09:35:41
+% Gaussian - 10 runs
+\begin{tabular}{@{}lrrrr@{}}
 \toprule
 Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
 \midrule
-Baseline & $.503 \pm .00$ & $.048 \pm .07$ & $\textbf{.974} \pm .00$ & $.014 \pm .03$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.903 \pm .01$ & $.901 \pm .02$ & $.974 \pm .00$ & $.898 \pm .02$ \\
-BW & $.640 \pm .16$ & $.410 \pm .35$ & $.916 \pm .07$ & $.353 \pm .38$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.895 \pm .02$ & $.892 \pm .03$ & $.974 \pm .00$ & $.889 \pm .03$ \\
-Thresh \cite{Sheng_2006_AAAI} & $.895 \pm .02$ & $.892 \pm .03$ & $.974 \pm .00$ & $.889 \pm .03$ \\
-Our Method & $\textbf{.911} \pm .00$ & $\textbf{.910} \pm .00$ & $.974 \pm .00$ & $\textbf{.911} \pm .01$ \\
+Baseline & $.5 \pm .0$ & $.0 \pm .0$ & $.941 \pm .01$ & $.0 \pm .0$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.904 \pm .01$ & $.902 \pm .02$ & $\textbf{.974} \pm .00$ & $.899 \pm .02$ \\
+BW & $\textbf{.912} \pm .00$ & $\textbf{.911} \pm .00$ & $.966 \pm .01$ & $\textbf{.915} \pm .00$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.872 \pm .02$ & $.870 \pm .02$ & $.941 \pm .01$ & $.872 \pm .03$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.872 \pm .02$ & $.870 \pm .02$ & $.941 \pm .01$ & $.872 \pm .03$ \\
+Our Method & $.876 \pm .02$ & $.874 \pm .02$ & $.941 \pm .01$ & $.874 \pm .02$ \\
 \bottomrule
 \end{tabular}

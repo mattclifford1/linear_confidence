@@ -1,0 +1,14 @@
+% 10/07/2024 10:34:21
+% Gaussian - 100 runs
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
+\midrule
+Baseline & $.597 \pm .03$ & $.431 \pm .09$ & $\textbf{.974} \pm .00$ & $.319 \pm .10$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.907 \pm .00$ & $.906 \pm .00$ & $.974 \pm .00$ & $.903 \pm .00$ \\
+BW & $.909 \pm .00$ & $.908 \pm .00$ & $.973 \pm .00$ & $.905 \pm .00$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.889 \pm .03$ & $.884 \pm .04$ & $.974 \pm .00$ & $.880 \pm .05$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.890 \pm .03$ & $.886 \pm .04$ & $.974 \pm .00$ & $.883 \pm .04$ \\
+Our Method & $\textbf{.910} \pm .01$ & $\textbf{.909} \pm .01$ & $.974 \pm .00$ & $\textbf{.908} \pm .01$ \\
+\bottomrule
+\end{tabular}
