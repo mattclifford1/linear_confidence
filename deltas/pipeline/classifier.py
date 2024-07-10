@@ -66,6 +66,10 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf = models.NN().fit(data['X'], data['y'])
         clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
         clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
+    elif model == 'MLP-Gaussian':
+        clf = models.NN(hidden_layer_sizes=(100,)).fit(data['X'], data['y'])
+        clf_weighted = models.NN(hidden_layer_sizes=(100,), class_weight='balanced').fit(data['X'], data['y'])
+        clf_SMOTE = models.NN(hidden_layer_sizes=(100,)).fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MLP-small':
         print('fitting MLP')
         clf = models.NN(hidden_layer_sizes=(

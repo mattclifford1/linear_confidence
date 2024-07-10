@@ -42,7 +42,7 @@ def get_HD(seed=True, **kwargs):
     # add name and description
     data['description'] = heart_disease.metadata
     # shuffle the dataset
-    print(seed)
+    # print(seed)
     data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split( # type: ignore

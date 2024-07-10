@@ -21,10 +21,10 @@ class normaliser:
 def set_seed(seed):
     if seed == True:
         np.random.seed(seed=RANDOM_STATE)
-    elif seed == False:
-        np.random.seed(seed=None)
     elif type(seed) == int:
         np.random.seed(seed=seed)
+    elif seed == False:
+        np.random.seed(seed=None)
 
 
 def shuffle_data(data, seed=True):
@@ -73,6 +73,7 @@ def proportional_split(data, size=0.8, seed=True, ratio=None, equal_test=False):
         # shuffle all the inds to get a random selection
         set_seed(seed)
         np.random.shuffle(cls_inds)
+        set_seed(seed)
         # now split the data inds into train/test
         split_point = int(counts[i]*size)
         if cls == 1: # minority class

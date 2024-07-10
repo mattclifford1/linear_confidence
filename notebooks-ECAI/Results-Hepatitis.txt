@@ -1,0 +1,12 @@
+% Hepatitis - 10\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
+\midrule
+Baseline & $\textbf{.851} \pm .03$ & $.711 \pm .07$ & $\textbf{.796} \pm .05$ & $.604 \pm .09$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.782 \pm .02$ & $.055 \pm .17$ & $.788 \pm .07$ & $.04 \pm .12$ \\
+BW & $.851 \pm .03$ & $.711 \pm .07$ & $.796 \pm .05$ & $.604 \pm .09$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.786 \pm .06$ & $.716 \pm .07$ & $.796 \pm .05$ & $.552 \pm .08$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.789 \pm .06$ & $.726 \pm .07$ & $.796 \pm .05$ & $.564 \pm .09$ \\
+Our Method & $.831 \pm .05$ & $\textbf{.767} \pm .05$ & $.796 \pm .05$ & $\textbf{.630} \pm .07$ \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,12 @@
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
+\midrule
+Baseline & $.859 \pm .00$ & $.387 \pm .01$ & $.553 \pm .00$ & $.193 \pm .01$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.826 \pm .00$ & $.431 \pm .02$ & $\textbf{.562} \pm .01$ & $.202 \pm .02$ \\
+BW & $.848 \pm .00$ & $.392 \pm .03$ & $.552 \pm .01$ & $.188 \pm .02$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.875} \pm .00$ & $.338 \pm .03$ & $.553 \pm .00$ & $.169 \pm .02$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.823 \pm .02$ & $\textbf{.442} \pm .04$ & $.553 \pm .00$ & $.208 \pm .01$ \\
+Our Method & $.832 \pm .00$ & $.438 \pm .01$ & $.553 \pm .00$ & $\textbf{.212} \pm .01$ \\
+\bottomrule
+\end{tabular}
