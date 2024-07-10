@@ -93,7 +93,8 @@ class delta_adjusted_clf:
 class NN(MLPClassifier):
     def __init__(self, 
                 #  hidden_layer_sizes=(20, 50, 100,), 
-                 hidden_layer_sizes=(10, 20,), 
+                 hidden_layer_sizes=(20, 50,), 
+                #  hidden_layer_sizes=(10, 20, 50, 20, 10), 
                  class_weight=None, 
                  max_iter=500, 
                  solver='adam',

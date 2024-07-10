@@ -25,7 +25,7 @@ class downsample_deltas(base.base_deltas):
             costs=(1, 1),
             alpha=1,
             prop_penalty=True,
-            method='supports-prop-update_mean-margin_only',
+            method='supports-prop-update_mean',
             max_trials=1000,
             force_downsample=False,
             parallel=True,

@@ -12,7 +12,7 @@ import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
 
 
-def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, binary=True, epochs=2, _plot=True, _print=False, _plot_data=False, save_file=None, diagram=False):
+def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, binary=True, epochs=2, _plot=True, _print=False, _plot_data=False, save_file=None, bayes_optimal=False, diagram=False):
     data = data_clf['data']
 
     # dim reducer (PCA) for plotting in higher dims
@@ -152,7 +152,8 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         # data
         fig, axs = plt.subplots(figsize=(8,8))
         # fig, axs = plt.subplots()
-        plots.plot_classes(data, ax=axs, dim_reducer=dim_reducer)
+        plots.plot_classes(data, ax=axs, dim_reducer=dim_reducer,
+                           bayes_optimal=bayes_optimal)
         if diagram == True:
             axs.plot([-2, 6], [6, -2], c='k', linewidth=5)
             axs.plot([-6, 4], [4, -6], c='k', linestyle='dashed', linewidth=5)
@@ -184,7 +185,7 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         axs[1].set_title('SMOTE', fontsize=28)
 
         fig.tight_layout()
-        fig.savefig(save_file+'_data.png')
+        fig.savefig(save_file+'_data.png', dpi=500)
         # plt.show()
     return clfs
    

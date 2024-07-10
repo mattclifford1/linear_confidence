@@ -36,7 +36,7 @@ def minority_accuracy(*args, **kwargs):
     return min_acc
 
 
-def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_file=None):
+def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_file=None, bayes_optimal=False):
     # using new class for deltas format
 
     # predict on both classifiers (original and delta adjusted)
@@ -168,11 +168,12 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
         x_count = 0
         y_count = 0
         for name, clf in clfs.items():
-            print(name)
+            # print(name)
             # data = {'X': test_data['X'], 'y': preds[name]}
             data = test_data
             # data = test_data
-            plots.plot_classes(data, ax=axs[y_count, x_count], dim_reducer=dim_reducer)
+            plots.plot_classes(
+                data, ax=axs[y_count, x_count], dim_reducer=dim_reducer, bayes_optimal=bayes_optimal)
             c = plots.plot_decision_boundary(
                 clf, test_data, ax=axs[y_count, x_count], probs=False, dim_reducer=dim_reducer, colourbar=True)
             axs[y_count, x_count].set_title(name, fontsize=28)
@@ -193,11 +194,11 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
             if y_count == 3: 
                 break
         plt.tight_layout()
-        plt.savefig(save_file+'_eval.png')
+        plt.savefig(save_file+'_eval.png', dpi=500)
 
 
-    if _print == True:
-        df = scores_df.style.format(precision=4)
-        print('LATEX table format\n\n')
-        print(df.to_latex())
+    # if _print == True:
+    #     df = scores_df.style.format(precision=4)
+    #     print('LATEX table format\n\n')
+    #     print(df.to_latex())
     return scores_df

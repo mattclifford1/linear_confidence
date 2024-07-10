@@ -1,0 +1,14 @@
+% 10/07/2024 14:54:36
+% Heart Disease - 10 runs SVM-rbf model
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
+\midrule
+Baseline & $\textbf{.888} \pm .02$ & $.802 \pm .04$ & $\textbf{.930} \pm .02$ & $.737 \pm .05$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.832 \pm .02$ & $.703 \pm .06$ & $.850 \pm .03$ & $.597 \pm .06$ \\
+BW & $.888 \pm .02$ & $.802 \pm .04$ & $.930 \pm .02$ & $.737 \pm .05$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.867 \pm .03$ & $\textbf{.849} \pm .04$ & $.930 \pm .02$ & $.742 \pm .05$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.865 \pm .03$ & $.847 \pm .04$ & $.930 \pm .02$ & $.739 \pm .06$ \\
+Our Method & $.876 \pm .04$ & $.847 \pm .05$ & $.930 \pm .02$ & $\textbf{.752} \pm .07$ \\
+\bottomrule
+\end{tabular}

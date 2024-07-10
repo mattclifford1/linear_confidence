@@ -51,9 +51,9 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
                 marker='x', label='Empircal Means')
         ax.text(emp_xp1-xminus, y+yplus,
-                r'$<\bar{\phi}_{S_1}, w>$', fontsize=10)
+                r'$\langle\bar{\phi}_{S_1}, w\rangle$', fontsize=10)
         ax.text(emp_xp2-xminus, y+yplus,
-                r'$<\bar{\phi}_{S_2}, w>$', fontsize=10)
+                r'$\langle\bar{\phi}_{S_2}, w\rangle$', fontsize=10)
         # supports
         # if 'supports' in data.keys():
         #     ax.scatter(data['supports'], [y, y], c='k', s=100,
@@ -81,11 +81,11 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
     if R1_emp != None:
         ax.plot([emp_xp1, emp_xp1+R1_emp], [y, y],
                 c='b', label=f'R1 {name}', marker='|')
-        ax.text(emp_xp1+(R1_emp)-0.85, y+yplus, txt1, fontsize=12)
+        ax.text(emp_xp1+(R1_emp/2), y+yplus, txt1, fontsize=12)
     if R2_emp != None:
         ax.plot([emp_xp2-R2_emp, emp_xp2], [y, y], 
                 c='r', label=f'R2 {name}', marker='|')
-        ax.text(emp_xp2-(R2_emp), y+yplus, txt2, fontsize=12)
+        ax.text(emp_xp2-(R2_emp/2), y+yplus, txt2, fontsize=12)
     
     # yplus = 0.05
     if D == True:
@@ -119,7 +119,7 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         ax.plot([0], [0.2], c='w')
     # ax.legend(loc='upper right')
 
-    ax.set_xlabel(r'$< \phi(x), w >$', size=12)
+    ax.set_xlabel(r'$\langle \phi(x), w \rangle$', size=12)
     ax.set_ylabel('')
     ax.set_yticks([])
     # ax.autoscale(enable=True, axis='y', tight=True)
@@ -130,7 +130,8 @@ def get_R_estimates(data_info, deltas=[1, 1]):
     R2_est = radius.R_upper_bound(data_info['empirical R2'], data_info['R all data'], data_info['N2'], deltas[1])
     return R1_est, R2_est
 
-def plot_classes(data, ax=None, dim_reducer=None):
+
+def plot_classes(data, ax=None, dim_reducer=None, bayes_optimal=False):
     '''
     plot classes in different colour on an axes, duplicate points in the data are enlarged for clarity
     input:
@@ -167,6 +168,10 @@ def plot_classes(data, ax=None, dim_reducer=None):
     ax.set_ylabel(y_txt, size=ticks_size)
     if show == True:
         plt.show()
+    if bayes_optimal == True:
+        v = 5
+        ax.plot([-v, v], [v, -v], 'k--', label='Bayes Optimal', linewidth=10)
+        # ax.legend()
 
 
 def plot_decision_boundary_custom_pred(pred_func, data, ax=None, dim_reducer=None, labels=True, probs=True):

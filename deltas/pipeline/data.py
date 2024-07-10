@@ -46,13 +46,16 @@ def get_data(m1=[1, 1],
              N1=10000,
              N2=10000,
              scale=True,
-             test_nums=[10000, 10000]):
+             test_nums=[10000, 10000],
+             seed=None):
     data = normal.get_two_classes(means=[m1, m2],
                                   covs=[cov1, cov2],
-                                  num_samples=[N1, N2])
+                                  num_samples=[N1, N2],
+                                  seed=seed)
     data_test = normal.get_two_classes(means=[m1, m2],
                                        covs=[cov1, cov2],
-                                       num_samples=[test_nums[0], test_nums[1]])
+                                       num_samples=[test_nums[0], test_nums[1]],
+                                       seed=seed)
 
     if scale == True:
         scaler = utils.normaliser(data)
