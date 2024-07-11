@@ -1,14 +1,15 @@
-% 10/07/2024 14:54:36
+% 11/07/2024 14:32:26
 % Heart Disease - 10 runs SVM-rbf model
+% train:[82 24], test:[82 24]
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
 \midrule
-Baseline & $\textbf{.888} \pm .02$ & $.802 \pm .04$ & $\textbf{.930} \pm .02$ & $.737 \pm .05$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.832 \pm .02$ & $.703 \pm .06$ & $.850 \pm .03$ & $.597 \pm .06$ \\
-BW & $.888 \pm .02$ & $.802 \pm .04$ & $.930 \pm .02$ & $.737 \pm .05$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.867 \pm .03$ & $\textbf{.849} \pm .04$ & $.930 \pm .02$ & $.742 \pm .05$ \\
-Thresh \cite{Sheng_2006_AAAI} & $.865 \pm .03$ & $.847 \pm .04$ & $.930 \pm .02$ & $.739 \pm .06$ \\
-Our Method & $.876 \pm .04$ & $.847 \pm .05$ & $.930 \pm .02$ & $\textbf{.752} \pm .07$ \\
+Baseline & $\textbf{.885} \pm .02$ & $.784 \pm .04$ & $\textbf{.923} \pm .03$ & $.718 \pm .05$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.844 \pm .03$ & $.700 \pm .07$ & $.863 \pm .03$ & $.602 \pm .09$ \\
+BW & $.885 \pm .02$ & $.784 \pm .04$ & $.923 \pm .03$ & $.718 \pm .05$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.848 \pm .04$ & $.819 \pm .06$ & $.923 \pm .03$ & $.704 \pm .07$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.837 \pm .05$ & $.829 \pm .03$ & $.923 \pm .03$ & $.703 \pm .06$ \\
+Our Method & $.880 \pm .02$ & $\textbf{.834} \pm .05$ & $.923 \pm .03$ & $\textbf{.742} \pm .06$ \\
 \bottomrule
 \end{tabular}

@@ -1,14 +1,15 @@
-% 10/07/2024 14:54:14
+% 11/07/2024 14:50:38
 % Hepatitis - 10 runs SVM-rbf model
+% train:[55 13], test:[56 13]
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
 \midrule
-Baseline & $\textbf{.851} \pm .03$ & $.711 \pm .07$ & $\textbf{.796} \pm .05$ & $.604 \pm .09$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.782 \pm .02$ & $.055 \pm .17$ & $.788 \pm .07$ & $.04 \pm .12$ \\
-BW & $.851 \pm .03$ & $.711 \pm .07$ & $.796 \pm .05$ & $.604 \pm .09$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.786 \pm .06$ & $.716 \pm .07$ & $.796 \pm .05$ & $.552 \pm .08$ \\
-Thresh \cite{Sheng_2006_AAAI} & $.789 \pm .06$ & $.726 \pm .07$ & $.796 \pm .05$ & $.564 \pm .09$ \\
-Our Method & $.831 \pm .05$ & $\textbf{.767} \pm .05$ & $.796 \pm .05$ & $\textbf{.630} \pm .07$ \\
+Baseline & $\textbf{.827} \pm .06$ & $.623 \pm .15$ & $\textbf{.799} \pm .06$ & $.485 \pm .16$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.804 \pm .02$ & $.299 \pm .31$ & $.732 \pm .15$ & $.224 \pm .24$ \\
+BW & $.827 \pm .06$ & $.623 \pm .15$ & $.799 \pm .06$ & $.485 \pm .16$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.804 \pm .05$ & $.656 \pm .11$ & $.799 \pm .06$ & $.493 \pm .10$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.786 \pm .08$ & $.686 \pm .09$ & $.799 \pm .06$ & $.516 \pm .09$ \\
+Our Method & $.778 \pm .09$ & $\textbf{.716} \pm .05$ & $.799 \pm .06$ & $\textbf{.539} \pm .08$ \\
 \bottomrule
 \end{tabular}

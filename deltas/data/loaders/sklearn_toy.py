@@ -28,7 +28,12 @@ def get_breast_cancer(seed=True, **kwargs):
     # data = deltas.data.utils.proportional_downsample(data, **kwargs)
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(
-        data, size=0.701, seed=seed, ratio=10)
+        data, 
+        # size=0.701, # for equal eval with 5 ratio
+        # size=0.453, # for equal eval with 10 ratio
+        size=0.5,
+        ratio=10,
+        seed=seed)
     return train_data, test_data
 
 def get_wine(**kwargs):
@@ -78,4 +83,6 @@ def get_iris(**kwargs):
 
 
 if __name__ == '__main__':
-    get_breast_cancer()
+    tr, te = get_breast_cancer()
+    print(np.unique(tr['y'], return_counts=True))
+    print(np.unique(te['y'], return_counts=True))

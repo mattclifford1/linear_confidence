@@ -71,7 +71,10 @@ def get_mortality(seed=True, complete=False, **kwargs):
     data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split(  # type: ignore
-        data, size=0.7, seed=seed) # locked for results
+        data, 
+        size=0.5, 
+        # size=0.7, 
+        seed=seed)
     return train_data, test_data
 
 

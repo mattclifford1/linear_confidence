@@ -207,7 +207,7 @@ class base_deltas:
             print("Not fit to any data yet, call 'fit(X, y)'  method first")
 
     @staticmethod
-    def _plot_data(data_info, clf, data=None, data_clf=None, m1=None, m2=None, save_file=None):
+    def _plot_data(data_info, clf, data=None, data_clf=None, m1=None, m2=None, save_file=None, diagram=False):
         # project means if we have them
         if isinstance(save_file, type(None)):
             ax = plots._get_axes()
@@ -235,6 +235,7 @@ class base_deltas:
             data_info['empirical R2'],
             deltas_to_plot=ds,
             data_info=data_info,
+            D=diagram,
             )
         if isinstance(save_file, type(None)):
             plots.plt.show()

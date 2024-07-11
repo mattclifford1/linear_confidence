@@ -1,14 +1,15 @@
-% 10/07/2024 14:51:46
+% 11/07/2024 14:26:52
 % Pima Indian Diabetes - 10 runs SVM-rbf model
+% train:[250  25], test:[250 243]
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
 \midrule
-Baseline & $.677 \pm .03$ & $.439 \pm .20$ & $\textbf{.771} \pm .02$ & $.346 \pm .19$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.672 \pm .02$ & $.553 \pm .05$ & $.728 \pm .04$ & $.451 \pm .06$ \\
-BW & $.677 \pm .03$ & $.439 \pm .20$ & $.771 \pm .02$ & $.346 \pm .19$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.707 \pm .02$ & $\textbf{.666} \pm .04$ & $.771 \pm .02$ & $.595 \pm .05$ \\
-Thresh \cite{Sheng_2006_AAAI} & $.704 \pm .03$ & $.666 \pm .03$ & $.771 \pm .02$ & $\textbf{.599} \pm .04$ \\
-Our Method & $\textbf{.712} \pm .02$ & $.663 \pm .04$ & $.771 \pm .02$ & $.591 \pm .05$ \\
+Baseline & $.540 \pm .04$ & $.181 \pm .23$ & $\textbf{.746} \pm .03$ & $.137 \pm .18$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.595 \pm .01$ & $.495 \pm .03$ & $.715 \pm .04$ & $.396 \pm .04$ \\
+BW & $.540 \pm .04$ & $.181 \pm .23$ & $.746 \pm .03$ & $.137 \pm .18$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.661 \pm .02$ & $.628 \pm .04$ & $.746 \pm .03$ & $.575 \pm .05$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.661 \pm .02$ & $.628 \pm .04$ & $.746 \pm .03$ & $.575 \pm .05$ \\
+Our Method & $\textbf{.673} \pm .03$ & $\textbf{.651} \pm .05$ & $.746 \pm .03$ & $\textbf{.611} \pm .08$ \\
 \bottomrule
 \end{tabular}

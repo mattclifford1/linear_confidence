@@ -32,5 +32,8 @@ def get_hepatitis(seed=True, **kwargs):
     data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split( # type: ignore
-        data, size=0.8, seed=seed)  # , ratio=5)  # type: ignore
+        data, 
+        # size=0.8, 
+        size=0.5, 
+        seed=seed)  # , ratio=5)  # type: ignore
     return train_data, test_data

@@ -1,14 +1,15 @@
-% 10/07/2024 14:53:40
+% 11/07/2024 14:54:25
 % Breast Cancer - 10 runs SVM-rbf model
+% train:[178  17], test:[179 195]
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Methods & Accuracy & G-Mean & ROC-AUC & F1 \\
 \midrule
-Baseline & $.919 \pm .02$ & $.933 \pm .02$ & $\textbf{.990} \pm .00$ & $.931 \pm .02$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.793 \pm .09$ & $.816 \pm .08$ & $.984 \pm .00$ & $.799 \pm .09$ \\
-BW & $.919 \pm .02$ & $.933 \pm .02$ & $.990 \pm .00$ & $.931 \pm .02$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.921 \pm .03$ & $.933 \pm .03$ & $.990 \pm .00$ & $.933 \pm .03$ \\
-Thresh \cite{Sheng_2006_AAAI} & $\textbf{.944} \pm .01$ & $\textbf{.950} \pm .01$ & $.990 \pm .00$ & $.955 \pm .01$ \\
-Our Method & $.944 \pm .01$ & $.931 \pm .02$ & $.990 \pm .00$ & $\textbf{.957} \pm .00$ \\
+Baseline & $.917 \pm .02$ & $.917 \pm .02$ & $\textbf{.992} \pm .00$ & $.913 \pm .02$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.793 \pm .09$ & $.768 \pm .12$ & $.981 \pm .00$ & $.737 \pm .14$ \\
+BW & $.917 \pm .02$ & $.917 \pm .02$ & $.992 \pm .00$ & $.913 \pm .02$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .08$ & $.880 \pm .09$ & $.992 \pm .00$ & $.869 \pm .11$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.935 \pm .06$ & $.932 \pm .07$ & $.992 \pm .00$ & $.929 \pm .09$ \\
+Our Method & $\textbf{.944} \pm .02$ & $\textbf{.943} \pm .02$ & $.992 \pm .00$ & $\textbf{.946} \pm .02$ \\
 \bottomrule
 \end{tabular}

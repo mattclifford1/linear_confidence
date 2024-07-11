@@ -160,10 +160,10 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
             # axs.annotate("", xy=(2, 2), dx=-2, xytext=(0, 0),
             #             arrowprops=dict(arrowstyle="->"))
             axs.arrow(1, 1, -1.2, -1.2, color='k', width=0.2)
-            axs.text(-0.8, -0.8, r'$< \phi(x), w > + b = 0$',
+            axs.text(-0.8, -0.8, r'$\langle \phi(x), w \rangle + b = 0$',
                     fontsize=18, rotation=-45)
             axs.text(-3.9, -3.9,
-                    r"$< \phi(x), w > + b^{'} = 0$", fontsize=18, rotation=-45)
+                    r"$\langle \phi(x), w \rangle + b^{'} = 0$", fontsize=18, rotation=-45)
             fig.savefig(save_file+'_data_original.png')
         else:
             axs.text(-8, -2, r'$S_1$',

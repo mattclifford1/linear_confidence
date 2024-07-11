@@ -33,7 +33,8 @@ class downsample_deltas(base.base_deltas):
             grid_search=True,
             _plot=False,
             _print=False,
-            save_file=None):
+            save_file=None,
+            diagram=False):
         '''
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
@@ -63,7 +64,7 @@ class downsample_deltas(base.base_deltas):
         results = self._check_and_optimise_data(data_info)
         if _plot == True:
             print('Original Data')
-            self._plot_data(data_info, self.clf, save_file=save_file)
+            self._plot_data(data_info, self.clf, save_file=save_file, diagram=diagram)
 
         # now try as many random downsamples of the dataset as the budget allows
         if 'supports' in method:

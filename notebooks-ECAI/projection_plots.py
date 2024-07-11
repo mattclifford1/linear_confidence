@@ -3,8 +3,10 @@ import deltas.plotting.plots as plots
 from deltas.model import base, downsample
 from deltas.pipeline import data, classifier, evaluation
 import os
-save_file = os.path.join(os.path.expanduser(
-    '~'), 'Downloads', 'diagrams')
+# save_file = os.path.join(os.path.expanduser(
+#     '~'), 'Downloads', 'diagrams')
+save_file = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), 'plots', 'diagrams')
 np.random.seed(10)
 N1 = 1000
 N2 = 10
@@ -29,6 +31,7 @@ classifiers_dict = classifier.get_classifier(
     data_clf=data_clf,
     model=model,
     _plot=False,
+    diagram=True,
     save_file=save_file)
 data_clf['clf'] = classifiers_dict['Baseline']
 
@@ -40,7 +43,9 @@ clf = data_clf['clf']
 # deltas_model = base.base_deltas(
 #     clf).fit(X, y, grid_search=True, _print=True, _plot=True)
 deltas_model = downsample.downsample_deltas(
-    clf).fit(X, y, costs=costs, _print=True, _plot=True, grid_search=True, save_file=save_file)
+    clf).fit(X, y, costs=costs, _print=True, _plot=True, 
+             diagram=True,
+             save_file=save_file)
 
 
 
