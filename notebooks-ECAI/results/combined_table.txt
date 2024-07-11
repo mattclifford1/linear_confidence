@@ -1,0 +1,60 @@
+\begin{tabular}{@{}llccc@{}}
+\toprule
+& Methods & Accuracy & G-Mean & F1 \\
+% 11/07/2024 22:43:02
+% Pima Indian Diabetes - 10 runs SVM-rbf model
+% train:[250  25], test:[250 243]
+\midrule
+\multirow{6}{*}{\rotatebox{90}{Pima Diabetes}}
+& Baseline & $.540 \pm .04$ & $.181 \pm .23$ & $.137 \pm .18$ \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.595 \pm .01$ & $.495 \pm .03$ & $.396 \pm .04$ \\
+& BW & $.540 \pm .04$ & $.181 \pm .23$ & $.137 \pm .18$ \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.661 \pm .02$ & $.628 \pm .04$ & $.575 \pm .05$ \\
+& Thresh \cite{Sheng_2006_AAAI} & $.661 \pm .02$ & $.628 \pm .04$ & $.575 \pm .05$ \\
+& Our Method & $\textbf{.673} \pm .03$ & $\textbf{.651} \pm .05$ & $\textbf{.611} \pm .08$ \\
+% 11/07/2024 22:32:53
+% Breast Cancer - 10 runs SVM-rbf model
+% train:[178  17], test:[179 195]
+\midrule
+\multirow{6}{*}{\rotatebox{90}{Breast Cancer}}
+& Baseline & $.917 \pm .02$ & $.917 \pm .02$ & $.913 \pm .02$ \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.793 \pm .09$ & $.768 \pm .12$ & $.737 \pm .14$ \\
+& BW & $.917 \pm .02$ & $.917 \pm .02$ & $.913 \pm .02$ \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .08$ & $.880 \pm .09$ & $.869 \pm .11$ \\
+& Thresh \cite{Sheng_2006_AAAI} & $.935 \pm .06$ & $.932 \pm .07$ & $.929 \pm .09$ \\
+& Our Method & $\textbf{.944} \pm .02$ & $\textbf{.943} \pm .02$ & $\textbf{.946} \pm .02$ \\
+% 11/07/2024 22:32:42
+% Hepatitis - 10 runs SVM-rbf model
+% train:[55 13], test:[56 13]
+\midrule
+\multirow{6}{*}{\rotatebox{90}{Hepatitis}}
+& Baseline & $\textbf{.827} \pm .06$ & $.623 \pm .15$ & $.485 \pm .16$ \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.804 \pm .02$ & $.299 \pm .31$ & $.224 \pm .24$ \\
+& BW & $.827 \pm .06$ & $.623 \pm .15$ & $.485 \pm .16$ \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.804 \pm .05$ & $.656 \pm .11$ & $.493 \pm .10$ \\
+& Thresh \cite{Sheng_2006_AAAI} & $.786 \pm .08$ & $.686 \pm .09$ & $.516 \pm .09$ \\
+& Our Method & $.778 \pm .09$ & $\textbf{.716} \pm .05$ & $\textbf{.539} \pm .08$ \\
+% 11/07/2024 22:33:03
+% Heart Disease - 10 runs SVM-rbf model
+% train:[82 24], test:[82 24]
+\midrule
+\multirow{6}{*}{\rotatebox{90}{Heart Disease}}
+& Baseline & $\textbf{.885} \pm .02$ & $.784 \pm .04$ & $.718 \pm .05$ \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.844 \pm .03$ & $.700 \pm .07$ & $.602 \pm .09$ \\
+& BW & $.885 \pm .02$ & $.784 \pm .04$ & $.718 \pm .05$ \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.848 \pm .04$ & $.819 \pm .06$ & $.704 \pm .07$ \\
+& Thresh \cite{Sheng_2006_AAAI} & $.837 \pm .05$ & $.829 \pm .03$ & $.703 \pm .06$ \\
+& Our Method & $.880 \pm .02$ & $\textbf{.834} \pm .05$ & $\textbf{.742} \pm .06$ \\
+% 11/07/2024 15:15:40
+% MIMIC-III-mortality - 10 runs MIMIC model
+% train:[3317  392], test:[3318  393]
+\midrule
+\multirow{6}{*}{\rotatebox{90}{MIMIC ICU}}
+& Baseline & $.861 \pm .00$ & $.370 \pm .01$ & $.181 \pm .01$ \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.832 \pm .00$ & $.401 \pm .01$ & $.183 \pm .01$ \\
+& BW & $.852 \pm .00$ & $.375 \pm .02$ & $.177 \pm .01$ \\
+& BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.872} \pm .01$ & $.322 \pm .03$ & $.152 \pm .01$ \\
+& Thresh \cite{Sheng_2006_AAAI} & $.830 \pm .02$ & $.413 \pm .05$ & $.190 \pm .02$ \\
+& Our Method & $.836 \pm .02$ & $\textbf{.413} \pm .02$ & $\textbf{.196} \pm .01$ \\
+\bottomrule
+\end{tabular}

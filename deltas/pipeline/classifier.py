@@ -100,10 +100,28 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         #     data['X'], data['y'], epochs=50)
         layers = (100, 500, 100)
         layers = (100, 500, 1000, 500, 100)
-        clf = models.NN(hidden_layer_sizes=layers).fit(data['X'], data['y'])
-        clf_weighted = models.NN(hidden_layer_sizes=layers, class_weight='balanced').fit(data['X'], data['y'])
-        clf_SMOTE = models.NN(hidden_layer_sizes=layers).fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        param_grid = {
+            'hidden_layer_sizes': [(10), (100, 500, 100), (100), (100, 500, 1000, 500, 100)],
+            'learning_rate_init': [0.0001, 0.001, 0.01],
+            'activation': ['tanh', 'relu', 'logistic'],
+        }
+        # original
+        grid_original = GridSearchCV(
+            models.NN(), param_grid, refit=True, n_jobs=-1)
+        grid_original.fit(data['X'], data['y'])
+        clf = grid_original.best_estimator_
+
+        # weighted
+        grid_weighted = GridSearchCV(models.NN(
+            class_weight='balanced'), param_grid, refit=True, n_jobs=-1)
+        grid_weighted.fit(data['X'], data['y'])
+        clf_weighted = grid_weighted.best_estimator_
+
+        # SMOTE
+        grid_SMOTE = GridSearchCV(
+            models.NN(), param_grid, refit=True, n_jobs=-1)
+        grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
+        clf_SMOTE = grid_SMOTE.best_estimator_
 
     else:
         raise ValueError(f"model: {model} not in list of available models")
