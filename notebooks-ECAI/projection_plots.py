@@ -11,7 +11,6 @@ np.random.seed(10)
 N1 = 1000
 N2 = 10
 m = 5
-costs = (1, 1)  # change for (1, 10) to increase results
 # Gaussian (not always seperable)
 data_clf = data.get_data(
     m1=[-m, -m],
@@ -43,7 +42,7 @@ clf = data_clf['clf']
 # deltas_model = base.base_deltas(
 #     clf).fit(X, y, grid_search=True, _print=True, _plot=True)
 deltas_model = downsample.downsample_deltas(
-    clf).fit(X, y, costs=costs, _print=True, _plot=True, 
+    clf).fit(X, y, _print=True, _plot=True, 
              diagram=True,
              save_file=save_file)
 

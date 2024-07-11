@@ -160,17 +160,20 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
             # axs.annotate("", xy=(2, 2), dx=-2, xytext=(0, 0),
             #             arrowprops=dict(arrowstyle="->"))
             axs.arrow(1, 1, -1.2, -1.2, color='k', width=0.2)
-            axs.text(-0.8, -0.8, r'$\langle \phi(x), w \rangle + b = 0$',
+            axs.text(-0.5, -0.5, 
+                     r'$\langle \phi(x), w \rangle + b = 0$',
                     fontsize=18, rotation=-45)
-            axs.text(-3.9, -3.9,
-                    r"$\langle \phi(x), w \rangle + b^{'} = 0$", fontsize=18, rotation=-45)
-            fig.savefig(save_file+'_data_original.png')
+            axs.text(-3.5, -3.5,
+                    r"$\langle \phi(x), w \rangle + b^{'} = 0$", 
+                    fontsize=18, rotation=-45)
+            fig.savefig(save_file+'_data_original.png', bbox_inches='tight', dpi=500)
         else:
             axs.text(-8, -2, r'$S_1$',
                      fontsize=30)
             axs.text(2, 6, r'$S_2$',
                      fontsize=30)
-            fig.savefig(save_file+'_data_original_S.png')
+            fig.savefig(save_file+'_data_original_S.png',
+                        dpi=500, bbox_inches='tight')
         # clfs
         fig, axs = plt.subplots(1, 2, figsize=(
             16, 8), sharey=True)  # width_ratios=[1, 1.5]
@@ -185,7 +188,7 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         axs[1].set_title('SMOTE', fontsize=28)
 
         fig.tight_layout()
-        fig.savefig(save_file+'_data.png', dpi=500)
+        fig.savefig(save_file+'_data.png', dpi=500, bbox_inches='tight')
         # plt.show()
     return clfs
    
