@@ -1,4 +1,4 @@
-% 11/07/2024 22:32:53
+% 12/07/2024 14:12:16
 % Breast Cancer - 10 runs SVM-rbf model
 % train:[178  17], test:[179 195]
 \begin{tabular}{@{}lccc@{}}
@@ -7,7 +7,7 @@ Methods & Accuracy & G-Mean & F1 \\
 \midrule
 Baseline & $.917 \pm .02$ & $.917 \pm .02$ & $.913 \pm .02$ \\
 SMOTE \cite{Chawla_2002_JAIR} & $.793 \pm .09$ & $.768 \pm .12$ & $.737 \pm .14$ \\
-BW & $.917 \pm .02$ & $.917 \pm .02$ & $.913 \pm .02$ \\
+BW & $.921 \pm .02$ & $.921 \pm .02$ & $.918 \pm .02$ \\
 BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .08$ & $.880 \pm .09$ & $.869 \pm .11$ \\
 Thresh \cite{Sheng_2006_AAAI} & $.935 \pm .06$ & $.932 \pm .07$ & $.929 \pm .09$ \\
 Our Method & $\textbf{.944} \pm .02$ & $\textbf{.943} \pm .02$ & $\textbf{.946} \pm .02$ \\

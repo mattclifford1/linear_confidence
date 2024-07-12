@@ -24,13 +24,14 @@ from imblearn.over_sampling import RandomOverSampler
 
 
 class SVM(SVC):
-    def __init__(self, kernel='rbf', C=1.0, gamma='scale', random_state=0, ** kwargs):
+    def __init__(self, kernel='rbf', C=1.0, gamma='scale', random_state=0, class_weight=None, **kwargs):
         self.kernel = kernel
         super().__init__(probability=True,
                          kernel=self.kernel, 
                          C=C,
                          gamma=gamma,
                          random_state=random_state,
+                         class_weight=class_weight,
                          **kwargs)
         
     def get_projection(self, X):
@@ -108,6 +109,7 @@ class NN(MLPClassifier):
                          activation=activation,
                          learning_rate_init=learning_rate_init,
                          random_state=random_state,
+                        #  early_stopping=True,
                          **kwargs)
         self.class_weight = class_weight
 
@@ -145,7 +147,7 @@ class NN(MLPClassifier):
     def get_bias(self):
         return self.intercepts_[-1]
     
-    # CLASS WEIGHT ADJUSTMENT TOT HE LOSS FUNCTION
+    # CLASS WEIGHT ADJUSTMENT TO THE LOSS FUNCTION
     # need to handle balanced class_weights as current sklearn doesn't support it but will do in the future see:
     # https://github.com/scikit-learn/scikit-learn/pull/25326 (class) and
     # https://github.com/scikit-learn/scikit-learn/pull/25646 (sample)

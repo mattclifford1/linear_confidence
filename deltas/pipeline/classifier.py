@@ -34,12 +34,24 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf = models.SVM(kernel='linear').fit(data['X'], data['y'])
         clf_weighted = models.SVM(class_weight='balanced', kernel='linear').fit(data['X'], data['y'])
         clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
+    elif model == 'SVM-rbf-fixed':
+        clf = models.SVM(kernel='rbf').fit(data['X'], data['y'])
+        clf_weighted = models.SVM(
+            class_weight='balanced', kernel='rbf').fit(data['X'], data['y'])
+        clf_SMOTE = models.SVM(kernel='rbf').fit(
+            SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
         # defining parameter range
         param_grid = {
             'C': [0.1, 1, 10, 100, 500, 2000, 10000],
                       'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
                       'kernel': ['rbf']
+                      }
+        param_grid_weighted = {
+            'C': [0.1, 1, 10, 100, 500, 2000, 10000],
+                      'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
+                      'kernel': ['rbf'],
+                      'class_weight': ['balanced'],
                       }
         if _print == True:
             print('Tuning SVM params with 5 fold CV')
@@ -48,16 +60,19 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         grid_original.fit(data['X'], data['y'])
         clf = grid_original.best_estimator_
         if _print == True:
-            print(f'Best SVM params: {grid_original.best_params_}')
+            print(f'Best SVM params original: {grid_original.best_params_}')
         # weighted
-        grid_weighted = GridSearchCV(models.SVM(
-            class_weight='balanced'), param_grid, refit=True, n_jobs=-1)
+        grid_weighted = GridSearchCV(models.SVM(), param_grid_weighted, refit=True, n_jobs=-1)
         grid_weighted.fit(data['X'], data['y'])
         clf_weighted = grid_weighted.best_estimator_
+        if _print == True:
+            print(f'Best SVM params weighted: {grid_weighted.best_params_}')
         # SMOTE
         grid_SMOTE = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
         grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
         clf_SMOTE = grid_SMOTE.best_estimator_
+        if _print == True:
+            print(f'Best SVM params SMOTE: {grid_SMOTE.best_params_}')
     elif model == 'Linear':
         clf = models.linear().fit(data['X'], data['y'])
         clf_weighted = models.linear(class_weight='balanced').fit(data['X'], data['y'])
@@ -95,15 +110,19 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         clf_SMOTE = model(hots=2).fit(
             SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
         
-    elif model == 'MIMIC':
+    elif model == 'MIMIC-cross-val':
         # clf = MIMIC_torch(lr=0.001, cuda=False).fit(
         #     data['X'], data['y'], epochs=50)
         layers = (100, 500, 100)
         layers = (100, 500, 1000, 500, 100)
         param_grid = {
-            'hidden_layer_sizes': [(10), (100, 500, 100), (100), (100, 500, 1000, 500, 100)],
-            'learning_rate_init': [0.0001, 0.001, 0.01],
-            'activation': ['tanh', 'relu', 'logistic'],
+            'hidden_layer_sizes': [
+                # (100, 500, 100), 
+                                #    (100), 
+                                   (100, 500, 1000, 500, 100)
+                                   ],
+            # 'learning_rate_init': [0.0001, 0.01],
+            'activation': ['tanh', 'relu'],
         }
         # original
         grid_original = GridSearchCV(
@@ -122,6 +141,14 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
             models.NN(), param_grid, refit=True, n_jobs=-1)
         grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
         clf_SMOTE = grid_SMOTE.best_estimator_
+    elif model == 'MIMIC':
+        # single model that works to save the long cross val
+        layers = (100, 500, 1000, 500, 100)
+        clf = models.NN(hidden_layer_sizes=layers).fit(data['X'], data['y'])
+        clf_weighted = models.NN(
+            hidden_layer_sizes=layers, class_weight='balanced').fit(data['X'], data['y'])
+        clf_SMOTE = models.NN(hidden_layer_sizes=layers).fit(
+            SMOTE_data['X'], SMOTE_data['y'])
 
     else:
         raise ValueError(f"model: {model} not in list of available models")
