@@ -1,15 +1,15 @@
-% 11/07/2024 22:44:15
+% 17/07/2024 12:56:47
 % Gaussian - 10 runs Linear model
 % train:[1000   10], test:[1000 1000]
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Methods & Accuracy & G-Mean & F1 \\
 \midrule
-Baseline & $.667 \pm .02$ & $.577 \pm .04$ & $.500 \pm .05$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.896 \pm .03$ & $.892 \pm .03$ & $.888 \pm .04$ \\
-BW & $.902 \pm .02$ & $.899 \pm .02$ & $.896 \pm .03$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.892 \pm .04$ & $.887 \pm .05$ & $.882 \pm .06$ \\
-Thresh \cite{Sheng_2006_AAAI} & $.892 \pm .04$ & $.887 \pm .05$ & $.882 \pm .06$ \\
-Our Method & $\textbf{.911} \pm .01$ & $\textbf{.909} \pm .01$ & $\textbf{.914} \pm .01$ \\
+Baseline & $.515 \pm .01$ & $.167 \pm .06$ & $.060 \pm .03$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.903 \pm .02$ & $.901 \pm .02$ & $.897 \pm .03$ \\
+BW & $.908 \pm .02$ & $.906 \pm .02$ & $.904 \pm .02$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .05$ & $.880 \pm .06$ & $.874 \pm .07$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.887 \pm .05$ & $.880 \pm .06$ & $.874 \pm .07$ \\
+Our Method & $\textbf{.910} \pm .01$ & $\textbf{.909} \pm .01$ & $\textbf{.914} \pm .01$ \\
 \bottomrule
 \end{tabular}

@@ -9,21 +9,22 @@ import deltas.data.XOR as XOR
 import deltas.data.normal as normal
 import deltas.data.madelon as madelon
 import deltas.data.sklearn_synthetic as synthetic
-from deltas.data.loaders import (sklearn_toy, 
-                                 diabetes, 
-                                 Habermans_breast_cancer, 
-                                 sonar_rocks, 
-                                 banknote, 
-                                 abalone_gender, 
-                                 ionosphere, 
-                                 wheat_seeds, 
-                                 costcla,
-                                 mnist,
-                                 breast_cancer_W,
-                                 hepititus,
-                                 heart_disease,
-                                 MIMIC_III,
-                                 MIMIC_IV)
+from deltas.data.loaders import (
+    sklearn_toy, 
+    diabetes, 
+    Habermans_breast_cancer, 
+    sonar_rocks, 
+    banknote, 
+    abalone_gender, 
+    ionosphere, 
+    wheat_seeds, 
+    costcla,
+    mnist,
+    breast_cancer_W,
+    hepititus,
+    heart_disease,
+    MIMIC_III,
+    MIMIC_IV)
 
 
 def make_data_dim_reducer(data_getter):
@@ -39,14 +40,14 @@ def make_data_dim_reducer(data_getter):
     return _wrapper
 
 
-def get_data(m1=[1, 1],
-             m2=[10, 10],
+def get_data(m1=[-1, -1],
+             m2=[1, 1],
              cov1=[[1, 0], [0, 1]],
              cov2=[[1, 0], [0, 1]],
-             N1=10000,
-             N2=10000,
-             scale=True,
-             test_nums=[10000, 10000],
+             N1=1000,
+             N2=10,
+             scale=False,
+             test_nums=[1000, 1000],
              seed=None):
     data = normal.get_two_classes(means=[m1, m2],
                                   covs=[cov1, cov2],
@@ -135,6 +136,7 @@ def get_real_dataset(dataset='Breast Cancer', _print=True, scale=False, **kwargs
     AVAILABLE_DATASETS = {
         # 'Gaussian': sample_dataset_to_proportions(get_gaussian),
         # 'Moons': sample_dataset_to_proportions(get_moons),
+        'Gaussian': get_data,
         'Breast Cancer': sklearn_toy.get_breast_cancer,
         'Iris': sklearn_toy.get_iris,
         'Wine': sklearn_toy.get_wine,
@@ -165,28 +167,31 @@ def get_real_dataset(dataset='Breast Cancer', _print=True, scale=False, **kwargs
         raise ValueError(f'dataset needs to be one of:{AVAILABLE_DATASETS.keys()}')
 
     # load dataset
-    train_data, test_data = AVAILABLE_DATASETS[dataset](**kwargs)
+    data_set = AVAILABLE_DATASETS[dataset](**kwargs)
+    if not isinstance(data_set, dict):
+        # convert to dict format needed
+        train_data, test_data = data_set
+        data_set = {'data': train_data, 'data_test': test_data}
 
     # scale
-    scaler = utils.normaliser(train_data)
+    scaler = utils.normaliser(data_set['data'])
     if scale == True:
-        train_data = scaler(train_data)
-        test_data = scaler(test_data)
+        data_set['data'] = scaler(data_set['data'])
+        data_set['data_test'] = scaler(data_set['data_test'])
 
-    train0 = len(train_data['y'])-sum(train_data['y'])
-    train1 = sum(train_data['y'])
+    train0 = len(data_set['data']['y'])-sum(data_set['data']['y'])
+    train1 = sum(data_set['data']['y'])
 
-    test0 = len(test_data['y'])-sum(test_data['y'])
-    test1 = sum(test_data['y'])
+    test0 = len(data_set['data_test']['y'])-sum(data_set['data_test']['y'])
+    test1 = sum(data_set['data_test']['y'])
     if _print == True:
         print(f"{dataset}: {test0+train0+test1+train1}")
-        print(f"Number of attribues: {train_data['X'].shape[1]}")
+        print(f"Number of attribues: {data_set['data']['X'].shape[1]}")
         print( f"Classes total: {test0+train0} - {test1+train1}\n")
         print(f"Classes train: {train0} - {train1}")
         print(f"Classes test:  {test0} - {test1}")
     
-    # return in dict format needed 
-    return {'data': train_data, 'data_test': test_data}
+    return data_set
 
 
 def get_SMOTE_data(data):

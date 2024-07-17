@@ -47,12 +47,8 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
                       'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
                       'kernel': ['rbf']
                       }
-        param_grid_weighted = {
-            'C': [0.1, 1, 10, 100, 500, 2000, 10000],
-                      'gamma': ['scale', 'auto', 1, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001],
-                      'kernel': ['rbf'],
-                      'class_weight': ['balanced'],
-                      }
+        param_grid_weighted = param_grid.copy()
+        param_grid_weighted['class_weight'] = ['balanced']
         if _print == True:
             print('Tuning SVM params with 5 fold CV')
         # original
@@ -116,34 +112,47 @@ def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=
         layers = (100, 500, 100)
         layers = (100, 500, 1000, 500, 100)
         param_grid = {
+            'learning_rate': ['constant', 'invscaling', 'adaptive'],
             'hidden_layer_sizes': [
                 # (100, 500, 100), 
-                                #    (100), 
-                                   (100, 500, 1000, 500, 100)
+                # (100), 
+                (50, 100, 200, 300, 500, 1000),
+                (100, 500, 1000, 500, 100),   # used atm
                                    ],
-            # 'learning_rate_init': [0.0001, 0.01],
-            'activation': ['tanh', 'relu'],
+            'learning_rate_init': [0.0001, 0.01],
+            # 'activation': ['logistic', 'relu'],
         }
+        param_grid_weighted = param_grid.copy()
+        param_grid_weighted['class_weight'] = ['balanced']
         # original
         grid_original = GridSearchCV(
             models.NN(), param_grid, refit=True, n_jobs=-1)
         grid_original.fit(data['X'], data['y'])
         clf = grid_original.best_estimator_
+        if _print == True:
+            print(f'Best MIMIC params original: {grid_original.best_params_}')
+        clf_weighted = clf
+        clf_SMOTE = clf
 
         # weighted
-        grid_weighted = GridSearchCV(models.NN(
-            class_weight='balanced'), param_grid, refit=True, n_jobs=-1)
-        grid_weighted.fit(data['X'], data['y'])
-        clf_weighted = grid_weighted.best_estimator_
+        # grid_weighted = GridSearchCV(models.NN(
+        #     class_weight='balanced'), param_grid_weighted, refit=True, n_jobs=-1)
+        # grid_weighted.fit(data['X'], data['y'])
+        # clf_weighted = grid_weighted.best_estimator_
+        # if _print == True:
+        #     print(f'Best MIMIC params weighted: {grid_original.best_params_}')
 
         # SMOTE
-        grid_SMOTE = GridSearchCV(
-            models.NN(), param_grid, refit=True, n_jobs=-1)
-        grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
-        clf_SMOTE = grid_SMOTE.best_estimator_
+        # grid_SMOTE = GridSearchCV(
+        #     models.NN(), param_grid, refit=True, n_jobs=-1)
+        # grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
+        # clf_SMOTE = grid_SMOTE.best_estimator_
+        # if _print == True:
+        #     print(f'Best MIMIC params SMOTE: {grid_original.best_params_}')
     elif model == 'MIMIC':
         # single model that works to save the long cross val
         layers = (100, 500, 1000, 500, 100)
+        layers = (50, 100, 200, 300, 500, 1000)
         clf = models.NN(hidden_layer_sizes=layers).fit(data['X'], data['y'])
         clf_weighted = models.NN(
             hidden_layer_sizes=layers, class_weight='balanced').fit(data['X'], data['y'])
