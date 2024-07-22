@@ -1,15 +1,15 @@
-% 17/07/2024 13:41:31
+% 22/07/2024 11:31:31
 % MIMIC-III-mortality - 10 runs MIMIC model
 % train:[3317  392], test:[3318  393]
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Methods & Accuracy & G-Mean & F1 \\
 \midrule
-Baseline & $.841 \pm .01$ & $.427 \pm .03$ & $.210 \pm .01$ \\
-SMOTE \cite{Chawla_2002_JAIR} & $.821 \pm .00$ & $.434 \pm .02$ & $.200 \pm .01$ \\
+Baseline & $.841 \pm .01$ & $.429 \pm .03$ & $.212 \pm .02$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.822 \pm .01$ & $.431 \pm .02$ & $.199 \pm .01$ \\
 BW & $.839 \pm .01$ & $.410 \pm .02$ & $.195 \pm .02$ \\
 BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.852} \pm .01$ & $.405 \pm .04$ & $.202 \pm .02$ \\
-Thresh \cite{Sheng_2006_AAAI} & $.840 \pm .01$ & $.428 \pm .04$ & $.210 \pm .02$ \\
-Our Method & $.802 \pm .02$ & $\textbf{.475} \pm .04$ & $\textbf{.219} \pm .01$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.844 \pm .01$ & $.421 \pm .04$ & $.208 \pm .02$ \\
+Our Method & $.802 \pm .02$ & $\textbf{.477} \pm .04$ & $\textbf{.221} \pm .02$ \\
 \bottomrule
 \end{tabular}

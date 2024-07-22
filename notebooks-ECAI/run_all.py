@@ -119,7 +119,7 @@ def combine_tables(tables):
     # gopen write file
     with open(os.path.join(dir, 'combined_table.txt'), 'w') as w_file:
         # get the first table to get table starter
-        with open(os.path.join(dir, tables[0]), 'r') as r_table:
+        with open(os.path.join(dir, 'results', tables[0]), 'r') as r_table:
             table = r_table.read()
             lines = table.split('\n')
             lines[3] = lines[3][:20] + 'l' + lines[3][20:]

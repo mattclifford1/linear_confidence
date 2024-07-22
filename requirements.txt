@@ -11,6 +11,7 @@ pandas
 costcla
 ucimlrepo
 torch
+torchvision
 # cvxpy
 # plotly
 # chart_studio
