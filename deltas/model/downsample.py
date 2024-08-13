@@ -25,6 +25,7 @@ class downsample_deltas(base.base_deltas):
             costs=(1, 1),
             alpha=1,
             prop_penalty=True,
+            continuous_slacks=False,
             method='supports-prop-update_mean',
             max_trials=1000,
             force_downsample=False,
@@ -39,6 +40,7 @@ class downsample_deltas(base.base_deltas):
         fit to downsampled datasets, then pick the lowest loss
             alpha:            the penalty value on the loss for removing points
             prop_penalty:     scale penality per class based on proportion of samples removed
+            continuous_slacks: use continuous slacks in the optimisation (False = Binary)
             max_trials:       the number of downsampled datasets to try 
             force_downsample: try downsampling even if the original projection is solvable
             method:           which method of downsampling to use from: ['supports', 'supports-update_mean', 'supports-prop', 'supports-prop-update_mean', 'random']
@@ -112,6 +114,7 @@ class downsample_deltas(base.base_deltas):
                         'costs': costs,
                         'alpha': alpha,
                         'prop_penalty': prop_penalty,
+                        'continuous_slacks': continuous_slacks,
                         'num_runs': num_runs,
                         'contraint_func': self.contraint_func,
                         'loss_func': self.loss_func,
@@ -269,6 +272,10 @@ class downsample_deltas(base.base_deltas):
         ys = [y1, y2]
         num_originals = (y1.shape[0], y2.shape[0])
 
+        # use for continuous slacks calc
+        original_means = (np.mean(x1, axis=0), np.mean(x2, axis=0)) 
+        removed_points_from_mean = [[], []]
+
         # use original means in supports calc or not
         if update_means == True:
             ms = [np.mean(x1, axis=0), np.mean(x2, axis=0)]
@@ -281,7 +288,7 @@ class downsample_deltas(base.base_deltas):
             # TODO: make more effecient by using slicing views instead of delete which creates a new arrays
 
             # loop over each class
-            for order in [[0, 1], [1, 0]]:
+            for order in [[0, 1], [1, 0]]:  # need both current and other ind for proportion calc
                 # make sure we have some data points left
                 if ys[order[0]].shape[0] > 1:
                     # remove to keep the correct class ratios 
@@ -294,6 +301,9 @@ class downsample_deltas(base.base_deltas):
                                                                                   Xs[order[1]],
                                                                                   ms[order[1]])
 
+                        # add support to be removed info to slack continuous vars
+                        removed_points_from_mean[order[0]].append(
+                            np.abs(Xs[order[0]][ind] - original_means[order[0]])[0])
                         # delete the support found
                         Xs[order[0]] = np.delete(Xs[order[0]], [ind])
                         ys[order[0]] = np.delete(ys[order[0]], [ind])
@@ -307,12 +317,18 @@ class downsample_deltas(base.base_deltas):
                         # break if we dont care about class ratios
                         if remove_method == 'equal':
                             break
-                        # break if weve reached the reduction limit
+                        # break if we've reached the reduction limit
                         if sum(num_reduced) == num_to_reduce:
                             break
-                    # break if weve reached the reduction limit
+
+
+                    # break if we've reached the reduction limit
                     if sum(num_reduced) == num_to_reduce:
                         break
+
+        # slack var continuous values to numpy array
+        for i, _ in enumerate(removed_points_from_mean):
+            removed_points_from_mean[i] = np.array(removed_points_from_mean[i])
         
         # print for dev to make sure the proportions looks good for prop method
         # total_orig = num_originals[0] + num_originals[1]
@@ -320,8 +336,9 @@ class downsample_deltas(base.base_deltas):
         # total_new = ys[0].shape[0] + ys[1].shape[0]
         # print([ys[0].shape[0]/total_new, ys[1].shape[0]/total_new])
         # print('')
-
-        return np.concatenate([Xs[0], Xs[1]], axis=0), np.concatenate([ys[0], ys[1]], axis=0), num_reduced[0], num_reduced[1]
+        new_X = np.concatenate([Xs[0], Xs[1]], axis=0)
+        new_y = np.concatenate([ys[0], ys[1]], axis=0)
+        return new_X, new_y, num_reduced[0], num_reduced[1], removed_points_from_mean
 
 
     @staticmethod
@@ -351,7 +368,7 @@ class downsample_deltas(base.base_deltas):
                 # see where we are at in terms of workers
                 num_to_reduce = i + args['order_in_queue']*args['num_runs']
                 # remove correct amount of supports
-                _X, _y, num_reduced1, num_reduced2 = downsample_deltas.supports_downsample_data(
+                _X, _y, num_reduced1, num_reduced2, removed_points_from_mean = downsample_deltas.supports_downsample_data(
                     args['X'], args['y'], 
                     num_to_reduce, 
                     remove_method=remove_method, 
@@ -367,6 +384,10 @@ class downsample_deltas(base.base_deltas):
             data_info['num_reduced_2'] = num_reduced2
             data_info['alpha'] = args['alpha']
             data_info['prop_penalty'] = args['prop_penalty']
+            data_info['continuous_slacks'] = args['continuous_slacks']
+            data_info['removed_points_from_mean'] = removed_points_from_mean
+            data_info['removed_points_from_mean_1'] = removed_points_from_mean[0]
+            data_info['removed_points_from_mean_2'] = removed_points_from_mean[1]
 
             results = downsample_deltas.static_check_and_optimise(
                 data_info, args['contraint_func'], args['loss_func'], args['delta2_from_delta1'], args['grid_search'])
@@ -392,10 +413,17 @@ class downsample_deltas(base.base_deltas):
                                               _plot=False,
                                               _print=False)
             # add penalty to the loss
+            # first check what sort of penalty we are adding
             if 'num_reduced' in data_info.keys():
                 num_reduced = data_info['num_reduced']
             else:
                 num_reduced = 0
+            if 'continuous_slacks' in data_info.keys():
+                continuous_slacks = data_info['continuous_slacks']
+            else:
+                continuous_slacks = False
+
+            # add the penalty
             if res != None and num_reduced != 0:
                 if data_info['prop_penalty'] == True:
                     for i, c in enumerate([1, 2]):
@@ -404,13 +432,21 @@ class downsample_deltas(base.base_deltas):
                         if hasattr(data_info['alpha'], '__len__'):
                             if len(data_info['alpha']) == 2:
                                 alpha = data_info['alpha'][i]
+                        
                         # add proportional loss
+                        if continuous_slacks == True:
+                            slacks = np.sum(data_info[f'removed_points_from_mean_{c}'])
+                        else: 
+                            slacks = data_info[f'num_reduced_{c}']
                         res['loss'] += alpha * \
-                            (data_info[f'num_reduced_{c}'] /
-                            (data_info[f'N{c}']+data_info[f'num_reduced_{c}']))
-                else:
-                    # add regular loss
-                    res['loss'] += data_info['alpha']*data_info['num_reduced']
+                            ( slacks / (data_info[f'N{c}']+data_info[f'num_reduced_{c}']))
+                else:  # add regular loss
+                    if continuous_slacks == True:
+                        slacks = np.sum(
+                            data_info['removed_points_from_mean_1']) + np.sum(data_info['removed_points_from_mean_2'])
+                    else:
+                        slacks = data_info['num_reduced']
+                    res['loss'] += data_info['alpha']*slacks
         else:
             res = None
         return res

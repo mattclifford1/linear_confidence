@@ -33,6 +33,7 @@ def run_single(dataset, model, len_required=10, exp_num=0):
         clf = data_clf['clf']
         deltas_model = downsample.downsample_deltas(clf).fit(X, y,
                                                              max_trials=10000,
+                                                             continuous_slacks=True,
                                                              parallel=True)
 
         if deltas_model.is_fit == True:
@@ -97,7 +98,7 @@ def write_results(dfs, dataset, model, data_clf, exp_num=0):
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     save_file = os.path.join(os.path.dirname(
-        os.path.realpath(__file__)), 'results', f'Results-{exp_num}-{dataset}.txt')
+        os.path.realpath(__file__)), 'results-continuous', f'Results-{exp_num}-{dataset}.txt')
     with open(save_file, "w") as text_file:
         text_file.write(f'% {dt_string}\n')
         text_file.write(f'% {dataset} - {len(dfs)} runs {model} model\n')
@@ -117,9 +118,9 @@ def combine_tables(tables):
                 'MIMIC-III-mortality': 'MIMIC ICU'}
 
     # gopen write file
-    with open(os.path.join(dir, 'combined_table.txt'), 'w') as w_file:
+    with open(os.path.join(dir, 'combined_table-continuous.txt'), 'w') as w_file:
         # get the first table to get table starter
-        with open(os.path.join(dir, 'results', tables[0]), 'r') as r_table:
+        with open(os.path.join(dir, 'results-continuous', tables[0]), 'r') as r_table:
             table = r_table.read()
             lines = table.split('\n')
             lines[3] = lines[3][:20] + 'l' + lines[3][20:]
@@ -128,7 +129,7 @@ def combine_tables(tables):
                 w_file.write(lines[l] + '\n')
         # loop through all tables
         for table in tables:
-            with open(os.path.join(dir, 'results',  table), 'r') as t:
+            with open(os.path.join(dir, 'results-continuous', table), 'r') as t:
                 lines = t.read().split('\n')
                 # meta info
                 for l in range(0, 3):
