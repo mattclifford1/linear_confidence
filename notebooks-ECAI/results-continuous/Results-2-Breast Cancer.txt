@@ -1,4 +1,4 @@
-% 13/08/2024 15:00:56
+% 21/08/2024 15:31:39
 % Breast Cancer - 10 runs SVM-rbf model
 % train:[178  17], test:[179 195]
 \begin{tabular}{@{}lccc@{}}

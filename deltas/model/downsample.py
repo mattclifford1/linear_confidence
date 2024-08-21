@@ -138,7 +138,7 @@ class downsample_deltas(base.base_deltas):
 
                     # run all workers
                     trials = list(tqdm(pool.imap_unordered(self._test_single, args),
-                                       total=scaled_trials, desc=f'Trying random downsampling deltas (multiprocessing batches of {num_runs})', leave=False))
+                                       total=scaled_trials, desc=f'Optimising deltas (multiprocessing batches of {num_runs})', leave=False))
             else:
                 trials = [self._test_single(arg_dict, disable_tqdm=False)]
 

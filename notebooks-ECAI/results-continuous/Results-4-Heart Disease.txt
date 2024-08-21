@@ -1,4 +1,4 @@
-% 13/08/2024 15:01:26
+% 21/08/2024 15:32:21
 % Heart Disease - 10 runs SVM-rbf model
 % train:[82 24], test:[82 24]
 \begin{tabular}{@{}lccc@{}}
