@@ -1,4 +1,4 @@
-% 21/08/2024 15:30:37
+% 26/08/2024 17:36:03
 % Pima Indian Diabetes - 10 runs SVM-rbf model
 % train:[250  25], test:[250 243]
 \begin{tabular}{@{}lccc@{}}

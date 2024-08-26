@@ -1,7 +1,7 @@
 \begin{tabular}{@{}llccc@{}}
 \toprule
 & Methods & Accuracy & G-Mean & F1 \\
-% 21/08/2024 15:30:37
+% 26/08/2024 17:36:03
 % Pima Indian Diabetes - 10 runs SVM-rbf model
 % train:[250  25], test:[250 243]
 \midrule
@@ -12,7 +12,7 @@
 & BMR \cite{Bahnsen_2014_SIAM} & $.661 \pm .02$ & $.628 \pm .04$ & $.575 \pm .05$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.661 \pm .02$ & $.628 \pm .04$ & $.575 \pm .05$ \\
 & Our Method & $\textbf{.672} \pm .03$ & $\textbf{.651} \pm .05$ & $\textbf{.611} \pm .08$ \\
-% 21/08/2024 15:30:55
+% 26/08/2024 17:36:16
 % Breast Cancer - 10 runs SVM-rbf model
 % train:[178  17], test:[179 195]
 \midrule
@@ -23,7 +23,7 @@
 & BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .08$ & $.880 \pm .09$ & $.869 \pm .11$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.935 \pm .06$ & $.932 \pm .07$ & $.929 \pm .09$ \\
 & Our Method & $\textbf{.944} \pm .02$ & $\textbf{.943} \pm .02$ & $\textbf{.946} \pm .02$ \\
-% 21/08/2024 15:31:07
+% 26/08/2024 17:36:24
 % Hepatitis - 10 runs SVM-rbf model
 % train:[55 13], test:[56 13]
 \midrule
@@ -34,7 +34,7 @@
 & BMR \cite{Bahnsen_2014_SIAM} & $.804 \pm .05$ & $.656 \pm .11$ & $.493 \pm .10$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.786 \pm .08$ & $.686 \pm .09$ & $.516 \pm .09$ \\
 & Our Method & $.778 \pm .09$ & $\textbf{.716} \pm .05$ & $\textbf{.539} \pm .08$ \\
-% 21/08/2024 15:31:37
+% 26/08/2024 17:36:47
 % Heart Disease - 10 runs SVM-rbf model
 % train:[82 24], test:[82 24]
 \midrule
@@ -45,7 +45,7 @@
 & BMR \cite{Bahnsen_2014_SIAM} & $.848 \pm .04$ & $.819 \pm .06$ & $.704 \pm .07$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.837 \pm .05$ & $.829 \pm .03$ & $.703 \pm .06$ \\
 & Our Method & $.880 \pm .02$ & $\textbf{.834} \pm .05$ & $\textbf{.742} \pm .06$ \\
-% 21/08/2024 16:24:35
+% 26/08/2024 18:11:46
 % MIMIC-III-mortality - 10 runs MIMIC model
 % train:[3317  392], test:[3318  393]
 \midrule

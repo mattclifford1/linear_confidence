@@ -1,4 +1,4 @@
-% 21/08/2024 15:29:19
+% 26/08/2024 17:35:09
 % Gaussian - 10 runs Linear model
 % train:[1000   10], test:[1000 1000]
 \begin{tabular}{@{}lccc@{}}

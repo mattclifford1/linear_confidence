@@ -1,4 +1,4 @@
-% 21/08/2024 15:31:07
+% 26/08/2024 17:36:24
 % Hepatitis - 10 runs SVM-rbf model
 % train:[55 13], test:[56 13]
 \begin{tabular}{@{}lccc@{}}
