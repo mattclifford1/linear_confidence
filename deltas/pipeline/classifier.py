@@ -12,7 +12,18 @@ import deltas.classifiers.models as models
 import deltas.pipeline.data as pipe_data
 
 
-def get_classifier(data_clf, model='Linear', balance_clf=False, costcla_methods=True, binary=True, epochs=2, _plot=True, _print=False, _plot_data=False, save_file=None, bayes_optimal=False, diagram=False):
+def get_classifier(data_clf, 
+                   model='Linear', 
+                   balance_clf=False, 
+                   costcla_methods=True, 
+                   binary=True, 
+                   epochs=2, 
+                   _plot=True, 
+                   _print=False, 
+                   _plot_data=False, 
+                   save_file=None, 
+                   bayes_optimal=False, 
+                   diagram=False):
     data = data_clf['data']
 
     # dim reducer (PCA) for plotting in higher dims
