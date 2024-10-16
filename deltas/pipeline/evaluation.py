@@ -36,7 +36,13 @@ def minority_accuracy(*args, **kwargs):
     return min_acc
 
 
-def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_file=None, bayes_optimal=False):
+def eval_test(clfs, 
+              test_data, 
+              _print=True,
+              _plot=True, 
+              dim_reducer=None, 
+              save_file=None, 
+              bayes_optimal=False):
     # using new class for deltas format
 
     # predict on both classifiers (original and delta adjusted)
@@ -88,7 +94,8 @@ def eval_test(clfs, test_data, _print=True, _plot=True, dim_reducer=None, save_f
             # data = {'X': test_data['X'], 'y': preds[name]}
             data = test_data
             # data = test_data
-            plots.plot_classes(data, ax=ax, dim_reducer=dim_reducer)
+            plots.plot_classes(
+                data, ax=ax, dim_reducer=dim_reducer, bayes_optimal=bayes_optimal)
             plots.plot_decision_boundary(
                 clf, test_data, ax=ax, probs=False, dim_reducer=dim_reducer)
             ax.set_title(name)
