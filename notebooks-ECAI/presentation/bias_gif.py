@@ -41,7 +41,10 @@ def plot_bias_stills(clfs, test_data, dim_reducer=None, save_dir=None):
         # data = test_data
         plots.plot_classes(data, ax=ax1, dim_reducer=dim_reducer)
         plots.plot_decision_boundary(
-            clf, test_data, ax=ax1, probs=False, dim_reducer=dim_reducer)
+            clf, test_data, ax=ax1, 
+            probs=False, 
+            dim_reducer=dim_reducer, 
+            colourbar=False)
         
         # ax1.set_title(name)
         
