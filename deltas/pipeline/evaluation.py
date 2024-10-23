@@ -42,7 +42,8 @@ def eval_test(clfs,
               _plot=True, 
               dim_reducer=None, 
               save_file=None, 
-              bayes_optimal=False):
+              bayes_optimal=False,
+              colourbar=True):
     # using new class for deltas format
 
     # predict on both classifiers (original and delta adjusted)
@@ -97,7 +98,7 @@ def eval_test(clfs,
             plots.plot_classes(
                 data, ax=ax, dim_reducer=dim_reducer, bayes_optimal=bayes_optimal)
             plots.plot_decision_boundary(
-                clf, test_data, ax=ax, probs=False, dim_reducer=dim_reducer)
+                clf, test_data, ax=ax, probs=False, dim_reducer=dim_reducer, colourbar=colourbar)
             ax.set_title(name)
             plots.plt.show()
 

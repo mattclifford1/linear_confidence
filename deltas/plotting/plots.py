@@ -169,8 +169,12 @@ def plot_classes(data, ax=None, dim_reducer=None, bayes_optimal=False):
     if show == True:
         plt.show()
     if bayes_optimal == True:
-        v = 5
-        ax.plot([-v, v], [v, -v], 'k--', label='Bayes Optimal', linewidth=10)
+        # only works for when same var and opposite mean gaussian data
+        # v = 4
+        # ax.plot([-v, v], [v, -v], 'k--', label='Bayes Optimal', linewidth=5)
+        v1 = 4
+        v2 =3.5
+        ax.plot([-v1, v2], [v1, -v2], 'k--', label='Bayes Optimal', linewidth=5)
         # ax.legend()
 
 

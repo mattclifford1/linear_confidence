@@ -19,6 +19,7 @@ def get_classifier(data_clf,
                    binary=True, 
                    epochs=2, 
                    _plot=True, 
+                   colourbar=True,
                    _print=False, 
                    _plot_data=False, 
                    save_file=None, 
@@ -209,7 +210,7 @@ def get_classifier(data_clf,
             ax, _ = plots._get_axes(None)
             plots.plot_classes(data_plot, ax=ax, dim_reducer=dim_reducer)
             plots.plot_decision_boundary(
-                classif, data_plot, ax=ax, probs=False, dim_reducer=dim_reducer)
+                classif, data_plot, ax=ax, probs=False, dim_reducer=dim_reducer, colourbar=colourbar)
             ax.set_title(name)
             plots.plt.show()
 
