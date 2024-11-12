@@ -15,6 +15,8 @@ import deltas.pipeline.data as pipe_data
 def get_classifier(data_clf, 
                    model='Linear', 
                    balance_clf=False, 
+                   smote=True,
+                   balanced_weights=True,
                    costcla_methods=True, 
                    binary=True, 
                    epochs=2, 
@@ -40,18 +42,21 @@ def get_classifier(data_clf,
     SMOTE_data = pipe_data.get_SMOTE_data(data)
 
 
-    weighted = True
     # Train Model ============================================================
     if model in ['SVM', 'SVM-linear']:
         clf = models.SVM(kernel='linear').fit(data['X'], data['y'])
-        clf_weighted = models.SVM(class_weight='balanced', kernel='linear').fit(data['X'], data['y'])
-        clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
+        if balanced_weights == True:
+            clf_weighted = models.SVM(class_weight='balanced', kernel='linear').fit(data['X'], data['y'])
+        if smote == True:
+            clf_SMOTE = models.SVM(kernel='linear').fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf-fixed':
         clf = models.SVM(kernel='rbf').fit(data['X'], data['y'])
-        clf_weighted = models.SVM(
+        if balanced_weights == True:
+            clf_weighted = models.SVM(
             class_weight='balanced', kernel='rbf').fit(data['X'], data['y'])
-        clf_SMOTE = models.SVM(kernel='rbf').fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        if smote == True:
+            clf_SMOTE = models.SVM(kernel='rbf').fit(
+                SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'SVM-rbf':
         # defining parameter range
         param_grid = {
@@ -72,53 +77,67 @@ def get_classifier(data_clf,
         # weighted
         grid_weighted = GridSearchCV(models.SVM(), param_grid_weighted, refit=True, n_jobs=-1)
         grid_weighted.fit(data['X'], data['y'])
-        clf_weighted = grid_weighted.best_estimator_
+        if balanced_weights == True:
+            clf_weighted = grid_weighted.best_estimator_
         if _print == True:
             print(f'Best SVM params weighted: {grid_weighted.best_params_}')
         # SMOTE
         grid_SMOTE = GridSearchCV(models.SVM(), param_grid, refit=True, n_jobs=-1)
         grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
-        clf_SMOTE = grid_SMOTE.best_estimator_
+        if smote == True:
+            clf_SMOTE = grid_SMOTE.best_estimator_
         if _print == True:
             print(f'Best SVM params SMOTE: {grid_SMOTE.best_params_}')
     elif model == 'Linear':
         clf = models.linear().fit(data['X'], data['y'])
-        clf_weighted = models.linear(class_weight='balanced').fit(data['X'], data['y'])
-        clf_SMOTE = models.linear().fit( SMOTE_data['X'], SMOTE_data['y'])
+        if balanced_weights == True:
+            clf_weighted = models.linear(class_weight='balanced').fit(data['X'], data['y'])
+        if smote == True:
+            clf_SMOTE = models.linear().fit( SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MLP':
         clf = models.NN().fit(data['X'], data['y'])
-        clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
-        clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
+        if balanced_weights == True:
+            clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
+        if smote == True:
+            clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MLP-Gaussian':
         clf = models.NN(hidden_layer_sizes=(100,)).fit(data['X'], data['y'])
-        clf_weighted = models.NN(hidden_layer_sizes=(100,), class_weight='balanced').fit(data['X'], data['y'])
-        clf_SMOTE = models.NN(hidden_layer_sizes=(100,)).fit(SMOTE_data['X'], SMOTE_data['y'])
+        if balanced_weights == True:
+            clf_weighted = models.NN(hidden_layer_sizes=(100,), class_weight='balanced').fit(data['X'], data['y'])
+        if smote == True:
+            clf_SMOTE = models.NN(hidden_layer_sizes=(100,)).fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MLP-small':
         print('fitting MLP')
         clf = models.NN(hidden_layer_sizes=(
             10, 10), max_iter=10).fit(data['X'], data['y'])
         print('fit MLP 1')
-        clf_weighted = models.NN(hidden_layer_sizes=(
+        if balanced_weights == True:
+            clf_weighted = models.NN(hidden_layer_sizes=(
             10, 10), max_iter=10, class_weight='balanced').fit(data['X'], data['y'])
         print('fit MLP 2')
-        clf_SMOTE = models.NN(hidden_layer_sizes=(
-            10, 10), max_iter=10).fit(SMOTE_data['X'], SMOTE_data['y'])
+        if smote == True:
+            clf_SMOTE = models.NN(hidden_layer_sizes=(
+                10, 10), max_iter=10).fit(SMOTE_data['X'], SMOTE_data['y'])
         print('fit MLP 3')
     elif model == 'MLP-deep':
         clf = models.NN(hidden_layer_sizes=(10, 20, 50, 50, 50, 100, 200, 300,), activation='relu', solver='adam'
                         ).fit(data['X'], data['y'])
-        clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
-        clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
+        if balanced_weights == True:
+            clf_weighted = models.NN(class_weight='balanced').fit(data['X'], data['y'])
+        if smote == True:
+            clf_SMOTE = models.NN().fit(SMOTE_data['X'], SMOTE_data['y'])
     elif model == 'MNIST':
         model = MNIST_torch
         # model = LargeMarginClassifier
         clf = model(hots=1, lr=0.01, cuda=True).fit(
             data['X'], data['y'], epochs=epochs)
         weighted = False
-        clf_SMOTE = model(hots=2).fit(
-            SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
+        if smote == True:
+            clf_SMOTE = model(hots=2).fit(
+                SMOTE_data['X'], SMOTE_data['y'], epochs=epochs)
         
-    elif model == 'MIMIC-cross-val':
+    elif model == 'MIMIC-cross-val':  # not finished!!!!
+        
         # clf = MIMIC_torch(lr=0.001, cuda=False).fit(
         #     data['X'], data['y'], epochs=50)
         layers = (100, 500, 100)
@@ -143,14 +162,17 @@ def get_classifier(data_clf,
         clf = grid_original.best_estimator_
         if _print == True:
             print(f'Best MIMIC params original: {grid_original.best_params_}')
-        clf_weighted = clf
-        clf_SMOTE = clf
+        if balanced_weights == True:
+            clf_weighted = clf
+        if smote == True:
+            clf_SMOTE = clf
 
         # weighted
         # grid_weighted = GridSearchCV(models.NN(
         #     class_weight='balanced'), param_grid_weighted, refit=True, n_jobs=-1)
         # grid_weighted.fit(data['X'], data['y'])
-        # clf_weighted = grid_weighted.best_estimator_
+        # if balanced_weights == True:
+            # clf_weighted = grid_weighted.best_estimator_
         # if _print == True:
         #     print(f'Best MIMIC params weighted: {grid_original.best_params_}')
 
@@ -158,7 +180,8 @@ def get_classifier(data_clf,
         # grid_SMOTE = GridSearchCV(
         #     models.NN(), param_grid, refit=True, n_jobs=-1)
         # grid_SMOTE.fit(SMOTE_data['X'], SMOTE_data['y'])
-        # clf_SMOTE = grid_SMOTE.best_estimator_
+        # if smote == True:
+            # clf_SMOTE = grid_SMOTE.best_estimator_
         # if _print == True:
         #     print(f'Best MIMIC params SMOTE: {grid_original.best_params_}')
     elif model == 'MIMIC':
@@ -166,17 +189,21 @@ def get_classifier(data_clf,
         layers = (100, 500, 1000, 500, 100)
         layers = (50, 100, 200, 300, 500, 1000)
         clf = models.NN(hidden_layer_sizes=layers).fit(data['X'], data['y'])
-        clf_weighted = models.NN(
+        if balanced_weights == True:
+            clf_weighted = models.NN(
             hidden_layer_sizes=layers, class_weight='balanced').fit(data['X'], data['y'])
-        clf_SMOTE = models.NN(hidden_layer_sizes=layers).fit(
-            SMOTE_data['X'], SMOTE_data['y'])
+        if smote == True:
+            clf_SMOTE = models.NN(hidden_layer_sizes=layers).fit(
+                SMOTE_data['X'], SMOTE_data['y'])
 
     else:
         raise ValueError(f"model: {model} not in list of available models")
     
     # Model adjsutment methods from the literature ===========================
-    clfs = {'Baseline': clf, 'SMOTE': clf_SMOTE}
-    if weighted == True:
+    clfs = {'Baseline': clf}
+    if smote == True:
+        clfs['SMOTE'] = clf_SMOTE
+    if balanced_weights == True:
         clfs['Balanced Weights'] = clf_weighted
     if costcla_methods == True:
         # Bayes Minimum Risk 
