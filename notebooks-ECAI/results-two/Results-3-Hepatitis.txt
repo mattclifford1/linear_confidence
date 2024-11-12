@@ -1,0 +1,15 @@
+% 06/11/2024 13:35:50
+% Hepatitis - 10 runs SVM-rbf model
+% train:[55 13], test:[56 13]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 \\
+\midrule
+Baseline & $\textbf{.827} \pm .06$ & $.623 \pm .15$ & $.485 \pm .16$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.804 \pm .02$ & $.299 \pm .31$ & $.224 \pm .24$ \\
+BW & $.768 \pm .09$ & $.681 \pm .09$ & $.499 \pm .10$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.804 \pm .05$ & $.656 \pm .11$ & $.493 \pm .10$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.786 \pm .08$ & $.686 \pm .09$ & $.516 \pm .09$ \\
+Our Method & $.778 \pm .09$ & $\textbf{.716} \pm .05$ & $\textbf{.539} \pm .08$ \\
+\bottomrule
+\end{tabular}

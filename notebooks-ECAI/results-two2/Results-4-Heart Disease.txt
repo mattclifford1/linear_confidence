@@ -1,0 +1,15 @@
+% 06/11/2024 13:48:58
+% Heart Disease - 10 runs SVM-rbf model
+% train:[82 24], test:[82 24]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 \\
+\midrule
+Baseline & $.866 \pm .04$ & $.765 \pm .06$ & $.681 \pm .09$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.829 \pm .03$ & $.705 \pm .07$ & $.591 \pm .09$ \\
+BW & $.842 \pm .03$ & $.788 \pm .06$ & $.669 \pm .07$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.827 \pm .04$ & $.795 \pm .09$ & $.660 \pm .10$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.821 \pm .04$ & $\textbf{.810} \pm .07$ & $.669 \pm .08$ \\
+Our Method & $\textbf{.872} \pm .04$ & $.797 \pm .08$ & $\textbf{.709} \pm .11$ \\
+\bottomrule
+\end{tabular}

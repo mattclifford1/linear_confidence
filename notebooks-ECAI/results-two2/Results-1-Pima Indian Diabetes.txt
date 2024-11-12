@@ -1,0 +1,15 @@
+% 06/11/2024 13:47:52
+% Pima Indian Diabetes - 10 runs SVM-rbf model
+% train:[250  25], test:[250 243]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 \\
+\midrule
+Baseline & $.540 \pm .04$ & $.204 \pm .22$ & $.145 \pm .16$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.581 \pm .02$ & $.468 \pm .05$ & $.362 \pm .06$ \\
+BW & $.582 \pm .04$ & $.467 \pm .09$ & $.365 \pm .12$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.649} \pm .03$ & $\textbf{.619} \pm .04$ & $\textbf{.567} \pm .06$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.649 \pm .03$ & $.619 \pm .04$ & $.567 \pm .06$ \\
+Our Method & $.646 \pm .04$ & $.604 \pm .08$ & $.548 \pm .11$ \\
+\bottomrule
+\end{tabular}

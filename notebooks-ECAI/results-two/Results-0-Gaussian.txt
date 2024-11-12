@@ -1,0 +1,15 @@
+% 06/11/2024 13:34:36
+% Gaussian - 10 runs Linear model
+% train:[1000   10], test:[1000 1000]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 \\
+\midrule
+Baseline & $.515 \pm .01$ & $.167 \pm .06$ & $.060 \pm .03$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.903 \pm .02$ & $.901 \pm .02$ & $.897 \pm .03$ \\
+BW & $.908 \pm .02$ & $.906 \pm .02$ & $.904 \pm .02$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .05$ & $.880 \pm .06$ & $.874 \pm .07$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.887 \pm .05$ & $.880 \pm .06$ & $.874 \pm .07$ \\
+Our Method & $\textbf{.912} \pm .01$ & $\textbf{.911} \pm .01$ & $\textbf{.916} \pm .01$ \\
+\bottomrule
+\end{tabular}
