@@ -2,7 +2,9 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 def from_clf(data, clf, supports=False):
-    if hasattr(clf, 'get_projection'):
+    if data['X'].shape[1] == 1:
+        projected = data['X']
+    elif hasattr(clf, 'get_projection'):
         projected = clf.get_projection(data['X'])
     else:
         raise AttributeError(f"Classifier {clf} needs 'get_projection' method")
@@ -12,7 +14,9 @@ def from_clf(data, clf, supports=False):
 
 
 def make_calcs(projected_data, supports=False):
-    # get supports
+    '''
+    split into classes and get the data supports
+    '''
     xp1 = projected_data['X'][projected_data['y'] == 0, :]
     xp2 = projected_data['X'][projected_data['y'] == 1, :]
 
