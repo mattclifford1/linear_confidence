@@ -28,14 +28,13 @@ class deltas:
     def fit(self, X, y, costs=(1, 1), **kwargs):
         self.data_info = data_info(X, y, self.clf)
         self.costs = costs
-        # get a very small number in terms of our data scale to use as min error 
-        # on the empirical mean when delta approaches 1
-        self.num_stablitity = np.abs(self.data_info.emp_xp2 - self.data_info.emp_xp1)/1000000000
         self.is_fit = True
 
         return self
 
-    def get_loss(self):
+    def get_loss(self, bias):
+        ''' get the loss as a specific bias point'''
+
         pass
 
     def get_generalisation_error(self, X_t, cls=1):
@@ -46,7 +45,8 @@ class deltas:
             raise AttributeError("Call .fit(X, y) first")
         # get vars we need
         mean = self.data_info(f'emp_xp{cls}')
-        d_train = self.data_info(f'd_{cls}') + self.num_stablitity
+        # add on the min concentration inequality error onto the dists as thats the dist we care about
+        d_train = self.data_info(f'd_{cls}') + self.data_info(f'min_conc_{cls}')
         N = self.data_info(f'N{cls}')
         # get the distance of test point to mean
         d_test = np.abs(X_t - mean)
@@ -60,9 +60,22 @@ class deltas:
         else:
             # argmin will give the index of the first False value
             k_furthest = N + 1 - np.argmin(d_comp)
-        # equation X
-        return k_furthest/(N+1)
+        # equation 1 (but new version)
+        error = k_furthest/(N+1)
 
+        # get the training point we are calculating the error from
+        ind = N - k_furthest
+        if ind == -1: # point closer than all training points
+            dist_add = 0
+        else:
+            dist_add = d_train[ind]
+        # get the point we are using
+        if mean < X_t:
+            point = mean + dist_add
+        else:
+            point = mean - dist_add
+        print(f'k: {k_furthest}, point: {point}')
+        return error, point
 
 
 class data_info:
@@ -91,6 +104,9 @@ class data_info:
         self.R2_emp = radius.supremum(self.xp2, self.emp_xp2)
         # Empirical D
         self.D_emp = np.abs(self.emp_xp1 - self.emp_xp2)
+        # stability numbers -- min error on empirical mean
+        self.min_conc_1 = radius.error_upper_bound(self.R1_emp, self.N1, 0.9999999999999999)
+        self.min_conc_2 = radius.error_upper_bound(self.R2_emp, self.N2, 0.9999999999999999)
 
     def order_distances_from_mean(self, mean, X):
         dists = np.sqrt(np.sum(np.square(X - mean), axis=1))
