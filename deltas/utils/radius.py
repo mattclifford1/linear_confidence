@@ -28,7 +28,7 @@ def calc_emp_R(X_proj, mean_proj):
 
 
 def supremum(X, x0=0):
-    
+    '''get the max distance from the mean (x0)'''
     euclid = np.sqrt(np.sum(np.square(X - x0), axis=1))
     return np.max(euclid)
 
