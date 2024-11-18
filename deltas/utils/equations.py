@@ -140,8 +140,6 @@ def delta2_given_delta1_matt(delta1, data_info):
 
     B = D_emp - R2_emp - R1_emp - error(R1, N1, delta1, factor)
 
-    # trying out double D to allow for non separable
-    # B = 2*D_emp - R2_emp - R1_emp - error(R, N1, delta1, factor)
     inside_exp = 0.5*(np.square(((B*np.sqrt(N2))/(factor*R2)) - 2))
     if isinstance(inside_exp, np.ndarray):
         dont_mask = inside_exp > 709  # overflow as np.inf
