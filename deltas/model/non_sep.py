@@ -27,11 +27,16 @@ class deltas:
         self.data_info_made = False
         self.is_fit = False
 
-    def fit(self, X, y, costs=(1, 1), _plot=False, **kwargs):
+    def fit(self, X, y, 
+            costs=(1, 1), 
+            _plot=False, 
+            only_furtherest_k=True, 
+            **kwargs):
         self.data_info = data_info(X, y, self.clf)
         self.data_info_made = True
         self.check_solvable()
         self.costs = costs
+        self.only_furtherest_k = only_furtherest_k
         self.optimise(_plot=_plot, **kwargs)
         self.is_fit = True
         return self
@@ -91,6 +96,10 @@ class deltas:
             plt.xlabel("Bias")
             plt.ylabel("Loss")
             plt.show()
+
+    def _single_class_loss(self, error, delta):
+        loss = error*(1-delta) + delta
+        return loss
        
 
     def get_loss(self, bias):
@@ -100,16 +109,31 @@ class deltas:
             return None
         
         # get loss for each class
-        loss = 0
+        total_loss = 0
         for cls in [1, 2]:
             # get the error term
-            error, point = self.get_generalisation_error(bias, cls)
-            # get the delta for this class
-            delta = self.deltas_from_bias(bias, point, cls)
-            # get the loss for this class
-            loss += error*(1-delta) + delta
-        return loss
-    
+            errors, points = self.get_generalisation_error(bias, cls=cls)
+            losses = []
+            # get the loss for each point
+            for error, point in zip(errors, points):
+                # get the delta for this class
+                delta = self.deltas_from_bias(bias, point, cls)
+                # get the loss for this class
+                losses.append(self._single_class_loss(error, delta))
+            # get the argmin of the losses
+            min_ind = np.argmin(losses)
+
+            # print('errs', errors)
+            # print('pts ', points)
+            # print('loss', losses)
+            # print(errors[min_ind])
+            # print(points[min_ind])
+            # print(losses[min_ind])
+
+            total_loss += losses[min_ind]
+
+        return total_loss
+
     def deltas_from_bias(self, bias, point, cls=1):
         ''' get the deltas i for class i at a specific bias point
         point is the training point we are using to calculate from
@@ -159,6 +183,7 @@ class deltas:
         mean = self.data_info(f'emp_xp{cls}')
         N = self.data_info(f'N{cls}')
         d_train_orig = self.data_info(f'd_{cls}')
+
         # add the min concentration inequality error onto the dists as thats the dist we care about
         d_train = d_train_orig + self.data_info(f'min_conc_{cls}')
         # get the distance of test point to mean
@@ -169,16 +194,36 @@ class deltas:
         # if the test point is further away than the furthest train point
         if d_comp.all() == True:
             # old error term -- is the beyond all train points
-            k_furthest = 1
+            k_furthest = [1]
         else:
             # argmin will give the index of the first False value
-            k_furthest = N + 1 - np.argmin(d_comp)
-        # equation 1 (but new version)
-        error = k_furthest/(N+1)
+            k_furthest = [N + 1 - np.argmin(d_comp)]
 
-        # get the training point we are calculating the error from
+        # use all points closer as well to evaluate the error
+        if self.only_furtherest_k == False:
+            for i in range(k_furthest[0], N):
+                k_furthest.append(i+1)
+        # get the errors and points used
+        errors = []
+        points = []
+        # equation 1 (but new version)
+        for k in k_furthest:
+            errors.append(k/(N+1))
+            points.append(
+                self.get_training_point_from_k_furthest(X_t, k, cls=cls))
+
+        return errors, points
+    
+    def get_training_point_from_k_furthest(self, X_t, k_furthest, cls=1):
+        ''' get the training point location that is k_furthest away from 
+        the test point -- used when getting the point accociated with loss'''
+        # get vars we need
+        mean = self.data_info(f'emp_xp{cls}')
+        N = self.data_info(f'N{cls}')
+        d_train_orig = self.data_info(f'd_{cls}')
+
         ind = N - k_furthest
-        if ind == -1: # point closer than all training points
+        if ind == -1:  # point closer than all training points
             dist_add = 0
         else:
             dist_add = d_train_orig[ind]
@@ -187,8 +232,8 @@ class deltas:
             point = mean + dist_add
         else:
             point = mean - dist_add
+        return point
 
-        return error, point
     
     def get_use_two(self):
         if USE_TWO == True:
