@@ -4,21 +4,19 @@ scikit-learn style class to fit deltas in the overlapping case
 import numpy as np
 from matplotlib import pyplot as plt
 
-import deltas.plotting.plots as plots
 import deltas.utils.projection as projection
 import deltas.utils.radius as radius
-import deltas.utils.equations as ds
-import deltas.optimisation.optimise_deltas as optimise_deltas
 from deltas.misc.use_two import USE_TWO
 
 
 class deltas:
-    def __init__(self, clf=None, dim_reducer=None):
+    def __init__(self, clf=None, dim_reducer=None, dev=False):
         if not hasattr(clf, 'get_projection'):
             raise AttributeError(
                 f"Classifier {clf} needs 'get_projection' method")
         self.clf = clf
         self.dim_reducer = dim_reducer
+        self.dev = dev
         self._setup()
         
 
@@ -30,13 +28,15 @@ class deltas:
     def fit(self, X, y, 
             costs=(1, 1), 
             _plot=False, 
-            only_furtherest_k=True, 
+            only_furtherest_k=False, 
+            loss_type='min',
             **kwargs):
         self.data_info = data_info(X, y, self.clf)
         self.data_info_made = True
         self.check_solvable()
         self.costs = costs
         self.only_furtherest_k = only_furtherest_k
+        self.loss_type = loss_type
         self.optimise(_plot=_plot, **kwargs)
         self.is_fit = True
         return self
@@ -72,7 +72,7 @@ class deltas:
         return True
     
     def get_valid_optimisation_range(self):
-        ''' get the valid range for the optimisation taking into account min conc'''
+        ''' get the valid range for the optimisation taking into account min conc '''
         m1, m2 = self.data_info('emp_xp1'), self.data_info('emp_xp2')
         if m1 < m2:
             r1 = m1 + self.data_info('min_conc_1')
@@ -82,13 +82,32 @@ class deltas:
             r2 = m2 + self.data_info('min_conc_2')
         return r1, r2
     
+    def get_valid_linspace(self, r1, r2, res):
+        ''' get a linspace with any invalid points removed'''
+        line = np.linspace(r1, r2, res)
+        # remove the invalid points
+        rm_inds = []
+        for i, bias in enumerate(line):
+            if self.check_bias_valid(bias) == False:
+                rm_inds.append(i)
+        line = np.delete(line, rm_inds)
+        return line
+    
     def optimise(self, res=1000, _plot=False, **kwargs):
         ''' optimise the deltas and return the best bias using linspace min'''
         if self.data_info_made == False:
             raise AttributeError("data_info not made -- dev error")
         r1, r2 = self.get_valid_optimisation_range()
-        line = np.linspace(r1, r2, res)
+        line = self.get_valid_linspace(r1, r2, res)
+        # remove the invalid points
+        if self.check_bias_valid(line[0]) == False:
+            np.delete(line, 0)
+        if self.check_bias_valid(line[-1]) == False:
+            np.delete(line, -1)
+        
+        # get all loss values
         losses = [self.get_loss(bias) for bias in line]
+        
         self.best_bias = line[np.argmin(losses)]
         # plot
         if _plot == True:
@@ -112,7 +131,7 @@ class deltas:
         total_loss = 0
         for cls in [1, 2]:
             # get the error term
-            errors, points = self.get_generalisation_error(bias, cls=cls)
+            errors, points, ks = self.get_generalisation_error(bias, cls=cls)
             losses = []
             # get the loss for each point
             for error, point in zip(errors, points):
@@ -120,17 +139,22 @@ class deltas:
                 delta = self.deltas_from_bias(bias, point, cls)
                 # get the loss for this class
                 losses.append(self._single_class_loss(error, delta))
-            # get the argmin of the losses
-            min_ind = np.argmin(losses)
+            
+            if self.loss_type == 'mean':
+                total_loss += np.mean(losses)
+            elif self.loss_type == 'max':
+                ind = np.argmax(losses)
+                total_loss += losses[np.argmax(losses)]
+            elif self.loss_type == 'min':
+                ind = np.argmin(losses)
+                total_loss += losses[np.argmin(losses)]
+            else:
+                raise AttributeError("loss_type must be 'mean', 'max' or 'min'")
 
-            # print('errs', errors)
-            # print('pts ', points)
-            # print('loss', losses)
-            # print(errors[min_ind])
-            # print(points[min_ind])
-            # print(losses[min_ind])
 
-            total_loss += losses[min_ind]
+
+            if self.dev == True:
+                print(f'min k cls {cls}: {ks[ind]}/{len(ks)} bias: {bias}')
 
         return total_loss
 
@@ -164,13 +188,12 @@ class deltas:
         # get delta
         delta = np.exp(-inside)
 
-        dev = False
-        if dev == True:
-            print(f'{d_bias} = {d_point} + error = {d_bias - d_point}')
+        if self.dev == True:
+            # print(f'{d_bias} = {d_point} + error = {d_bias - d_point}')
             # recover the bias term to check all is working
             err = radius.error_upper_bound(R, N, delta)
             # err = ((factor*R) / (np.sqrt(N))) * (2 + np.sqrt(2*np.log(1/delta)))
-            print(f'error = {err}')
+            # print(f'error = {err}')
 
         return delta
 
@@ -211,8 +234,9 @@ class deltas:
             errors.append(k/(N+1))
             points.append(
                 self.get_training_point_from_k_furthest(X_t, k, cls=cls))
+            
 
-        return errors, points
+        return errors, points, k_furthest
     
     def get_training_point_from_k_furthest(self, X_t, k_furthest, cls=1):
         ''' get the training point location that is k_furthest away from 
