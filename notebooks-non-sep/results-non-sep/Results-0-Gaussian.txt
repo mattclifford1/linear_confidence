@@ -1,0 +1,16 @@
+% 21/11/2024 17:01:23
+% Gaussian - 10 runs Linear model
+% train:[1000   10], test:[1000 1000]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 \\
+\midrule
+Baseline & $.519 \pm .01$ & $.185 \pm .06$ & $.073 \pm .04$ \\
+SMOTE \cite{Chawla_2002_JAIR} & $.901 \pm .02$ & $.898 \pm .02$ & $.894 \pm .03$ \\
+BW & $.907 \pm .01$ & $.905 \pm .02$ & $.902 \pm .02$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.880 \pm .05$ & $.872 \pm .06$ & $.864 \pm .07$ \\
+Thresh \cite{Sheng_2006_AAAI} & $.880 \pm .05$ & $.872 \pm .06$ & $.864 \pm .07$ \\
+Old Deltas \cite{Clifford_2024_ECAI} & $\textbf{.914} \pm .01$ & $\textbf{.913} \pm .01$ & $\textbf{.917} \pm .00$ \\
+Our Method & $.875 \pm .04$ & $.867 \pm .05$ & $.859 \pm .06$ \\
+\bottomrule
+\end{tabular}

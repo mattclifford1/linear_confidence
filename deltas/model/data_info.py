@@ -5,6 +5,7 @@ import numpy as np
 
 import deltas.utils.projection as projection
 import deltas.utils.radius as radius
+from deltas.misc.use_two import USE_TWO
 
 class data_info:
     def __init__(self, X, y, clf):
@@ -33,10 +34,16 @@ class data_info:
         # Empirical D
         self.D_emp = np.abs(self.emp_xp1 - self.emp_xp2)
         # stability numbers -- min error on empirical mean
-        self.min_conc_1 = radius.error_upper_bound(
-            self.R1_emp, self.N1, 0.9999999999999999)
-        self.min_conc_2 = radius.error_upper_bound(
-            self.R2_emp, self.N2, 0.9999999999999999)
+        if USE_TWO == True:
+            factor = 2
+        else:   
+            factor = 1
+        self.min_conc_1 = factor*(self.R1_emp/np.sqrt(self.N1))
+        self.min_conc_2 = factor*(self.R2_emp/np.sqrt(self.N2))
+        # self.min_conc_1 = radius.error_upper_bound(
+        #     self.R1_emp, self.N1, 0.999999999999999999999999999999999999)
+        # self.min_conc_2 = radius.error_upper_bound(
+        #     self.R2_emp, self.N2, 0.999999999999999999999999999999999999)
 
     def order_distances_from_mean(self, mean, X):
         dists = np.sqrt(np.sum(np.square(X - mean), axis=1))

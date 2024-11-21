@@ -53,7 +53,6 @@ def eval_test(clfs,
         preds[name] = clf.predict(test_data['X'])
         probs[name] = clf.predict_proba(test_data['X'])[:, 1]
 
-
     metrics = {
         'Accuracy': accuracy_score,
         # 'Minority Accuracy': minority_accuracy,

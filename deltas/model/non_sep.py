@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import deltas.utils.radius as radius
 from deltas.misc.use_two import USE_TWO
 from deltas.model.data_info import data_info
+import deltas.plotting.plots as plots
 
 
 class deltas:
@@ -33,21 +34,52 @@ class deltas:
             **kwargs):
         self.data_info = data_info(X, y, self.clf)
         self.data_info_made = True
-        self.check_solvable()
+        if _plot == True:
+            self.plot_data_info()
+        if self.check_solvable() == False:
+            return self
         self.costs = costs
         self.only_furtherest_k = only_furtherest_k
         self.loss_type = loss_type
         self.optimise(_plot=_plot, **kwargs)
+        self._make_boundary()
         self.is_fit = True
         return self
     
+    def predict(self, X):
+        self._check_fit()
+        # project data if not already
+        if X.shape[1] != 1:
+            if self.clf != None:
+                X = self.clf.get_projection(X)
+            else:
+                raise AttributeError(
+                    f"Deltas classifier needs original classifier to project feature space onto 1D classification space")
+        preds = np.zeros(X.shape)
+        preds[X <= self.boundary] = self.class_nums[0]
+        preds[X > self.boundary] = self.class_nums[1]
+        return preds.squeeze()
+    
+    def predict_proba(self, X):
+        return self.clf.predict_proba(X)
+
+    def _make_boundary(self):
+        ''' make the boundary from the best bias term'''
+        self.boundary = self.best_bias
+        if self.data_info('emp_xp1') < self.data_info('emp_xp2'):
+            self.class_nums = [0, 1]
+        else:
+            self.class_nums = [1, 0]
+
     def check_solvable(self):
         ''' check if the problem is solvable with data'''
         if self.data_info.N1 == 0 or self.data_info.N2 == 0:
             raise ValueError("One class has no data points")
         # if the means are too close
         if self.data_info.D_emp < (self.data_info.min_conc_1 + self.data_info.min_conc_2):
-            raise ValueError("Means are too close")
+            print('Means are too close!!! -- not solvable')
+            return False
+        return True
     
     def _check_fit(self):
         if not self.is_fit:
@@ -111,10 +143,15 @@ class deltas:
         self.best_bias = line[np.argmin(losses)]
         # plot
         if _plot == True:
-            plt.plot(line, losses)
-            plt.xlabel("Bias")
-            plt.ylabel("Loss")
+            fig, ax = plt.subplots(figsize=(5.5, 2.5))
+            ax.plot(line, losses)
+            ax.set_xlabel("Bias")
+            ax.set_ylabel("Loss")
             plt.show()
+
+    def plot_data_info(self):
+        plots.conc_projected_boundary(
+            data_info_class=self.data_info)
 
     def _single_class_loss(self, error, delta):
         loss = error*(1-delta) + delta

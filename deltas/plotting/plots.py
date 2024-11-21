@@ -27,29 +27,28 @@ def projections_from_data_clfs(clfs, X, y, ax=None):
         ax.scatter(xp2, np.ones_like(xp2)*y_plt, c='r',
                 s=10, label='Class 2', marker='x')
         y_plt -= 0.2
-        
 
-def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, D=False, ax=None, deltas_to_plot=[0.9999999999999999999], calc_data=True):
+
+def plot_projection_data(data, means=None, D=False, calc_data=True, ax=None, y=0):
     ax, _ = _get_axes(ax)
 
     xp1, xp2 = projection.get_classes(data)
-    y = 0
-    ax.scatter(xp1, np.ones_like(xp1)*y, c='b', 
+    ax.scatter(xp1, np.ones_like(xp1)*y, c='b',
                s=10, label=f'Class 1: {xp1.shape[0]}', marker='o')
     ax.scatter(xp2, np.ones_like(xp2)*y, c='r',
                s=10, label=f'Class 2: {xp2.shape[0]}', marker='o')
-
+    
     # data empircal results
+    emp_xp1, emp_xp2 = projection.get_emp_means(data)
     if calc_data == True:
         # empirical means
         if D == True:
             yplus = 0.12
         else:
             yplus = 0.05
-        emp_xp1, emp_xp2 = projection.get_emp_means(data)
-        xminus =   0.25#0  #1.5
-        ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200, 
-                marker='x', label='Empircal Means')
+        xminus = 0.25  # 0  #1.5
+        ax.scatter(np.array([emp_xp1, emp_xp2]), [y, y], c='k', s=200,
+                   marker='x', label='Empircal Means')
         ax.text(emp_xp1-xminus, y+yplus,
                 r'$\langle\bar{\phi}_{S_1}, w\rangle$', fontsize=10)
         ax.text(emp_xp2-xminus, y+yplus,
@@ -58,11 +57,21 @@ def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, 
         # if 'supports' in data.keys():
         #     ax.scatter(data['supports'], [y, y], c='k', s=100,
         #             marker='+', label='Supports')
-        
+    
     # expected means
     if means != None:
         ax.scatter(means['X'], [y, y], c='k', s=100,
-                marker='o', label='Expected Means')
+                   marker='o', label='Expected Means')
+    return emp_xp1, emp_xp2
+
+
+def plot_projection(data, means=None, R1_emp=None, R2_emp=None, data_info=None, R_est=False, D=False, ax=None, deltas_to_plot=[0.9999999999999999999], calc_data=True):
+    ax, _ = _get_axes(ax)
+
+    y = 0
+    emp_xp1, emp_xp2 = plot_projection_data(
+        data, means=means, D=D, calc_data=calc_data, ax=ax, y=y)
+
         
     # empirical estimates of Rs
     if R_est == True:
@@ -320,3 +329,26 @@ def deltas_projected_boundary(delta1, delta2, data_info, ax=None, save_file=None
     if save_file != None:
         fig.tight_layout()
         fig.savefig(save_file + '-optimised.png', dpi=500)
+
+def conc_projected_boundary(data_info_class, ax=None, save_file=None):
+    '''plot porjected data and concetration inequalities around each mean'''
+    proj_data = data_info_class.proj_data
+
+
+    fig, ax = plt.subplots(figsize=(5.5, 2.5))
+    y = 0
+    emp_xp1, emp_xp2 = plot_projection_data(proj_data, ax=ax, y=y)
+
+    # plot the concentration inequalities
+    y = 0.4
+    ax.plot([emp_xp1-data_info_class('min_conc_1'), emp_xp1+data_info_class('min_conc_1')], [y, y],
+            c='b', marker='|', linestyle='dashed')
+    ax.plot([emp_xp2-data_info_class('min_conc_2'), emp_xp2+data_info_class('min_conc_2')], [y, y],
+            c='r', marker='|', linestyle='dashed')
+    
+
+    ax.set_xlabel(r'$\langle \phi(x), w \rangle$', size=12)
+    ax.set_ylabel('')
+    ax.set_yticks([])
+    # ax.autoscale(enable=True, axis='y', tight=True)
+    return ax, plt.gcf()
