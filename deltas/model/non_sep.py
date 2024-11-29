@@ -260,8 +260,14 @@ class deltas:
             k_furthest = [N + 1 - np.argmin(d_comp)]
 
         # use all points closer as well to evaluate the error
-        if self.only_furtherest_k == False:
-            for i in range(k_furthest[0], N):
+        if self.only_furtherest_k != True:
+            if self.only_furtherest_k == False:
+                check_furthest = N
+            elif isinstance(self.only_furtherest_k, int):
+                check_furthest = min(self.only_furtherest_k, N)
+            else:
+                raise AttributeError("only_furtherest_k must be bool or int")
+            for i in range(k_furthest[0], check_furthest):
                 k_furthest.append(i+1)
         # get the errors and points used
         errors = []
