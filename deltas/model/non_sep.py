@@ -62,6 +62,19 @@ class deltas:
     
     def predict_proba(self, X):
         return self.clf.predict_proba(X)
+    
+    def get_projection(self, X):
+        return self.clf.get_projection(X)
+    
+    def get_bias(self):
+        if self.is_fit == True:
+            return -self.boundary
+        else:
+            if hasattr(self.clf, 'get_bias'):
+                print('Giving bias from original classifier')
+                return self.clf.get_bias()
+            else:
+                print('Not fit to give bias')
 
     def _make_boundary(self):
         ''' make the boundary from the best bias term'''
@@ -179,6 +192,7 @@ class deltas:
             
             if self.loss_type == 'mean':
                 total_loss += np.mean(losses)
+                # total_loss += np.mean(losses)/len(losses)
             elif self.loss_type == 'max':
                 ind = np.argmax(losses)
                 total_loss += losses[np.argmax(losses)]

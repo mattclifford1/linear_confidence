@@ -26,7 +26,8 @@ def get_classifier(data_clf,
                    _plot_data=False, 
                    save_file=None, 
                    bayes_optimal=False, 
-                   diagram=False):
+                   diagram=False,
+                   return_dim_reducer=False):
     data = data_clf['data']
 
     # dim reducer (PCA) for plotting in higher dims
@@ -283,6 +284,9 @@ def get_classifier(data_clf,
         fig.tight_layout()
         fig.savefig(save_file+'_data.png', dpi=500, bbox_inches='tight')
         # plt.show()
-    return clfs
+    if return_dim_reducer == True:
+        return clfs, dim_reducer
+    else:
+        return clfs
    
 
