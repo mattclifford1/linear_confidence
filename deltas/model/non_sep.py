@@ -66,6 +66,72 @@ class deltas:
     def get_projection(self, X):
         return self.clf.get_projection(X)
     
+    def optimise(self, res=1000, _plot=False, **kwargs):
+        ''' optimise the deltas and return the best bias using linspace min'''
+        if self.data_info_made == False:
+            raise AttributeError("data_info not made -- dev error")
+        r1, r2 = self.get_valid_optimisation_range()
+        line = self.get_valid_linspace(r1, r2, res)
+        # remove the invalid points
+        if self.check_bias_valid(line[0]) == False:
+            np.delete(line, 0)
+        if self.check_bias_valid(line[-1]) == False:
+            np.delete(line, -1)
+
+        # get all loss values
+        losses = [self.get_loss(bias) for bias in line]
+
+        self.best_bias = line[np.argmin(losses)]
+        # plot
+        if _plot == True:
+            fig, ax = plt.subplots(figsize=(5.5, 2.5))
+            ax.plot(line, losses)
+            ax.set_xlabel("Bias")
+            ax.set_ylabel("Loss")
+            plt.show()
+
+    def _single_class_loss(self, error, delta):
+        loss = error*(1-delta) + delta
+        loss = error*(1-delta)
+        return loss
+
+    def get_loss(self, bias):
+        ''' get the loss as a specific bias point'''
+        self._check_data_info_made()
+        if self.check_bias_valid(bias) == False:
+            return None
+
+        # get loss for each class
+        total_loss = 0
+        for cls in [1, 2]:
+            # get the error term
+            errors, points, ks = self.get_generalisation_error(bias, cls=cls)
+            losses = []
+            # get the loss for each point
+            for error, point in zip(errors, points):
+                # get the delta for this class
+                delta = self.deltas_from_bias(bias, point, cls)
+                # get the loss for this class
+                losses.append(self._single_class_loss(error, delta))
+
+            if self.loss_type == 'mean':
+                total_loss += np.mean(losses)
+                # total_loss += np.mean(losses)/len(losses)
+            elif self.loss_type == 'max':
+                ind = np.argmax(losses)
+                total_loss += losses[np.argmax(losses)]
+            elif self.loss_type == 'min':
+                ind = np.argmin(losses)
+                total_loss += losses[np.argmin(losses)]
+            else:
+                raise AttributeError(
+                    "loss_type must be 'mean', 'max' or 'min'")
+
+            if self.dev == True:
+                print(f'min k cls {cls}: {ks[ind]}/{len(ks)} bias: {bias}')
+
+        return total_loss
+    
     def get_bias(self):
         if self.is_fit == True:
             return -self.boundary
@@ -138,76 +204,9 @@ class deltas:
         line = np.delete(line, rm_inds)
         return line
     
-    def optimise(self, res=1000, _plot=False, **kwargs):
-        ''' optimise the deltas and return the best bias using linspace min'''
-        if self.data_info_made == False:
-            raise AttributeError("data_info not made -- dev error")
-        r1, r2 = self.get_valid_optimisation_range()
-        line = self.get_valid_linspace(r1, r2, res)
-        # remove the invalid points
-        if self.check_bias_valid(line[0]) == False:
-            np.delete(line, 0)
-        if self.check_bias_valid(line[-1]) == False:
-            np.delete(line, -1)
-        
-        # get all loss values
-        losses = [self.get_loss(bias) for bias in line]
-        
-        self.best_bias = line[np.argmin(losses)]
-        # plot
-        if _plot == True:
-            fig, ax = plt.subplots(figsize=(5.5, 2.5))
-            ax.plot(line, losses)
-            ax.set_xlabel("Bias")
-            ax.set_ylabel("Loss")
-            plt.show()
-
     def plot_data_info(self):
         plots.conc_projected_boundary(
             data_info_class=self.data_info)
-
-    def _single_class_loss(self, error, delta):
-        loss = error*(1-delta) + delta
-        return loss
-       
-
-    def get_loss(self, bias):
-        ''' get the loss as a specific bias point'''
-        self._check_data_info_made()
-        if self.check_bias_valid(bias) == False:
-            return None
-        
-        # get loss for each class
-        total_loss = 0
-        for cls in [1, 2]:
-            # get the error term
-            errors, points, ks = self.get_generalisation_error(bias, cls=cls)
-            losses = []
-            # get the loss for each point
-            for error, point in zip(errors, points):
-                # get the delta for this class
-                delta = self.deltas_from_bias(bias, point, cls)
-                # get the loss for this class
-                losses.append(self._single_class_loss(error, delta))
-            
-            if self.loss_type == 'mean':
-                total_loss += np.mean(losses)
-                # total_loss += np.mean(losses)/len(losses)
-            elif self.loss_type == 'max':
-                ind = np.argmax(losses)
-                total_loss += losses[np.argmax(losses)]
-            elif self.loss_type == 'min':
-                ind = np.argmin(losses)
-                total_loss += losses[np.argmin(losses)]
-            else:
-                raise AttributeError("loss_type must be 'mean', 'max' or 'min'")
-
-
-
-            if self.dev == True:
-                print(f'min k cls {cls}: {ks[ind]}/{len(ks)} bias: {bias}')
-
-        return total_loss
 
     def deltas_from_bias(self, bias, point, cls=1):
         ''' get the deltas i for class i at a specific bias point
