@@ -1,4 +1,4 @@
-% 21/11/2024 17:42:24
+% 09/12/2024 13:00:38
 % MIMIC-III-mortality - 10 runs MIMIC model
 % train:[3317  392], test:[3318  393]
 \begin{tabular}{@{}lccc@{}}
@@ -10,7 +10,9 @@ SMOTE \cite{Chawla_2002_JAIR} & $.822 \pm .01$ & $.431 \pm .02$ & $.199 \pm .01$
 BW & $.839 \pm .01$ & $.410 \pm .02$ & $.195 \pm .02$ \\
 BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.852} \pm .01$ & $.405 \pm .04$ & $.202 \pm .02$ \\
 Thresh \cite{Sheng_2006_AAAI} & $.844 \pm .01$ & $.421 \pm .04$ & $.208 \pm .02$ \\
-Old Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.486 \pm .04$ & $\textbf{.217} \pm .01$ \\
-Our Method & $.759 \pm .07$ & $\textbf{.496} \pm .04$ & $.216 \pm .01$ \\
+Old Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.486 \pm .04$ & $.217 \pm .01$ \\
+Min Deltas & $.780 \pm .04$ & $.490 \pm .04$ & $.219 \pm .01$ \\
+Avg Deltas & $.831 \pm .10$ & $.403 \pm .05$ & $.198 \pm .02$ \\
+F Deltas & $.777 \pm .04$ & $\textbf{.493} \pm .04$ & $\textbf{.219} \pm .01$ \\
 \bottomrule
 \end{tabular}

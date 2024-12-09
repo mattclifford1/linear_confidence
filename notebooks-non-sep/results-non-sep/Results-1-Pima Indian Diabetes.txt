@@ -1,4 +1,4 @@
-% 21/11/2024 17:04:32
+% 09/12/2024 12:20:38
 % Pima Indian Diabetes - 10 runs SVM-rbf model
 % train:[250  25], test:[250 243]
 \begin{tabular}{@{}lccc@{}}
@@ -8,9 +8,11 @@ Methods & Accuracy & G-Mean & F1 \\
 Baseline & $.530 \pm .03$ & $.160 \pm .20$ & $.105 \pm .14$ \\
 SMOTE \cite{Chawla_2002_JAIR} & $.587 \pm .02$ & $.474 \pm .05$ & $.370 \pm .06$ \\
 BW & $.576 \pm .03$ & $.452 \pm .07$ & $.344 \pm .08$ \\
-BMR \cite{Bahnsen_2014_SIAM} & $.652 \pm .03$ & $\textbf{.619} \pm .04$ & $\textbf{.565} \pm .06$ \\
+BMR \cite{Bahnsen_2014_SIAM} & $.652 \pm .03$ & $.619 \pm .04$ & $.565 \pm .06$ \\
 Thresh \cite{Sheng_2006_AAAI} & $.652 \pm .03$ & $.619 \pm .04$ & $.565 \pm .06$ \\
 Old Deltas \cite{Clifford_2024_ECAI} & $.653 \pm .04$ & $.610 \pm .09$ & $.554 \pm .12$ \\
-Our Method & $\textbf{.659} \pm .06$ & $.612 \pm .11$ & $.562 \pm .16$ \\
+Min Deltas & $.657 \pm .05$ & $.616 \pm .09$ & $.562 \pm .12$ \\
+Avg Deltas & $.645 \pm .06$ & $.583 \pm .11$ & $.520 \pm .16$ \\
+F Deltas & $\textbf{.663} \pm .05$ & $\textbf{.627} \pm .09$ & $\textbf{.581} \pm .13$ \\
 \bottomrule
 \end{tabular}

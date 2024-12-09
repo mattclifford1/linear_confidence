@@ -1,7 +1,7 @@
 \begin{tabular}{@{}llccc@{}}
 \toprule
 & Methods & Accuracy & G-Mean & F1 \\
-% 21/11/2024 17:04:32
+% 09/12/2024 12:20:38
 % Pima Indian Diabetes - 10 runs SVM-rbf model
 % train:[250  25], test:[250 243]
 \midrule
@@ -9,10 +9,10 @@
 & Baseline & $.530 \pm .03$ & $.160 \pm .20$ & $.105 \pm .14$ \\
 & SMOTE \cite{Chawla_2002_JAIR} & $.587 \pm .02$ & $.474 \pm .05$ & $.370 \pm .06$ \\
 & BW & $.576 \pm .03$ & $.452 \pm .07$ & $.344 \pm .08$ \\
-& BMR \cite{Bahnsen_2014_SIAM} & $.652 \pm .03$ & $\textbf{.619} \pm .04$ & $\textbf{.565} \pm .06$ \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.652 \pm .03$ & $.619 \pm .04$ & $.565 \pm .06$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.652 \pm .03$ & $.619 \pm .04$ & $.565 \pm .06$ \\
 & Old Deltas \cite{Clifford_2024_ECAI} & $.653 \pm .04$ & $.610 \pm .09$ & $.554 \pm .12$ \\
-% 21/11/2024 17:04:56
+% 09/12/2024 12:21:13
 % Breast Cancer - 10 runs SVM-rbf model
 % train:[178  17], test:[179 195]
 \midrule
@@ -22,8 +22,8 @@
 & BW & $.918 \pm .02$ & $.918 \pm .02$ & $.915 \pm .02$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $.877 \pm .09$ & $.868 \pm .10$ & $.855 \pm .12$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.918 \pm .08$ & $.914 \pm .09$ & $.908 \pm .10$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $\textbf{.951} \pm .02$ & $\textbf{.949} \pm .02$ & $\textbf{.953} \pm .01$ \\
-% 21/11/2024 17:05:13
+& Old Deltas \cite{Clifford_2024_ECAI} & $.951 \pm .02$ & $.949 \pm .02$ & $.953 \pm .01$ \\
+% 09/12/2024 12:21:33
 % Hepatitis - 10 runs SVM-rbf model
 % train:[55 13], test:[56 13]
 \midrule
@@ -34,7 +34,7 @@
 & BMR \cite{Bahnsen_2014_SIAM} & $.786 \pm .07$ & $.656 \pm .11$ & $.484 \pm .10$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.765 \pm .10$ & $.683 \pm .09$ & $.503 \pm .09$ \\
 & Old Deltas \cite{Clifford_2024_ECAI} & $.8 \pm .08$ & $\textbf{.712} \pm .05$ & $\textbf{.548} \pm .07$ \\
-% 21/11/2024 17:05:55
+% 09/12/2024 12:22:39
 % Heart Disease - 10 runs SVM-rbf model
 % train:[82 24], test:[82 24]
 \midrule
@@ -43,9 +43,9 @@
 & SMOTE \cite{Chawla_2002_JAIR} & $.829 \pm .03$ & $.705 \pm .07$ & $.591 \pm .09$ \\
 & BW & $.842 \pm .03$ & $.788 \pm .06$ & $.669 \pm .07$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $.827 \pm .04$ & $.795 \pm .09$ & $.660 \pm .10$ \\
-& Thresh \cite{Sheng_2006_AAAI} & $.821 \pm .04$ & $\textbf{.810} \pm .07$ & $.669 \pm .08$ \\
+& Thresh \cite{Sheng_2006_AAAI} & $.821 \pm .04$ & $.810 \pm .07$ & $.669 \pm .08$ \\
 & Old Deltas \cite{Clifford_2024_ECAI} & $\textbf{.872} \pm .04$ & $.797 \pm .08$ & $\textbf{.709} \pm .11$ \\
-% 21/11/2024 17:42:24
+% 09/12/2024 13:00:38
 % MIMIC-III-mortality - 10 runs MIMIC model
 % train:[3317  392], test:[3318  393]
 \midrule
@@ -55,6 +55,6 @@
 & BW & $.839 \pm .01$ & $.410 \pm .02$ & $.195 \pm .02$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.852} \pm .01$ & $.405 \pm .04$ & $.202 \pm .02$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.844 \pm .01$ & $.421 \pm .04$ & $.208 \pm .02$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.486 \pm .04$ & $\textbf{.217} \pm .01$ \\
+& Old Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.486 \pm .04$ & $.217 \pm .01$ \\
 \bottomrule
 \end{tabular}

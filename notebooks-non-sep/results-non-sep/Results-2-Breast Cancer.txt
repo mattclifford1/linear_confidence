@@ -1,4 +1,4 @@
-% 21/11/2024 17:04:56
+% 09/12/2024 12:21:13
 % Breast Cancer - 10 runs SVM-rbf model
 % train:[178  17], test:[179 195]
 \begin{tabular}{@{}lccc@{}}
@@ -10,7 +10,9 @@ SMOTE \cite{Chawla_2002_JAIR} & $.782 \pm .10$ & $.753 \pm .13$ & $.718 \pm .16$
 BW & $.918 \pm .02$ & $.918 \pm .02$ & $.915 \pm .02$ \\
 BMR \cite{Bahnsen_2014_SIAM} & $.877 \pm .09$ & $.868 \pm .10$ & $.855 \pm .12$ \\
 Thresh \cite{Sheng_2006_AAAI} & $.918 \pm .08$ & $.914 \pm .09$ & $.908 \pm .10$ \\
-Old Deltas \cite{Clifford_2024_ECAI} & $\textbf{.951} \pm .02$ & $\textbf{.949} \pm .02$ & $\textbf{.953} \pm .01$ \\
-Our Method & $.905 \pm .01$ & $.905 \pm .01$ & $.901 \pm .01$ \\
+Old Deltas \cite{Clifford_2024_ECAI} & $.951 \pm .02$ & $.949 \pm .02$ & $.953 \pm .01$ \\
+Min Deltas & $\textbf{.955} \pm .01$ & $\textbf{.954} \pm .01$ & $\textbf{.957} \pm .01$ \\
+Avg Deltas & $.927 \pm .02$ & $.927 \pm .02$ & $.926 \pm .02$ \\
+F Deltas & $.948 \pm .02$ & $.948 \pm .02$ & $.948 \pm .03$ \\
 \bottomrule
 \end{tabular}

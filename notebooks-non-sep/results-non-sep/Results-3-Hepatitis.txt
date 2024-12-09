@@ -1,4 +1,4 @@
-% 21/11/2024 17:05:13
+% 09/12/2024 12:21:33
 % Hepatitis - 10 runs SVM-rbf model
 % train:[55 13], test:[56 13]
 \begin{tabular}{@{}lccc@{}}
@@ -11,6 +11,8 @@ BW & $.759 \pm .08$ & $.675 \pm .09$ & $.486 \pm .09$ \\
 BMR \cite{Bahnsen_2014_SIAM} & $.786 \pm .07$ & $.656 \pm .11$ & $.484 \pm .10$ \\
 Thresh \cite{Sheng_2006_AAAI} & $.765 \pm .10$ & $.683 \pm .09$ & $.503 \pm .09$ \\
 Old Deltas \cite{Clifford_2024_ECAI} & $.8 \pm .08$ & $\textbf{.712} \pm .05$ & $\textbf{.548} \pm .07$ \\
-Our Method & $.776 \pm .07$ & $.701 \pm .11$ & $.512 \pm .11$ \\
+Min Deltas & $.786 \pm .04$ & $.702 \pm .10$ & $.513 \pm .11$ \\
+Avg Deltas & $.772 \pm .09$ & $.701 \pm .10$ & $.518 \pm .08$ \\
+F Deltas & $.786 \pm .04$ & $.702 \pm .10$ & $.513 \pm .11$ \\
 \bottomrule
 \end{tabular}

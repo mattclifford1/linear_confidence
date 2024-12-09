@@ -35,15 +35,25 @@ def run_single(dataset, model, len_required=10, exp_num=0):
         X = data_clf['data']['X']
         y = data_clf['data']['y']
         clf = data_clf['clf']
-        deltas_model = non_sep.deltas(clf).fit(X, y)
+        deltas_min = non_sep.deltas(
+            clf).fit(X, y, loss_type='min')
+        deltas_avg = non_sep.deltas(
+            clf).fit(X, y, loss_type='mean')
+        deltas_f = non_sep.deltas(
+            clf).fit(X, y, only_furtherest_k=True)
         deltas_downsample = downsample.downsample_deltas(clf).fit(X, y,
                                                              max_trials=10000,
                                                              parallel=True)
 
-        if deltas_model.is_fit == True and deltas_downsample.is_fit == True:
+        if (deltas_min.is_fit == True and
+            deltas_avg.is_fit == True and
+            deltas_f.is_fit == True and
+            deltas_downsample.is_fit == True):
 
-            classifiers_dict['Old Deltas'] = deltas_downsample
-            classifiers_dict['Our Method'] = deltas_model
+            classifiers_dict['Slacks Deltas'] = deltas_downsample
+            classifiers_dict['Min Deltas'] = deltas_min
+            classifiers_dict['Avg Deltas'] = deltas_avg
+            classifiers_dict['F Deltas'] = deltas_f
             scores_df = evaluation.eval_test(classifiers_dict,
                                              data_clf['data_test'], _print=False, _plot=False)
             dfs.append(scores_df)
@@ -89,8 +99,10 @@ def write_results(dfs, dataset, model, data_clf, exp_num=0):
         'Balanced Weights': 'BW',
         'BMR': 'BMR \cite{Bahnsen_2014_SIAM}',
         'Threshold': 'Thresh \cite{Sheng_2006_AAAI}',
-        'Old Deltas': 'Old Deltas \cite{Clifford_2024_ECAI}',
-        'Our Method': 'Our Method',
+        'Slacks Deltas': 'Old Deltas \cite{Clifford_2024_ECAI}',
+        'Min Deltas': 'Min Deltas',
+        'Avg Deltas': 'Avg Deltas',
+        'F Deltas': 'F Deltas',
     }
     meths_new = []
     for me in methods:
