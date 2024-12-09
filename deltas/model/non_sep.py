@@ -91,8 +91,8 @@ class deltas:
             plt.show()
 
     def _single_class_loss(self, error, delta):
-        loss = error*(1-delta) + delta
-        loss = error*(1-delta)
+        # loss = error*(1-delta) + delta
+        # loss = error*(1-delta)
         loss = error*(delta)
         return loss
 
