@@ -37,6 +37,8 @@ def run_single(dataset, model, len_required=10, exp_num=0):
         clf = data_clf['clf']
         deltas_min = non_sep.deltas(
             clf).fit(X, y, loss_type='min')
+        deltas_max = non_sep.deltas(
+            clf).fit(X, y, loss_type='max')
         deltas_avg = non_sep.deltas(
             clf).fit(X, y, loss_type='mean')
         deltas_f = non_sep.deltas(
@@ -52,6 +54,7 @@ def run_single(dataset, model, len_required=10, exp_num=0):
 
             classifiers_dict['Slacks Deltas'] = deltas_downsample
             classifiers_dict['Min Deltas'] = deltas_min
+            classifiers_dict['Max Deltas'] = deltas_max
             classifiers_dict['Avg Deltas'] = deltas_avg
             classifiers_dict['F Deltas'] = deltas_f
             scores_df = evaluation.eval_test(classifiers_dict,
@@ -99,8 +102,9 @@ def write_results(dfs, dataset, model, data_clf, exp_num=0):
         'Balanced Weights': 'BW',
         'BMR': 'BMR \cite{Bahnsen_2014_SIAM}',
         'Threshold': 'Thresh \cite{Sheng_2006_AAAI}',
-        'Slacks Deltas': 'Old Deltas \cite{Clifford_2024_ECAI}',
+        'Slacks Deltas': 'Slacks Deltas \cite{Clifford_2024_ECAI}',
         'Min Deltas': 'Min Deltas',
+        'Max Deltas': 'Max Deltas',
         'Avg Deltas': 'Avg Deltas',
         'F Deltas': 'F Deltas',
     }
@@ -139,7 +143,7 @@ def combine_tables(tables):
                 'Heart Disease': 'Heart Disease',
                 'MIMIC-III-mortality': 'MIMIC ICU'}
 
-    # gopen write file
+    # open write file
     with open(os.path.join(dir, TABLE_NAME), 'w') as w_file:
         # get the first table to get table starter
         with open(os.path.join(dir, DIR_NAME, tables[0]), 'r') as r_table:
@@ -162,7 +166,7 @@ def combine_tables(tables):
                 w_file.write(
                     '\multirow{6}{*}{\\rotatebox{90}{'+short_names[dataset_name]+'}}\n')
                 # table info
-                for l in range(7, 13):
+                for l in range(7, 17):
                     w_file.write('& ' + lines[l] + '\n')
         w_file.write('\\bottomrule\n\end{tabular}')
 
@@ -177,10 +181,10 @@ def main():
         5: {'dataset': 'MIMIC-III-mortality', 'model': 'MIMIC'},
     }
 
-    for exp_num, exp in experiments.items():
-        dataset = exp['dataset']
-        model = exp['model']
-        run_single(dataset, model, exp_num=exp_num)
+    # for exp_num, exp in experiments.items():
+    #     dataset = exp['dataset']
+    #     model = exp['model']
+    #     run_single(dataset, model, exp_num=exp_num)
 
     tables = [
         'Results-1-Pima Indian Diabetes.txt',

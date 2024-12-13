@@ -1,7 +1,7 @@
 \begin{tabular}{@{}llccc@{}}
 \toprule
 & Methods & Accuracy & G-Mean & F1 \\
-% 09/12/2024 12:20:38
+% 13/12/2024 10:41:22
 % Pima Indian Diabetes - 10 runs SVM-rbf model
 % train:[250  25], test:[250 243]
 \midrule
@@ -11,8 +11,12 @@
 & BW & $.576 \pm .03$ & $.452 \pm .07$ & $.344 \pm .08$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $.652 \pm .03$ & $.619 \pm .04$ & $.565 \pm .06$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.652 \pm .03$ & $.619 \pm .04$ & $.565 \pm .06$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $.653 \pm .04$ & $.610 \pm .09$ & $.554 \pm .12$ \\
-% 09/12/2024 12:21:13
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.653 \pm .04$ & $.610 \pm .09$ & $.554 \pm .12$ \\
+& Min Deltas & $.657 \pm .05$ & $.616 \pm .09$ & $.562 \pm .12$ \\
+& Max Deltas & $.644 \pm .06$ & $.572 \pm .13$ & $.509 \pm .18$ \\
+& Avg Deltas & $.645 \pm .06$ & $.583 \pm .11$ & $.520 \pm .16$ \\
+& F Deltas & $\textbf{.663} \pm .05$ & $\textbf{.627} \pm .09$ & $\textbf{.581} \pm .13$ \\
+% 13/12/2024 10:42:05
 % Breast Cancer - 10 runs SVM-rbf model
 % train:[178  17], test:[179 195]
 \midrule
@@ -22,8 +26,12 @@
 & BW & $.918 \pm .02$ & $.918 \pm .02$ & $.915 \pm .02$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $.877 \pm .09$ & $.868 \pm .10$ & $.855 \pm .12$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.918 \pm .08$ & $.914 \pm .09$ & $.908 \pm .10$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $.951 \pm .02$ & $.949 \pm .02$ & $.953 \pm .01$ \\
-% 09/12/2024 12:21:33
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.951 \pm .02$ & $.949 \pm .02$ & $.953 \pm .01$ \\
+& Min Deltas & $\textbf{.955} \pm .01$ & $\textbf{.954} \pm .01$ & $\textbf{.957} \pm .01$ \\
+& Max Deltas & $.885 \pm .05$ & $.880 \pm .05$ & $.873 \pm .06$ \\
+& Avg Deltas & $.927 \pm .02$ & $.927 \pm .02$ & $.926 \pm .02$ \\
+& F Deltas & $.948 \pm .02$ & $.948 \pm .02$ & $.948 \pm .03$ \\
+% 13/12/2024 10:42:29
 % Hepatitis - 10 runs SVM-rbf model
 % train:[55 13], test:[56 13]
 \midrule
@@ -33,8 +41,12 @@
 & BW & $.759 \pm .08$ & $.675 \pm .09$ & $.486 \pm .09$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $.786 \pm .07$ & $.656 \pm .11$ & $.484 \pm .10$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.765 \pm .10$ & $.683 \pm .09$ & $.503 \pm .09$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $.8 \pm .08$ & $\textbf{.712} \pm .05$ & $\textbf{.548} \pm .07$ \\
-% 09/12/2024 12:22:39
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.8 \pm .08$ & $\textbf{.712} \pm .05$ & $\textbf{.548} \pm .07$ \\
+& Min Deltas & $.786 \pm .04$ & $.702 \pm .10$ & $.513 \pm .11$ \\
+& Max Deltas & $.755 \pm .09$ & $.697 \pm .09$ & $.506 \pm .08$ \\
+& Avg Deltas & $.772 \pm .09$ & $.701 \pm .10$ & $.518 \pm .08$ \\
+& F Deltas & $.786 \pm .04$ & $.702 \pm .10$ & $.513 \pm .11$ \\
+% 13/12/2024 10:43:22
 % Heart Disease - 10 runs SVM-rbf model
 % train:[82 24], test:[82 24]
 \midrule
@@ -44,8 +56,12 @@
 & BW & $.842 \pm .03$ & $.788 \pm .06$ & $.669 \pm .07$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $.827 \pm .04$ & $.795 \pm .09$ & $.660 \pm .10$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.821 \pm .04$ & $.810 \pm .07$ & $.669 \pm .08$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $\textbf{.872} \pm .04$ & $.797 \pm .08$ & $\textbf{.709} \pm .11$ \\
-% 09/12/2024 13:00:38
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $\textbf{.872} \pm .04$ & $.797 \pm .08$ & $\textbf{.709} \pm .11$ \\
+& Min Deltas & $.856 \pm .04$ & $\textbf{.814} \pm .06$ & $.703 \pm .08$ \\
+& Max Deltas & $.835 \pm .05$ & $.773 \pm .08$ & $.660 \pm .10$ \\
+& Avg Deltas & $.858 \pm .05$ & $.784 \pm .09$ & $.687 \pm .12$ \\
+& F Deltas & $.856 \pm .04$ & $.814 \pm .06$ & $.703 \pm .08$ \\
+% 13/12/2024 11:22:55
 % MIMIC-III-mortality - 10 runs MIMIC model
 % train:[3317  392], test:[3318  393]
 \midrule
@@ -55,6 +71,10 @@
 & BW & $.839 \pm .01$ & $.410 \pm .02$ & $.195 \pm .02$ \\
 & BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.852} \pm .01$ & $.405 \pm .04$ & $.202 \pm .02$ \\
 & Thresh \cite{Sheng_2006_AAAI} & $.844 \pm .01$ & $.421 \pm .04$ & $.208 \pm .02$ \\
-& Old Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.486 \pm .04$ & $.217 \pm .01$ \\
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.486 \pm .04$ & $.217 \pm .01$ \\
+& Min Deltas & $.780 \pm .04$ & $.490 \pm .04$ & $.219 \pm .01$ \\
+& Max Deltas & $.831 \pm .10$ & $.401 \pm .05$ & $.197 \pm .02$ \\
+& Avg Deltas & $.831 \pm .10$ & $.403 \pm .05$ & $.198 \pm .02$ \\
+& F Deltas & $.777 \pm .04$ & $\textbf{.493} \pm .04$ & $\textbf{.219} \pm .01$ \\
 \bottomrule
 \end{tabular}

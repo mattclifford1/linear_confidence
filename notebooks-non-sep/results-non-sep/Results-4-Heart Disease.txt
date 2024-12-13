@@ -1,4 +1,4 @@
-% 09/12/2024 12:22:39
+% 13/12/2024 10:43:22
 % Heart Disease - 10 runs SVM-rbf model
 % train:[82 24], test:[82 24]
 \begin{tabular}{@{}lccc@{}}
@@ -10,8 +10,9 @@ SMOTE \cite{Chawla_2002_JAIR} & $.829 \pm .03$ & $.705 \pm .07$ & $.591 \pm .09$
 BW & $.842 \pm .03$ & $.788 \pm .06$ & $.669 \pm .07$ \\
 BMR \cite{Bahnsen_2014_SIAM} & $.827 \pm .04$ & $.795 \pm .09$ & $.660 \pm .10$ \\
 Thresh \cite{Sheng_2006_AAAI} & $.821 \pm .04$ & $.810 \pm .07$ & $.669 \pm .08$ \\
-Old Deltas \cite{Clifford_2024_ECAI} & $\textbf{.872} \pm .04$ & $.797 \pm .08$ & $\textbf{.709} \pm .11$ \\
+Slacks Deltas \cite{Clifford_2024_ECAI} & $\textbf{.872} \pm .04$ & $.797 \pm .08$ & $\textbf{.709} \pm .11$ \\
 Min Deltas & $.856 \pm .04$ & $\textbf{.814} \pm .06$ & $.703 \pm .08$ \\
+Max Deltas & $.835 \pm .05$ & $.773 \pm .08$ & $.660 \pm .10$ \\
 Avg Deltas & $.858 \pm .05$ & $.784 \pm .09$ & $.687 \pm .12$ \\
 F Deltas & $.856 \pm .04$ & $.814 \pm .06$ & $.703 \pm .08$ \\
 \bottomrule
