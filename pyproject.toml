@@ -1,0 +1,32 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "deltas"
+version = "0.1.0"
+description = "deltas: learning the confidence bounds of linear classifier in feature space."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Matt Clifford", email = "matt.clifford@bristol.ac.uk"},
+]
+dependencies = [
+    "scikit-learn",
+    "numpy",
+    "matplotlib",
+    "notebook",
+    "scipy",
+    "tqdm",
+    "ipywidgets",
+    "imbalanced-learn",
+    "umap-learn",
+    "pandas",
+    "costcla",
+    "ucimlrepo",
+    "torch",
+    "torchvision",
+]
+
+[tool.pdm]
+distribution = true
