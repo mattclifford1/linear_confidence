@@ -1,70 +1,137 @@
-# DELTAS: Confidence Bounds for Linear Classifiers
+# deltas — learning confidence bounds for classification with imbalanced data
 
-DELTAS is an algorithm for computing tight confidence bounds (delta1, delta2) on the misclassification probability of linear classifiers. Given a classifier that projects data onto a 1D decision axis, DELTAS finds the smallest delta values consistent with the empirical data geometry — enabling statistically grounded prediction boundaries.
+Post-hoc, classifier-agnostic class-imbalance correction. Given any binary
+classifier of the form `f(x) = sgn(⟨φ(x), w⟩ + b)`, **deltas** moves the bias
+term `b` to a position justified by class-conditional concentration
+inequalities, rather than by a heuristic such as inverse-frequency
+thresholding.
 
-The algorithm characterises each class by its projected mean and radius, then solves a constrained optimisation to find delta1 and delta2 (per-class error probabilities) subject to a joint constraint equation.
+The intuition: the minority class has fewer samples, so we are less certain
+that its training samples cover its true distribution. That uncertainty is
+quantified per class and the decision boundary is pushed away from the minority
+class by exactly that amount.
 
-## Setup
+📄 **Paper:** *Learning Confidence Bounds for Classification with Imbalanced
+Data*, Clifford, Erskine, Hepburn, Santos-Rodríguez & Garcia-Garcia, ECAI 2024.
+[arXiv:2407.11878](https://arxiv.org/abs/2407.11878)
 
-Clone the repo:
-```
+For the research state, open questions, known bugs and planned work see
+[`FINDINGS.md`](FINDINGS.md). For the package internals see
+[`deltas/README.md`](deltas/README.md).
+
+---
+
+## Install
+
+```bash
 git clone https://github.com/mattclifford1/linear_confidence
 cd linear_confidence
-```
 
-Create a Python environment:
-```
 conda create -n deltas python=3.10 -y
 conda activate deltas
+
+pdm install        # or: pip install -e .   (works via PEP 517)
 ```
 
-Install as an editable package:
-```
-pip install -e .
-```
+Dependencies are declared in `pyproject.toml` (pdm-backend). `setup.py` and
+`requirements.txt` were removed in `c1c0a96`.
 
-## Quick Start
+> **Pin scikit-learn to 1.3.x.** `deltas/classifiers/models.py` vendors private
+> `MLPClassifier` internals to support sample-weighted training and will break
+> on newer versions. `pyproject.toml` currently declares no version bounds at
+> all — worth fixing. Known-good: python 3.10.13, scikit-learn 1.3.2,
+> numpy 1.26.4, pandas 2.2.1, scipy 1.11.4, imbalanced-learn 0.12.0,
+> torch 2.1.1.
+
+`costcla`, `torch`/`torchvision` and `umap-learn` are only needed for datasets
+and experiments outside the papers (Credit Scoring, MNIST, UMAP plots). The
+BMR and Thresholding baselines use the self-contained `deltas/costcla_local/`,
+not the `costcla` package — so these three could be optional extras.
+
+MIMIC-III / MIMIC-IV data is not distributed (licensing) — see
+`deltas/data/loaders/MIMIC_III.py` for the processing pipeline it expects, and
+place the CSVs under `data/MIMIC-III/`.
+
+## Quick start
+
+Any classifier you pass in must expose `get_projection(X) -> (n, 1)`, giving
+the 1-D score before the bias. `deltas.classifiers.models` provides
+drop-in `SVM`, `linear` (logistic regression) and `NN` (MLP) subclasses that
+already do.
 
 ```python
-from deltas.model.base import base_deltas
-from sklearn.svm import SVC
+import deltas.classifiers.models as models
+from deltas.model import downsample, non_sep
 
-# Your classifier must implement get_projection(X)
-clf = ...  # e.g. a wrapped SVC with get_projection method
+clf = models.SVM(kernel='rbf').fit(X_train, y_train)   # class 1 = minority
 
-model = base_deltas(clf=clf)
-model.fit(X_train, y_train)
-preds = model.predict(X_test)
+# published method (separable + binary slacks)
+d = downsample.downsample_deltas(clf).fit(X_train, y_train, max_trials=10000)
 
-print(f"delta1: {model.delta1:.4f}, delta2: {model.delta2:.4f}")
-model.print_params()
+# non-separable follow-up (k-th furthest order statistic)
+d = non_sep.deltas(clf).fit(X_train, y_train, loss_type='min')
+
+d.predict(X_test)
+d.get_bias()      # the corrected bias term
+d.is_fit          # False => no solution was found for this projection
 ```
 
-## Package Structure
+**Convention: class `1` is always the minority / positive class.** All the
+dataset loaders relabel to enforce this and all metrics assume it.
+
+`is_fit == False` is a normal outcome, not an error — it means the projected
+classes overlap too much for a solution to exist. Handling that case properly
+is the current research direction (see `FINDINGS.md` §4).
+
+## Reproducing the papers
+
+```bash
+cd notebooks-ECAI    && python run_all.py           # ECAI Table 3
+cd notebooks-ECAI    && python "run_all continuous.py"  # ECAI Table 4 (continuous slacks)
+cd notebooks-ECAI    && python Guassian_plots.py    # ECAI Figs 3,4,5,6
+cd notebooks-ECAI    && python projection_plots.py  # ECAI Figs 1,2
+cd notebooks-non-sep && python run_all_non_sep.py   # non-separable draft tables
+```
+
+Each writes LaTeX fragments to `results*/` and stitches them into
+`combined_table*.txt`, which is pasted directly into the `.tex`.
+
+⚠️ **HEAD does not reproduce the published paper as-is.** `deltas/misc/use_two.py`
+has `USE_TWO = True` (set for the non-separable follow-up); the ECAI results
+used `False`. Verified on Breast Cancer, seeds 0–9: `USE_TWO=False` gives
+Baseline .917/.917/.914 and Our Method .945/.943/.947 (published: .917/.917/.913
+and .943/.942/.946); `USE_TWO=True` gives .912/.912/.908 and .951/.950/.954.
+
+Also read `FINDINGS.md` §6 before trusting a re-run — the runners use an
+open-ended seed search that silently drops seeds where deltas finds no solution
+(which shifts even the *baseline* numbers), keep only aggregated `mean ± std`,
+and truncate rather than round.
+
+Per-directory notes: [`notebooks-ECAI/README.md`](notebooks-ECAI/README.md),
+[`notebooks-non-sep/README.md`](notebooks-non-sep/README.md).
+
+## Repository layout
 
 ```
-deltas/
-  model/        Core algorithm: base_deltas class, non-separable variant
-  data/         Data utilities and loaders for benchmark datasets
-  optimisation/ Delta optimisation (grid search + scipy minimize)
-  utils/        Projection, radius, and equation utilities
-  classifiers/  Neural network classifiers with get_projection support
-  plotting/     Visualisation utilities
-  pipeline/     End-to-end pipeline helpers
-  misc/         Global config flags (use_two.py)
-  costcla_local/ Local copy of cost-sensitive classification utilities
+deltas/               the installable package — see deltas/README.md
+  model/              the estimators        — see deltas/model/README.md
+  data/loaders/       dataset loaders       — see deltas/data/loaders/readme.md
+notebooks-ECAI/       experiments + figures for the published paper
+notebooks-non-sep/    experiments for the non-separable follow-up
+notebooks/            scratch / development notebooks — see notebooks/README.md
+dev/                  exploratory dead ends (MNIST, MIMIC, large-margin nets)
+jonny/                a collaborator's independent implementation
+data/                 large local datasets (gitignored; MIMIC, MNIST, IMDB)
 ```
 
-## Experiments
+## Citation
 
-- `notebooks/` — Development notebooks; start here for exploration
-- `notebooks-ECAI/` — Publication experiments (cross-validation on benchmark datasets)
-- `notebooks-non-sep/` — Non-separable / overlapping case experiments
-
-## Dependencies
-
-Core: `numpy`, `scipy`, `scikit-learn`, `matplotlib`
-Neural classifiers: `torch`
-Notebooks: `jupyter`
-
-Install all via `pip install -e .`
+```bibtex
+@inproceedings{clifford2024learning,
+  title     = {Learning Confidence Bounds for Classification with Imbalanced Data},
+  author    = {Clifford, Matt and Erskine, Jonathan and Hepburn, Alexander
+               and Santos-Rodr{\'i}guez, Ra{\'u}l and Garcia-Garcia, Dario},
+  booktitle = {ECAI},
+  year      = {2024}
+}
+```
