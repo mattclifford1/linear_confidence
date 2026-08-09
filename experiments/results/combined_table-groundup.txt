@@ -1,0 +1,80 @@
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+& Methods & Accuracy & G-Mean & F1 & solved \\
+\midrule
+% Pima Indian Diabetes - SVM-rbf - USE_TWO=True
+\multirow{12}{*}{\rotatebox{90}{Pima Diabetes}}
+& Baseline & $.534 \pm .04$ & $.172 \pm .20$ & $.113 \pm .15$ & 10/10 \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.601 \pm .02$ & $.509 \pm .02$ & $.414 \pm .03$ & 10/10 \\
+& BW & $.587 \pm .02$ & $.485 \pm .04$ & $.384 \pm .06$ & 10/10 \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.679 \pm .03$ & $.658 \pm .04$ & $.616 \pm .05$ & 10/10 \\
+& Thresh \cite{Sheng_2006_AAAI} & $.679 \pm .02$ & $.657 \pm .03$ & $.618 \pm .05$ & 10/10 \\
+& Slacks Deltas \cite{Clifford_2024_ECAI} & -- & -- & -- & 0/10 \\
+& F Deltas & $.695 \pm .02$ & $.682 \pm .04$ & $.666 \pm .07$ & 7/10 \\
+& Min Deltas & $.685 \pm .02$ & $.666 \pm .04$ & $.641 \pm .07$ & 7/10 \\
+& CP sum & $.677 \pm .02$ & $.655 \pm .02$ & $.612 \pm .03$ & 10/10 \\
+& CP minimax & $\textbf{.702} \pm .02$ & $\textbf{.700} \pm .03$ & $\textbf{.691} \pm .04$ & 10/10 \\
+& DKW sum & $.680 \pm .03$ & $.660 \pm .03$ & $.619 \pm .05$ & 10/10 \\
+& DKW minimax & $.702 \pm .02$ & $.699 \pm .03$ & $.689 \pm .04$ & 10/10 \\
+\midrule
+% Breast Cancer - SVM-rbf - USE_TWO=True
+\multirow{12}{*}{\rotatebox{90}{Breast Cancer}}
+& Baseline & $.917 \pm .02$ & $.917 \pm .02$ & $.914 \pm .02$ & 10/10 \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.793 \pm .10$ & $.769 \pm .12$ & $.738 \pm .15$ & 10/10 \\
+& BW & $.921 \pm .02$ & $.922 \pm .02$ & $.919 \pm .02$ & 10/10 \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.887 \pm .09$ & $.880 \pm .10$ & $.870 \pm .11$ & 10/10 \\
+& Thresh \cite{Sheng_2006_AAAI} & $.936 \pm .07$ & $.933 \pm .08$ & $.930 \pm .09$ & 10/10 \\
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.951 \pm .02$ & $.950 \pm .03$ & $.954 \pm .02$ & 9/10 \\
+& F Deltas & $.947 \pm .03$ & $.947 \pm .03$ & $.947 \pm .03$ & 10/10 \\
+& Min Deltas & $\textbf{.955} \pm .01$ & $\textbf{.955} \pm .01$ & $\textbf{.957} \pm .01$ & 10/10 \\
+& CP sum & $.939 \pm .02$ & $.940 \pm .02$ & $.939 \pm .03$ & 10/10 \\
+& CP minimax & $.948 \pm .02$ & $.946 \pm .02$ & $.951 \pm .02$ & 10/10 \\
+& DKW sum & $.939 \pm .02$ & $.940 \pm .02$ & $.939 \pm .03$ & 10/10 \\
+& DKW minimax & $.946 \pm .02$ & $.944 \pm .02$ & $.950 \pm .02$ & 10/10 \\
+\midrule
+% Hepatitis - SVM-rbf - USE_TWO=True
+\multirow{12}{*}{\rotatebox{90}{Hepatitis}}
+& Baseline & $\textbf{.828} \pm .06$ & $.624 \pm .15$ & $.486 \pm .16$ & 10/10 \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.804 \pm .02$ & $.300 \pm .32$ & $.224 \pm .24$ & 10/10 \\
+& BW & $.768 \pm .09$ & $.681 \pm .10$ & $.500 \pm .10$ & 10/10 \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.804 \pm .06$ & $.657 \pm .11$ & $.494 \pm .11$ & 10/10 \\
+& Thresh \cite{Sheng_2006_AAAI} & $.787 \pm .09$ & $.687 \pm .09$ & $.516 \pm .10$ & 10/10 \\
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.813 \pm .07$ & $.703 \pm .06$ & $\textbf{.548} \pm .08$ & 8/10 \\
+& F Deltas & $.783 \pm .05$ & $.695 \pm .11$ & $.503 \pm .11$ & 9/10 \\
+& Min Deltas & $.783 \pm .05$ & $.695 \pm .11$ & $.503 \pm .11$ & 9/10 \\
+& CP sum & $.777 \pm .07$ & $.648 \pm .08$ & $.471 \pm .06$ & 10/10 \\
+& CP minimax & $.743 \pm .09$ & $\textbf{.714} \pm .05$ & $.512 \pm .06$ & 10/10 \\
+& DKW sum & $.775 \pm .07$ & $.661 \pm .09$ & $.481 \pm .07$ & 10/10 \\
+& DKW minimax & $.743 \pm .09$ & $.714 \pm .05$ & $.512 \pm .06$ & 10/10 \\
+\midrule
+% Heart Disease - SVM-rbf - USE_TWO=True
+\multirow{12}{*}{\rotatebox{90}{Heart Disease}}
+& Baseline & $\textbf{.892} \pm .02$ & $.789 \pm .05$ & $.729 \pm .06$ & 10/10 \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.838 \pm .03$ & $.688 \pm .08$ & $.585 \pm .10$ & 10/10 \\
+& BW & $.846 \pm .03$ & $.799 \pm .07$ & $.679 \pm .08$ & 10/10 \\
+& BMR \cite{Bahnsen_2014_SIAM} & $.844 \pm .05$ & $.842 \pm .03$ & $.719 \pm .06$ & 10/10 \\
+& Thresh \cite{Sheng_2006_AAAI} & $.843 \pm .05$ & $.843 \pm .03$ & $.718 \pm .06$ & 10/10 \\
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.887 \pm .03$ & $.820 \pm .05$ & $\textbf{.743} \pm .07$ & 4/10 \\
+& F Deltas & $.852 \pm .04$ & $\textbf{.848} \pm .04$ & $.723 \pm .05$ & 10/10 \\
+& Min Deltas & $.852 \pm .04$ & $.848 \pm .04$ & $.723 \pm .05$ & 10/10 \\
+& CP sum & $.849 \pm .05$ & $.837 \pm .05$ & $.718 \pm .07$ & 10/10 \\
+& CP minimax & $.818 \pm .03$ & $.847 \pm .02$ & $.694 \pm .03$ & 10/10 \\
+& DKW sum & $.845 \pm .05$ & $.848 \pm .03$ & $.724 \pm .06$ & 10/10 \\
+& DKW minimax & $.818 \pm .03$ & $.847 \pm .02$ & $.694 \pm .03$ & 10/10 \\
+\midrule
+% MIMIC-III-mortality - MIMIC - USE_TWO=True
+\multirow{12}{*}{\rotatebox{90}{MIMIC ICU}}
+& Baseline & $.841 \pm .02$ & $.430 \pm .04$ & $.212 \pm .02$ & 10/10 \\
+& SMOTE \cite{Chawla_2002_JAIR} & $.823 \pm .01$ & $.432 \pm .03$ & $.200 \pm .02$ & 10/10 \\
+& BW & $.839 \pm .01$ & $.410 \pm .03$ & $.195 \pm .02$ & 10/10 \\
+& BMR \cite{Bahnsen_2014_SIAM} & $\textbf{.853} \pm .02$ & $.405 \pm .05$ & $.202 \pm .03$ & 10/10 \\
+& Thresh \cite{Sheng_2006_AAAI} & $.844 \pm .02$ & $.422 \pm .04$ & $.209 \pm .02$ & 10/10 \\
+& Slacks Deltas \cite{Clifford_2024_ECAI} & $.785 \pm .03$ & $.487 \pm .04$ & $.218 \pm .02$ & 10/10 \\
+& F Deltas & $.778 \pm .04$ & $\textbf{.493} \pm .05$ & $.219 \pm .02$ & 10/10 \\
+& Min Deltas & $.781 \pm .04$ & $.491 \pm .04$ & $.219 \pm .02$ & 10/10 \\
+& CP sum & $.840 \pm .01$ & $.431 \pm .04$ & $.212 \pm .02$ & 10/10 \\
+& CP minimax & $.818 \pm .01$ & $.463 \pm .03$ & $.220 \pm .02$ & 10/10 \\
+& DKW sum & $.840 \pm .01$ & $.431 \pm .04$ & $.212 \pm .02$ & 10/10 \\
+& DKW minimax & $.809 \pm .01$ & $.476 \pm .03$ & $\textbf{.223} \pm .02$ & 10/10 \\
+\bottomrule
+\end{tabular}

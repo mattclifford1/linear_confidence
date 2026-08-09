@@ -1,0 +1,24 @@
+% 07/08/2026 20:18:52
+% Breast Cancer - 10 seeds SVM-rbf model
+% train:[178, 17], test:[179, 195]
+% USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 & solved \\
+\midrule
+Baseline & $.917 \pm .02$ & $.917 \pm .02$ & $.914 \pm .02$ & 10/10 \\
+SMOTE & $.793 \pm .10$ & $.769 \pm .12$ & $.738 \pm .15$ & 10/10 \\
+Balanced Weights & $.921 \pm .02$ & $.922 \pm .02$ & $.919 \pm .02$ & 10/10 \\
+BMR & $.887 \pm .09$ & $.880 \pm .10$ & $.870 \pm .11$ & 10/10 \\
+Threshold & $.936 \pm .07$ & $.933 \pm .08$ & $.930 \pm .09$ & 10/10 \\
+Slacks Deltas & $.951 \pm .02$ & $.950 \pm .03$ & $.954 \pm .02$ & 9/10 \\
+Min Deltas & $\textbf{.955} \pm .01$ & $\textbf{.955} \pm .01$ & $\textbf{.957} \pm .01$ & 10/10 \\
+Max Deltas & $.897 \pm .04$ & $.894 \pm .04$ & $.889 \pm .05$ & 10/10 \\
+Avg Deltas & $.927 \pm .02$ & $.927 \pm .02$ & $.925 \pm .03$ & 10/10 \\
+F Deltas & $.947 \pm .03$ & $.947 \pm .03$ & $.947 \pm .03$ & 10/10 \\
+CP Sum & $.939 \pm .02$ & $.940 \pm .02$ & $.939 \pm .03$ & 10/10 \\
+CP Minimax & $.948 \pm .02$ & $.946 \pm .02$ & $.951 \pm .02$ & 10/10 \\
+DKW Sum & $.939 \pm .02$ & $.940 \pm .02$ & $.939 \pm .03$ & 10/10 \\
+DKW Minimax & $.946 \pm .02$ & $.944 \pm .02$ & $.950 \pm .02$ & 10/10 \\
+\bottomrule
+\end{tabular}

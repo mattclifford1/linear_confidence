@@ -1,0 +1,24 @@
+% 07/08/2026 20:17:53
+% Pima Indian Diabetes - 10 seeds SVM-rbf model
+% train:[250, 25], test:[250, 243]
+% USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 & solved \\
+\midrule
+Baseline & $.534 \pm .04$ & $.172 \pm .20$ & $.113 \pm .15$ & 10/10 \\
+SMOTE & $.601 \pm .02$ & $.509 \pm .02$ & $.414 \pm .03$ & 10/10 \\
+Balanced Weights & $.587 \pm .02$ & $.485 \pm .04$ & $.384 \pm .06$ & 10/10 \\
+BMR & $.679 \pm .03$ & $.658 \pm .04$ & $.616 \pm .05$ & 10/10 \\
+Threshold & $.679 \pm .02$ & $.657 \pm .03$ & $.618 \pm .05$ & 10/10 \\
+Slacks Deltas & -- & -- & -- & 0/10 \\
+Min Deltas & $.685 \pm .02$ & $.666 \pm .04$ & $.641 \pm .07$ & 7/10 \\
+Max Deltas & $.681 \pm .02$ & $.659 \pm .05$ & $.647 \pm .09$ & 7/10 \\
+Avg Deltas & $.685 \pm .03$ & $.664 \pm .05$ & $.644 \pm .09$ & 7/10 \\
+F Deltas & $.695 \pm .02$ & $.682 \pm .04$ & $.666 \pm .07$ & 7/10 \\
+CP Sum & $.677 \pm .02$ & $.655 \pm .02$ & $.612 \pm .03$ & 10/10 \\
+CP Minimax & $\textbf{.702} \pm .02$ & $\textbf{.700} \pm .03$ & $\textbf{.691} \pm .04$ & 10/10 \\
+DKW Sum & $.680 \pm .03$ & $.660 \pm .03$ & $.619 \pm .05$ & 10/10 \\
+DKW Minimax & $.702 \pm .02$ & $.699 \pm .03$ & $.689 \pm .04$ & 10/10 \\
+\bottomrule
+\end{tabular}

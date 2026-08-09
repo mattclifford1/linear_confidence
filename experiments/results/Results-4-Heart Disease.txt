@@ -1,0 +1,24 @@
+% 07/08/2026 20:19:29
+% Heart Disease - 10 seeds SVM-rbf model
+% train:[82, 24], test:[82, 24]
+% USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 & solved \\
+\midrule
+Baseline & $\textbf{.892} \pm .02$ & $.789 \pm .05$ & $.729 \pm .06$ & 10/10 \\
+SMOTE & $.838 \pm .03$ & $.688 \pm .08$ & $.585 \pm .10$ & 10/10 \\
+Balanced Weights & $.846 \pm .03$ & $.799 \pm .07$ & $.679 \pm .08$ & 10/10 \\
+BMR & $.844 \pm .05$ & $.842 \pm .03$ & $.719 \pm .06$ & 10/10 \\
+Threshold & $.843 \pm .05$ & $.843 \pm .03$ & $.718 \pm .06$ & 10/10 \\
+Slacks Deltas & $.887 \pm .03$ & $.820 \pm .05$ & $\textbf{.743} \pm .07$ & 4/10 \\
+Min Deltas & $.852 \pm .04$ & $\textbf{.848} \pm .04$ & $.723 \pm .05$ & 10/10 \\
+Max Deltas & $.861 \pm .06$ & $.831 \pm .04$ & $.731 \pm .07$ & 10/10 \\
+Avg Deltas & $.852 \pm .05$ & $.835 \pm .05$ & $.721 \pm .07$ & 10/10 \\
+F Deltas & $.852 \pm .04$ & $.848 \pm .04$ & $.723 \pm .05$ & 10/10 \\
+CP Sum & $.849 \pm .05$ & $.837 \pm .05$ & $.718 \pm .07$ & 10/10 \\
+CP Minimax & $.818 \pm .03$ & $.847 \pm .02$ & $.694 \pm .03$ & 10/10 \\
+DKW Sum & $.845 \pm .05$ & $.848 \pm .03$ & $.724 \pm .06$ & 10/10 \\
+DKW Minimax & $.818 \pm .03$ & $.847 \pm .02$ & $.694 \pm .03$ & 10/10 \\
+\bottomrule
+\end{tabular}

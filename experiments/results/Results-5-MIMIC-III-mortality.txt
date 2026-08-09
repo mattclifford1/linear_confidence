@@ -1,0 +1,24 @@
+% 07/08/2026 20:57:52
+% MIMIC-III-mortality - 10 seeds MIMIC model
+% train:[3317, 392], test:[3318, 393]
+% USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Methods & Accuracy & G-Mean & F1 & solved \\
+\midrule
+Baseline & $.841 \pm .02$ & $.430 \pm .04$ & $.212 \pm .02$ & 10/10 \\
+SMOTE & $.823 \pm .01$ & $.432 \pm .03$ & $.200 \pm .02$ & 10/10 \\
+Balanced Weights & $.839 \pm .01$ & $.410 \pm .03$ & $.195 \pm .02$ & 10/10 \\
+BMR & $\textbf{.853} \pm .02$ & $.405 \pm .05$ & $.202 \pm .03$ & 10/10 \\
+Threshold & $.844 \pm .02$ & $.422 \pm .04$ & $.209 \pm .02$ & 10/10 \\
+Slacks Deltas & $.785 \pm .03$ & $.487 \pm .04$ & $.218 \pm .02$ & 10/10 \\
+Min Deltas & $.781 \pm .04$ & $.491 \pm .04$ & $.219 \pm .02$ & 10/10 \\
+Max Deltas & $.832 \pm .10$ & $.402 \pm .06$ & $.198 \pm .02$ & 10/10 \\
+Avg Deltas & $.832 \pm .10$ & $.403 \pm .06$ & $.199 \pm .02$ & 10/10 \\
+F Deltas & $.778 \pm .04$ & $\textbf{.493} \pm .05$ & $.219 \pm .02$ & 10/10 \\
+CP Sum & $.840 \pm .01$ & $.431 \pm .04$ & $.212 \pm .02$ & 10/10 \\
+CP Minimax & $.818 \pm .01$ & $.463 \pm .03$ & $.220 \pm .02$ & 10/10 \\
+DKW Sum & $.840 \pm .01$ & $.431 \pm .04$ & $.212 \pm .02$ & 10/10 \\
+DKW Minimax & $.809 \pm .01$ & $.476 \pm .03$ & $\textbf{.223} \pm .02$ & 10/10 \\
+\bottomrule
+\end{tabular}
