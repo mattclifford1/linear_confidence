@@ -584,3 +584,218 @@ the MIMIC CSV parse.
 8. Statistical tests (Friedman + Nemenyi over datasets), 30+ seeds.
 
 Items 1–2 are engineering, 3–5 are a week, 6–8 are the paper.
+
+**Status as of 2026-08-07** (see §10): 1 ✅, 2 ✅ (classifier cache, which is
+what actually mattered), 5 ✅, 6 ✅ (both Clopper–Pearson and DKW), 7 ✅
+(§10.6 — and it found a real validity problem), 8 partially ✅
+(`experiments/significance.py`: Wilcoxon + average ranks + Friedman; still on
+10 seeds, not 30). Still open: **0** (`USE_TWO` is still a hand-edited global —
+only *recorded* now, not parameterised), **3** (B1/B2 unfixed, no test suite),
+**4** (the non-sep loss-form ablation is still a one-line change nobody has
+run).
+
+---
+
+## 10. Update — what was built and what it showed (2026-08-07)
+
+### 10.1 Caching (`deltas/utils/cache.py`, `deltas/pipeline/cached.py`)
+
+Disk cache keyed by a SHA-256 of `(kind, config, {sklearn, numpy, cache_version})`,
+so a stale entry cannot silently poison results. Two namespaces, `dataset` and
+`classifiers`. Verified **bit-identical predictions** against the uncached path
+on all five baseline classifiers.
+
+The classifier key deliberately excludes `USE_TWO` / `USE_GLOBAL_R`: baselines
+are trained from data alone, so one training run serves every deltas config.
+
+Measured: MIMIC-III drops from **270 s to 0.0 s** per seed on re-run; Breast
+Cancer 3.3 s → 0.0 s. Datasets whose loaders hit the network (`heart_disease`
+→ `fetch_ucirepo`) are now fetched once.
+
+`cache.sanitise()` replaces unpicklable values with their string form — needed
+because `heart_disease.get_HD` stores a live `ucimlrepo` metadata object in
+`feature_names`/`description`, which `joblib` cannot serialise.
+
+### 10.2 Reproducible runner (`experiments/run_experiments.py`)
+
+Fixed seed list, per-seed raw CSV, `is_fit` failures recorded as NaN and
+reported as a `solved n/10` column, config stamped into the LaTeX comments and
+a `config.json`, values **rounded** not truncated.
+
+The fix is immediately visible: with seeds pinned to 0–9 the baselines now
+reproduce the published numbers exactly (Breast Cancer Baseline .917/.917/.914
+vs published .917/.917/.913; Hepatitis .828/.624/.486 vs .827/.623/.485 — the
+last digit is the old truncation bug). Under the old seed-search they moved
+with `USE_TWO`, a flag that cannot touch a baseline.
+
+### 10.3 ⚠️ The slack method fails far more often than the paper suggests
+
+With `USE_TWO=True` (the correct setting, §5A) on fixed seeds 0–9:
+
+| Dataset | Slacks Deltas solved |
+|---|---|
+| Pima Diabetes | **0/10** |
+| Heart Disease | **4/10** |
+| Hepatitis | 8/10 |
+| Gaussian | 8/10 |
+| Breast Cancer | 9/10 |
+
+The old runner searched seeds until 10 *successes*, so this never appeared in
+any table — and on Pima it would have had to search a long way, or hang. Every
+published "Slacks Deltas" row is conditioned on the method having worked.
+This is the strongest available evidence for the overlap-native reformulation.
+
+### 10.4 Overlap-native estimators (`deltas/model/overlap.py`)
+
+`binomial_deltas` (Clopper–Pearson, exact, with a union bound over the `N+1`
+distinct thresholds) and `dkw_deltas` (one-sided DKW, uniform in `b` for free).
+Both validated by simulation: CP coverage 0.965–1.000 against nominal 0.95,
+DKW 0.999–1.000; at `m=0` CP gives `1-δ^(1/N)`, matching `ln(1/δ)/N` to three
+figures, confirming the separable case is the `m=0` corner.
+
+Neither uses `R` or the concentration inequality on the mean. **Never
+infeasible** — `solved 10/10` on every dataset. Fitting takes 0.2 s
+(Clopper–Pearson) / 0.004 s (DKW) vs 21 s for the slack method on MIMIC.
+
+**Two decision rules, and the sum rule is a trap.** `L_i(b)` depends on `b`
+only through the count `m_i(b)`, so when `N_2` is small it is flat over long
+stretches; minimising `L_1 + L_2` then spends that freedom on the majority and
+pushes the boundary *towards* the minority. On the synthetic Gaussian
+(`N_1=1000, N_2=10`): sum rule `b=+1.07`, test balanced error **0.192**;
+minimax `b=-0.53`, **0.102**; test optimum `b=-0.13`, 0.072.
+
+The honest reading: at `N_2=10` a distribution-free certificate cannot resolve
+the minority error at all — every boundary keeping `m_2=0` carries the same
+certificate. This is a real limit of the fully distribution-free route, and it
+is precisely what the original `R/√N` geometry was buying: an extrapolation
+assumption about where the minority mass could be beyond the observed points.
+Minimax recovers most of the lost behaviour without reintroducing it.
+
+### 10.5 Where the new methods stand
+
+Final numbers, after the §10.7 tie-break fix and a full re-run at
+`USE_TWO = True`, ten fixed seeds:
+
+| method | avg rank (G-Mean) | mean G-Mean | ever fails? |
+|---|---|---|---|
+| Min Deltas | 2.33 | .761 | yes (3/10 Pima, 1/10 Hep) |
+| F Deltas | 2.67 | .763 | yes (same) |
+| CP minimax | 3.83 | .760 | **no** |
+| DKW minimax | 3.83 | .762 | **no** |
+| Slacks Deltas | 5.83 | .774 † | yes (10/10 Pima, 6/10 HD) |
+| DKW sum | 6.92 | .737 | no |
+| Thresholding | 8.25 | .737 | no |
+| CP sum | 8.75 | .732 | no |
+| Baseline | 12.17 | .516 | no |
+
+† averaged only over datasets it solved — Pima is excluded from its mean, which
+flatters it. Friedman over the 13 methods that solve everywhere:
+χ² = 49.3, p < 1e-4.
+
+`CP minimax` is the best method on **Pima Diabetes** across all three metrics
+(.702/.699/.691 vs Thresholding .679/.657/.618) — and no other deltas variant
+solves it at all. It is within .001 of the best G-Mean on Heart Disease (.847
+vs .848). On Breast Cancer and Hepatitis it is competitive but behind the
+slack/`Min Deltas` variants.
+
+Honest summary: **the overlap-native methods do not win on average — they rank
+third and fourth — but they are the only certified methods here that never
+fail.** That is the claim the draft makes, and it is the defensible one. The
+two measures are near-interchangeable in practice: CP and DKW minimax tie on
+average rank and pick boundaries within 0.03 of each other on the synthetic
+diagnostic, because minimax depends only on where the two per-class curves
+cross and both bounds are monotone in the same count. DKW is ~50× faster to
+fit (0.004 s vs 0.2 s); CP is tighter at small `m`. Prefer CP for reporting a
+certificate, DKW if fit time matters.
+
+Raw per-seed results in `experiments/results/raw/*.csv`, tables in
+`experiments/results/`, figures in the Overleaf draft. Regenerate everything
+with `experiments/reproduce.sh`.
+
+### 10.6 ⚠️ The certificate is optimistic on training data — and so is the published method's
+
+Because the overlap methods report the bound they certify, it can be checked
+against measured test error. Over 4 datasets × 10 seeds × 2 classes
+(`experiments/validate_bounds.py`, raw in `results/bound_validation.csv`):
+
+| Certificate computed on | observed coverage | nominal |
+|---|---|---|
+| the training data | **0.84** | 0.96 |
+| a 35% held-out calibration split | **1.00** | 0.90 |
+
+Per dataset the training-data coverage is Breast Cancer 1.00, Heart Disease
+0.95, Pima **0.75**, Hepatitis **0.65**.
+
+**Cause.** The binomial model `m_i(b) ~ Binomial(N_i, e_i(b))` needs the
+projected training points to be i.i.d. draws from the projected
+class-conditional law. They are not: the classifier that *defines* the
+projection was fitted to those same points and has pushed them to the correct
+side, so `m_i` under-counts. Verified — the violation tracks classifier
+optimism exactly:
+
+| Dataset | train err | test err | optimism | coverage |
+|---|---|---|---|---|
+| Breast Cancer | .054 | .067 | .013 | 1.00 |
+| Heart Disease | .121 | .148 | .027 | 0.95 |
+| Pima Diabetes | .177 | .298 | .121 | 0.75 |
+| Hepatitis | .093 | .301 | **.208** | 0.65 |
+
+Ruled out as the cause: the data-dependent choice of `δ`. Repeating with a
+*pre-specified* `δ ∈ {0.05, 0.10}` and the threshold union bound still gives
+0.85/0.83 coverage.
+
+**Fix.** Sample splitting — fit the classifier on one part, compute the
+certificate on a held-out part, as conformal prediction does. Restores coverage
+to 1.00 on every dataset, at the cost of a looser bound (mean `U_i` .34 → .53).
+
+**This applies to the published method too.** `R̄ᵢ` is likewise the empirical
+support of the classifier's own training data, so the ECAI paper's `1−δᵢ`
+confidence statements carry the same optimism. It has never shown up because
+that method never reports the quantity it certifies — there is nothing to check
+it against. Worth a paragraph in any journal version, and it is an argument for
+adding a calibration split to the pipeline generally.
+
+### 10.7 A tie-break bug the tests caught (and why it mattered)
+
+The minimax rule's arg-min is a *plateau*, not a point (that is the whole point
+of §10.4). The first implementation broke the tie by taking the middle
+**index** of the plateau. A mirror-symmetry property test
+(`tests/test_overlap.py::test_orientation_is_symmetric`) failed: reflecting the
+data about zero did not reflect the boundary, because the middle index depends
+on how the projected points happen to be spaced.
+
+Fixed by taking the midpoint of the plateau **in value**. This is both
+symmetric and better motivated — every boundary on the plateau carries an
+identical certificate, so the remaining freedom should buy the largest distance
+to the training points at either end.
+
+It is not a cosmetic fix. On the synthetic Gaussian the minimax test balanced
+error drops from **0.102 to 0.0735** (Clopper–Pearson) and **0.0720** (DKW),
+against a test optimum of 0.0715 — i.e. from "recovers most of the achievable
+performance" to "essentially optimal". All results in §10.5 and the draft were
+regenerated after this fix.
+
+Worth noting the general lesson: this is the kind of defect that no amount of
+staring at a results table surfaces, and the repo had no test suite at all
+(§7.2). `tests/test_overlap.py` now covers the bound coverage by simulation,
+the `m = 0` separable corner, always-solvability across seven edge cases, and
+the two symmetry/behaviour properties the write-up claims.
+
+### 10.8 Power-cut recovery note (2026-08-07)
+
+A power cut killed the MIMIC run mid-way (seed 3 of 10). Recovery was clean and
+worth recording, because it validates two design choices:
+
+- **No cache corruption.** `cache.save()` writes to `<key>.joblib.tmp` and then
+  `os.replace()`s it, which is atomic on POSIX, so an interrupted write can
+  never leave a half-written entry that looks valid. After the cut: 110/110
+  entries loaded, zero stray `.tmp` files.
+- **No lost work.** The MIMIC classifiers for seeds 0–3 were already cached, so
+  the restart only had to train seeds 4–9. Under the old scripts the whole
+  ~50 min would have been repaid.
+
+If a future cut *does* leave a bad entry, `cache.load()` catches any exception
+and returns `None` (treated as a miss), so a corrupt file degrades to a
+recompute rather than a crash. To force a clean slate:
+`python -c "import deltas.utils.cache as c; c.clear()"`, or
+`FRESH=1 ./experiments/reproduce.sh`.

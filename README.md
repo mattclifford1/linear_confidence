@@ -61,7 +61,7 @@ already do.
 
 ```python
 import deltas.classifiers.models as models
-from deltas.model import downsample, non_sep
+from deltas.model import downsample, non_sep, overlap
 
 clf = models.SVM(kernel='rbf').fit(X_train, y_train)   # class 1 = minority
 
@@ -71,9 +71,14 @@ d = downsample.downsample_deltas(clf).fit(X_train, y_train, max_trials=10000)
 # non-separable follow-up (k-th furthest order statistic)
 d = non_sep.deltas(clf).fit(X_train, y_train, loss_type='min')
 
+# overlap-native (recommended): never infeasible, no slacks, no R
+d = overlap.binomial_deltas(clf, objective='minimax').fit(X_train, y_train)
+d = overlap.dkw_deltas(clf, objective='minimax').fit(X_train, y_train)
+
 d.predict(X_test)
-d.get_bias()      # the corrected bias term
-d.is_fit          # False => no solution was found for this projection
+d.get_bias()          # the corrected bias term
+d.is_fit              # False => no solution was found (never for overlap.*)
+d.certified_error()   # overlap.* only: the bounds actually certified
 ```
 
 **Convention: class `1` is always the minority / positive class.** All the
@@ -83,7 +88,23 @@ dataset loaders relabel to enforce this and all metrics assume it.
 classes overlap too much for a solution to exist. Handling that case properly
 is the current research direction (see `FINDINGS.md` §4).
 
-## Reproducing the papers
+## Running experiments
+
+Use `experiments/` — it supersedes the `notebooks-*/run_all*.py` scripts:
+
+```bash
+cd experiments
+python run_experiments.py       # all datasets, all methods, fixed seeds 0-9
+python combine_tables.py        # multi-row LaTeX table
+python make_figures.py          # figures
+```
+
+It writes per-seed raw CSV (so significance tests are possible after the fact),
+reports how many seeds each method actually solved rather than silently
+dropping failures, rounds instead of truncating, and stamps the config into the
+output. Classifier training is cached, so MIMIC's ~270 s/seed is paid once.
+
+The original paper scripts are kept for provenance:
 
 ```bash
 cd notebooks-ECAI    && python run_all.py           # ECAI Table 3
@@ -92,9 +113,6 @@ cd notebooks-ECAI    && python Guassian_plots.py    # ECAI Figs 3,4,5,6
 cd notebooks-ECAI    && python projection_plots.py  # ECAI Figs 1,2
 cd notebooks-non-sep && python run_all_non_sep.py   # non-separable draft tables
 ```
-
-Each writes LaTeX fragments to `results*/` and stitches them into
-`combined_table*.txt`, which is pasted directly into the `.tex`.
 
 ⚠️ **HEAD does not reproduce the published paper as-is.** `deltas/misc/use_two.py`
 has `USE_TWO = True` (set for the non-separable follow-up); the ECAI results

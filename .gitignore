@@ -137,3 +137,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# deltas experiment cache
+cache/
+
+# experiment run logs
+experiments/*.log

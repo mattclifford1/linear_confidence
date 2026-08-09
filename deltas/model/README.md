@@ -44,6 +44,25 @@ the *k*-th furthest order statistic and sweeps the bias directly. Requires `clf`
 with `get_projection` at construction time (not optional).
 `loss_type ∈ {'min','max','mean'}` or `only_furtherest_k=True`.
 
+### `overlap.py` — `binomial_deltas`, `dkw_deltas`
+
+⭐ The overlap-native formulation (Aug 2026). Bounds the class-conditional error
+directly from the count of training points on the wrong side of a candidate
+boundary, so **no separability assumption, no slack variables, and no
+infeasible case** — `is_fit` is always `True`.
+
+- `binomial_deltas` — exact Clopper–Pearson upper limit on the binomial
+  proportion, with a union bound over the `N+1` distinct thresholds.
+- `dkw_deltas` — one-sided DKW bound on the empirical CDF; uniform in the
+  threshold, so no union bound needed.
+- `objective='sum'` minimises `c1 L1 + c2 L2`; `objective='minimax'` minimises
+  `max_i c_i L_i`. **Use minimax** — the sum rule degenerates when the minority
+  is scarce (the certificate is flat in `b`, so the majority term takes over and
+  drives the boundary the wrong way). See `FINDINGS.md` §10.4.
+
+Neither uses `R` or the concentration inequality on the empirical mean. Fits in
+0.2 s (CP) / 0.004 s (DKW) vs 21 s for `downsample_deltas` on MIMIC.
+
 ### `data_info.py`
 
 Computes and stores the projected data statistics. **Used only by `non_sep.py`**

@@ -1,5 +1,11 @@
 # `notebooks-ECAI` — experiments for the published paper
 
+
+> **Superseded.** New experiments should use `experiments/run_experiments.py`,
+> which fixes the seed-selection bias, keeps per-seed raw output, rounds instead
+> of truncating, records the config, and caches classifier training. The scripts
+> here are kept for provenance. See `experiments/README.md`.
+
 Everything here backs *Learning Confidence Bounds for Classification with
 Imbalanced Data* (ECAI 2024, arXiv:2407.11878). Paper source:
 `../../../Repos/Overleaf/deltas/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex`.

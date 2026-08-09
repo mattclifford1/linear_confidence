@@ -54,31 +54,40 @@ deltas/              the package (see deltas/README.md)
   pipeline/          data -> classifier -> evaluation glue used by experiments
   data/loaders/      one loader per dataset
   misc/use_two.py    GLOBAL config flags (USE_TWO, USE_GLOBAL_R, RANDOM_STATE)
-notebooks-ECAI/      experiments + figures for the published paper
-notebooks-non-sep/   experiments for the non-separable follow-up
+experiments/         ⭐ the current runner — start here for new experiments
+notebooks-ECAI/      experiments + figures for the published paper (legacy)
+notebooks-non-sep/   experiments for the non-separable follow-up (legacy)
 notebooks/           scratch/dev notebooks
 dev/                 dead-end / exploratory scripts (MNIST, MIMIC, large-margin)
 jonny/               collaborator's independent implementation
 data/                large local datasets (MIMIC-III/IV, MNIST, IMDB) — gitignored
+cache/               joblib cache of datasets + trained classifiers — gitignored
 ```
 
 ## Running experiments
 
+**Use `experiments/`, not the `notebooks-*/run_all*.py` scripts.** The latter
+are kept for provenance but have the reproducibility problems in `FINDINGS.md`
+§6 (open-ended seed search that hides failures, truncated numbers, no raw
+output, no config recorded).
+
 ```bash
-cd notebooks-ECAI     && python run_all.py            # ECAI slacks method, 5 datasets
-cd notebooks-non-sep  && python run_all_non_sep.py    # non-sep loss variants
-cd notebooks-ECAI     && python Guassian_plots.py     # paper's synthetic figures
-cd notebooks-ECAI     && python projection_plots.py   # paper's diagram figures
+cd experiments
+python run_experiments.py                 # all datasets, all methods, seeds 0-9
+python run_experiments.py --datasets 2 3  # by index (see EXPERIMENTS)
+python run_experiments.py --seeds 30
+python combine_tables.py                  # multi-row LaTeX for the draft
+python make_figures.py                    # figures into the Overleaf draft
 ```
 
-`run_all*.py` writes LaTeX table fragments into `results*/` and then
-`combine_tables()` stitches them into `combined_table*.txt`, which is pasted
-straight into the `.tex`. Note `main()` in `run_all_non_sep.py` currently has
-the experiment loop **commented out** — it only re-combines existing tables.
+Outputs: `experiments/results/raw/*.csv` (per-seed, keep these),
+`agg-*.csv`, `Results-*.txt` (LaTeX fragments), `config.json`.
 
-MIMIC-III is the slow one (~10+ min just to train the three MLPs for one seed,
-×10 seeds). Everything else is seconds. Anything that trains a classifier
-should be cached — see `FINDINGS.md` §"Caching".
+Classifier training is cached via `deltas/pipeline/cached.py`, so the ~270 s
+per-seed MIMIC MLP training is paid once. The cache key includes library
+versions and a `CACHE_VERSION` — bump `deltas/utils/cache.py::CACHE_VERSION` by
+hand if you change what a cached artefact *means* without changing its config.
+Inspect with `deltas.utils.cache.info()`, wipe with `cache.clear()`.
 
 ## Conventions that matter
 

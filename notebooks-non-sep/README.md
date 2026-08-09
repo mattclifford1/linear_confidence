@@ -1,5 +1,11 @@
 # `notebooks-non-sep` — the non-separable follow-up
 
+
+> **Superseded.** New experiments should use `experiments/run_experiments.py`,
+> which fixes the seed-selection bias, keeps per-seed raw output, rounds instead
+> of truncating, records the config, and caches classifier training. The scripts
+> here are kept for provenance. See `experiments/README.md`.
+
 Experiments for the working draft
 `../../../Repos/Overleaf/deltas/deltas-non-separable/main.tex` (Dec 2024).
 Backed by `deltas/model/non_sep.py`.
