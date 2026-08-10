@@ -18,20 +18,28 @@ class normaliser:
         return self.scaler.transform([X])[0]
 
 
+# NOTE on `is True` rather than the `== True` used elsewhere in this repo.
+# In python `1 == True`, so `seed == True` also matches the integer seed 1 and
+# silently replaced it with RANDOM_STATE. With RANDOM_STATE = 0 that made
+# seed 1 identical to seed 0, so every experiment run over `range(10)` really
+# used nine distinct datasets with seed 0 counted twice. `is True` matches only
+# the boolean. Do not "tidy" these back to `== True`.
+def _resolve_seed(seed):
+    '''True -> RANDOM_STATE, False -> None (non-deterministic), int -> itself'''
+    if seed is True:
+        return RANDOM_STATE
+    if seed is False:
+        return None
+    return seed
+
+
 def set_seed(seed):
-    if seed == True:
-        np.random.seed(seed=RANDOM_STATE)
-    elif type(seed) == int:
-        np.random.seed(seed=seed)
-    elif seed == False:
-        np.random.seed(seed=None)
+    np.random.seed(seed=_resolve_seed(seed))
 
 
 def shuffle_data(data, seed=True):
-    if seed == True:
-        seed = RANDOM_STATE
     data['X'], data['y'] = shuffle(
-        data['X'], data['y'], random_state=seed)
+        data['X'], data['y'], random_state=_resolve_seed(seed))
     return data
 
 

@@ -18,11 +18,9 @@ def get_Wisconsin_breast_cancer(seed=True, **kwargs):
     data = {}
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'breast_cancer_Wisconsin', 'data.csv'))
-    data['y'] = df.pop('diagnosis')
-    data['y'][data['y']=='B'] = 0  
-    data['y'][data['y']=='M'] = 1
-    data['y'] = data['y'].to_list()
-    data['y'] = np.array(data['y'])
+    # pandas >= 2.2 refuses to store an int into a str-dtype column in place,
+    # so map to the new labels rather than assigning into the old Series
+    data['y'] = df.pop('diagnosis').map({'B': 0, 'M': 1}).to_numpy(dtype=int)
     df.pop('ID')
     data['X'] = df.to_numpy()
     data['feature_names'] = df.columns.to_list()
@@ -30,7 +28,7 @@ def get_Wisconsin_breast_cancer(seed=True, **kwargs):
     with open(os.path.join(CURRENT_FILE, '..', 'datasets', 'breast_cancer_Wisconsin', 'description.txt'), 'r') as f:
         data['description'] = f.read()
     # shuffle the dataset
-    data = deltas.data.utils.shuffle_data(data)  # type: ignore
+    data = deltas.data.utils.shuffle_data(data, seed=seed)  # type: ignore
     # split into train, test
     train_data, test_data = deltas.data.utils.proportional_split( # type: ignore
         data, size=0.45, ratio=10, seed=seed)  # type: ignore

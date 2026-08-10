@@ -73,7 +73,7 @@ Worth reviving.
 ## Running
 
 ```bash
-conda activate deltas
+# use `uv run <cmd>` from the repo root
 cd notebooks-ECAI
 python run_all.py
 ```

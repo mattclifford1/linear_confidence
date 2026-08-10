@@ -27,7 +27,7 @@ def get_HD(seed=True, **kwargs):
     X.pop('ca')
     X.pop('thal')
 
-    data['y'] = y.to_numpy().squeeze(axis=1)
+    data['y'] = y.to_numpy().squeeze(axis=1).copy()
     data['X'] = X.to_numpy()
 
     for i in [1,2,]:

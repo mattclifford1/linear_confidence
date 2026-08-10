@@ -14,7 +14,7 @@ def get_diabetes_indian(seed=True, **kwargs):
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'diabetes_pima_indians', 'data.csv'))
     
-    data['y'] = df.pop('Outcome').to_numpy()
+    data['y'] = df.pop('Outcome').to_numpy().copy()
 
     # keep:            glucose, BMI, age, insulin, and skin thickness
     # maybe keep only: glucose, BMI, age

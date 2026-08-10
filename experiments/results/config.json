@@ -25,17 +25,17 @@
     "DKW Sum",
     "DKW Minimax"
   ],
-  "python": "3.10.13",
-  "started": "2026-08-07T20:14:33.623094",
-  "finished": "2026-08-07T20:57:52.923856",
+  "python": "3.13.13",
+  "started": "2026-08-10T11:19:31.928442",
+  "finished": "2026-08-10T12:06:59.568645",
   "cache": {
     "classifiers": {
-      "entries": 60,
-      "MB": 533.8
+      "entries": 121,
+      "MB": 1245.0
     },
     "dataset": {
-      "entries": 60,
-      "MB": 15.3
+      "entries": 120,
+      "MB": 30.4
     }
   }
 }

@@ -31,6 +31,10 @@ PAPER_METHODS = [
 def fmt(mu, sd):
     if np.isnan(mu):
         return '--'
+    if np.isnan(sd):
+        # only one seed solved, so there is no spread to report - say so
+        # rather than printing "\pm nan"
+        return f"${f'{mu:.3f}'.lstrip('0')}$"
     return f"${f'{mu:.3f}'.lstrip('0')} \\pm {f'{sd:.2f}'.lstrip('0')}$"
 
 

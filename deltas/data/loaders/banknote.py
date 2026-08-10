@@ -15,7 +15,7 @@ def get_banknote(**kwargs):
     data = {}
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'banknote_authentication', 'data.csv'), header=None)
-    data['y'] = df.pop(4).to_numpy()  # type: ignore
+    data['y'] = df.pop(4).to_numpy().copy()  # type: ignore
     data['X'] = df.to_numpy()
     data['feature_names'] = ['variance of Wavelet Transformed image',
                              'skewness of Wavelet Transformed image',

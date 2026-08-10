@@ -23,30 +23,35 @@ For the research state, open questions, known bugs and planned work see
 
 ## Install
 
+Managed with [uv](https://docs.astral.sh/uv/). The two sibling repos must be
+checked out alongside this one — they are path dependencies.
+
 ```bash
+git clone https://github.com/mattclifford1/toy_datasets       ../../Repos/toy_datasets
+git clone https://github.com/mattclifford1/projection_models  ../../Repos/projection_models
+
 git clone https://github.com/mattclifford1/linear_confidence
 cd linear_confidence
 
-conda create -n deltas python=3.10 -y
-conda activate deltas
-
-pdm install        # or: pip install -e .   (works via PEP 517)
+uv sync --group dev      # creates .venv with deltas + both siblings, editable
+uv run pytest tests -q
 ```
 
-Dependencies are declared in `pyproject.toml` (pdm-backend). `setup.py` and
-`requirements.txt` were removed in `c1c0a96`.
+Then prefix commands with `uv run`, e.g. `uv run python experiments/run_wide.py`.
 
-> **Pin scikit-learn to 1.3.x.** `deltas/classifiers/models.py` vendors private
-> `MLPClassifier` internals to support sample-weighted training and will break
-> on newer versions. `pyproject.toml` currently declares no version bounds at
-> all — worth fixing. Known-good: python 3.10.13, scikit-learn 1.3.2,
-> numpy 1.26.4, pandas 2.2.1, scipy 1.11.4, imbalanced-learn 0.12.0,
-> torch 2.1.1.
+Known-good set is committed in `uv.lock`: python 3.13, scikit-learn 1.9,
+numpy 2.4.
 
-`costcla`, `torch`/`torchvision` and `umap-learn` are only needed for datasets
-and experiments outside the papers (Credit Scoring, MNIST, UMAP plots). The
-BMR and Thresholding baselines use the self-contained `deltas/costcla_local/`,
-not the `costcla` package — so these three could be optional extras.
+> **Historical note.** Until Aug 2026 this repo was pinned to scikit-learn
+> 1.3.2, because `deltas/classifiers/models.py` vendored ~350 lines of private
+> `MLPClassifier` internals to get sample-weighted training. scikit-learn#25646
+> landed `sample_weight` upstream, so the copy is gone and the pin with it.
+
+`torch`/`torchvision` are pulled in by `toy_datasets` (image datasets); the
+deltas-side torch nets under `deltas/classifiers/` are an optional extra
+(`uv sync --extra torch`) and are not needed for any headline result. The BMR
+and Thresholding baselines use the self-contained `deltas/costcla_local/`, so
+the `costcla` package is no longer a dependency at all.
 
 MIMIC-III / MIMIC-IV data is not distributed (licensing) — see
 `deltas/data/loaders/MIMIC_III.py` for the processing pipeline it expects, and

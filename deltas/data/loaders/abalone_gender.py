@@ -17,7 +17,7 @@ def get_abalone(**kwargs):
                      'datasets', 'abalone', 'data.csv'), header=None)
     df.drop(df[df[0] == 'I'].index, inplace=True)
     df = df.replace({0: {'M': 0, 'F': 1}})
-    data['y'] = df.pop(0).to_numpy()  # type: ignore
+    data['y'] = df.pop(0).to_numpy().copy()  # type: ignore
     data['X'] = df.to_numpy()
     data['feature_names'] = ['Length',
                              'Diameter',

@@ -86,7 +86,7 @@ highest-value one-line experiment in the repo.
 ## Running
 
 ```bash
-conda activate deltas
+# use `uv run <cmd>` from the repo root
 cd notebooks-non-sep
 python run_all_non_sep.py     # after uncommenting main()'s loop
 ```

@@ -1,4 +1,4 @@
-% 07/08/2026 20:18:52
+% 10/08/2026 11:21:54
 % Breast Cancer - 10 seeds SVM-rbf model
 % train:[178, 17], test:[179, 195]
 % USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
@@ -6,19 +6,19 @@
 \toprule
 Methods & Accuracy & G-Mean & F1 & solved \\
 \midrule
-Baseline & $.917 \pm .02$ & $.917 \pm .02$ & $.914 \pm .02$ & 10/10 \\
-SMOTE & $.793 \pm .10$ & $.769 \pm .12$ & $.738 \pm .15$ & 10/10 \\
-Balanced Weights & $.921 \pm .02$ & $.922 \pm .02$ & $.919 \pm .02$ & 10/10 \\
-BMR & $.887 \pm .09$ & $.880 \pm .10$ & $.870 \pm .11$ & 10/10 \\
-Threshold & $.936 \pm .07$ & $.933 \pm .08$ & $.930 \pm .09$ & 10/10 \\
-Slacks Deltas & $.951 \pm .02$ & $.950 \pm .03$ & $.954 \pm .02$ & 9/10 \\
-Min Deltas & $\textbf{.955} \pm .01$ & $\textbf{.955} \pm .01$ & $\textbf{.957} \pm .01$ & 10/10 \\
-Max Deltas & $.897 \pm .04$ & $.894 \pm .04$ & $.889 \pm .05$ & 10/10 \\
-Avg Deltas & $.927 \pm .02$ & $.927 \pm .02$ & $.925 \pm .03$ & 10/10 \\
-F Deltas & $.947 \pm .03$ & $.947 \pm .03$ & $.947 \pm .03$ & 10/10 \\
-CP Sum & $.939 \pm .02$ & $.940 \pm .02$ & $.939 \pm .03$ & 10/10 \\
-CP Minimax & $.948 \pm .02$ & $.946 \pm .02$ & $.951 \pm .02$ & 10/10 \\
-DKW Sum & $.939 \pm .02$ & $.940 \pm .02$ & $.939 \pm .03$ & 10/10 \\
-DKW Minimax & $.946 \pm .02$ & $.944 \pm .02$ & $.950 \pm .02$ & 10/10 \\
+Baseline & $.918 \pm .02$ & $.918 \pm .02$ & $.915 \pm .03$ & 10/10 \\
+SMOTE & $.810 \pm .11$ & $.788 \pm .13$ & $.760 \pm .16$ & 10/10 \\
+Balanced Weights & $.922 \pm .02$ & $.923 \pm .02$ & $.920 \pm .02$ & 10/10 \\
+BMR & $.884 \pm .08$ & $.877 \pm .10$ & $.866 \pm .11$ & 10/10 \\
+Threshold & $.934 \pm .07$ & $.931 \pm .08$ & $.928 \pm .09$ & 10/10 \\
+Slacks Deltas & $.949 \pm .02$ & $.947 \pm .03$ & $.952 \pm .02$ & 9/10 \\
+Min Deltas & $\textbf{.952} \pm .02$ & $\textbf{.951} \pm .02$ & $\textbf{.954} \pm .01$ & 10/10 \\
+Max Deltas & $.903 \pm .04$ & $.902 \pm .04$ & $.897 \pm .05$ & 10/10 \\
+Avg Deltas & $.929 \pm .02$ & $.929 \pm .02$ & $.928 \pm .02$ & 10/10 \\
+F Deltas & $.944 \pm .03$ & $.944 \pm .03$ & $.943 \pm .03$ & 10/10 \\
+CP Sum & $.938 \pm .02$ & $.938 \pm .02$ & $.937 \pm .03$ & 10/10 \\
+CP Minimax & $.947 \pm .02$ & $.945 \pm .02$ & $.950 \pm .02$ & 10/10 \\
+DKW Sum & $.938 \pm .02$ & $.938 \pm .02$ & $.937 \pm .03$ & 10/10 \\
+DKW Minimax & $.945 \pm .02$ & $.943 \pm .02$ & $.949 \pm .02$ & 10/10 \\
 \bottomrule
 \end{tabular}

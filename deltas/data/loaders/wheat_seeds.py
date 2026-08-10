@@ -22,7 +22,7 @@ def get_wheat_seeds(**kwargs):
                      'datasets', 'wheat_seeds', 'data.csv'), header=None)
     df.drop(df[df[7] == 3].index, inplace=True)
     df = df.replace({7: {2: 0}})
-    data['y'] = df.pop(7).to_numpy()  # type: ignore
+    data['y'] = df.pop(7).to_numpy().copy()  # type: ignore
     data['X'] = df.to_numpy()
     # add name and description
     with open(os.path.join(CURRENT_FILE, '..', 'datasets', 'wheat_seeds', 'description.txt'), 'r') as f:

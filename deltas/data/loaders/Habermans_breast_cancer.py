@@ -17,8 +17,10 @@ def get_Habermans_breast_cancer(**kwargs):
     data = {}
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'Habermans_breast_cancer', 'data.csv'))
-    data['y'] = df.pop('Survived_Longer_5_Years').to_numpy()
-    data['y'][data['y']==1] = 0  
+    # .to_numpy() can hand back a read-only view under numpy >= 2, so copy
+    # before relabelling in place
+    data['y'] = df.pop('Survived_Longer_5_Years').to_numpy().copy()
+    data['y'][data['y']==1] = 0
     data['y'][data['y']==2] = 1
     data['X'] = df.to_numpy()
     data['feature_names'] = df.columns.to_list()

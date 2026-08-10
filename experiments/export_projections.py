@@ -2,26 +2,26 @@
 Export 1-D projections from toy_datasets + projection_models for the deltas
 experiments.
 
-WHY THIS IS A SEPARATE PROCESS
-------------------------------
-Neither sibling package can be imported into the deltas environment:
+WHY THIS IS A SEPARATE STEP
+---------------------------
+It used to be a separate *environment*. The sibling packages need sklearn >= 1.6
+and python >= 3.11, and this repo was pinned to sklearn 1.3.2 by ~350 lines of
+vendored MLPClassifier internals in deltas/classifiers/models.py, so models had
+to be fitted under the sibling venv and their projections shipped across.
+scikit-learn#25646 landed sample_weight in MLPClassifier upstream, the vendored
+copy is gone, and everything now runs in one uv environment.
 
-  * projection_models uses sklearn.utils.validation.validate_data (sklearn>=1.6)
-  * toy_datasets requires python>=3.11, numpy>=2.3, sklearn>=1.7
+The step is kept because it is still worth having:
 
-and the deltas env is pinned to python 3.10 / sklearn 1.3.2 because
-deltas/classifiers/models.py vendors sklearn 1.3.x MLPClassifier internals.
-Upgrading breaks deltas; downgrading breaks the sibling packages.
+  * it is a cache. Fitting 224 (dataset, model) pairs x 10 seeds x 2 calibration
+    modes takes ~30 min; the deltas methods are then re-runnable in minutes
+    without refitting anything.
+  * every deltas method needs exactly one thing from a classifier,
+    get_projection(X) -> (n, 1). Exporting that and nothing else keeps the
+    classifier-agnostic claim structural rather than incidental: the code in
+    run_wide.py never sees a model.
 
-The bridge is possible because every deltas method needs exactly one thing from
-a classifier: get_projection(X) -> (n, 1). So we fit here, export the
-projections, and let the deltas env do the maths on the 1-D arrays. That also
-makes the classifier-agnostic claim structural: the deltas code never sees the
-model at all.
-
-RUN IT WITH THE SIBLING VENV, NOT THE DELTAS ONE:
-
-    /home/matt/Repos/projection_models/.venv/bin/python export_projections.py
+    uv run python export_projections.py
     ... --datasets Hepatitis "Heart Disease"     # subset
     ... --models Linear LDA                      # subset
     ... --seeds 10 --jobs 8

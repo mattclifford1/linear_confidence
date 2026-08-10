@@ -1,4 +1,4 @@
-% 07/08/2026 20:19:29
+% 10/08/2026 11:22:14
 % Heart Disease - 10 seeds SVM-rbf model
 % train:[82, 24], test:[82, 24]
 % USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
@@ -6,19 +6,19 @@
 \toprule
 Methods & Accuracy & G-Mean & F1 & solved \\
 \midrule
-Baseline & $\textbf{.892} \pm .02$ & $.789 \pm .05$ & $.729 \pm .06$ & 10/10 \\
-SMOTE & $.838 \pm .03$ & $.688 \pm .08$ & $.585 \pm .10$ & 10/10 \\
-Balanced Weights & $.846 \pm .03$ & $.799 \pm .07$ & $.679 \pm .08$ & 10/10 \\
-BMR & $.844 \pm .05$ & $.842 \pm .03$ & $.719 \pm .06$ & 10/10 \\
-Threshold & $.843 \pm .05$ & $.843 \pm .03$ & $.718 \pm .06$ & 10/10 \\
-Slacks Deltas & $.887 \pm .03$ & $.820 \pm .05$ & $\textbf{.743} \pm .07$ & 4/10 \\
-Min Deltas & $.852 \pm .04$ & $\textbf{.848} \pm .04$ & $.723 \pm .05$ & 10/10 \\
-Max Deltas & $.861 \pm .06$ & $.831 \pm .04$ & $.731 \pm .07$ & 10/10 \\
-Avg Deltas & $.852 \pm .05$ & $.835 \pm .05$ & $.721 \pm .07$ & 10/10 \\
-F Deltas & $.852 \pm .04$ & $.848 \pm .04$ & $.723 \pm .05$ & 10/10 \\
-CP Sum & $.849 \pm .05$ & $.837 \pm .05$ & $.718 \pm .07$ & 10/10 \\
-CP Minimax & $.818 \pm .03$ & $.847 \pm .02$ & $.694 \pm .03$ & 10/10 \\
-DKW Sum & $.845 \pm .05$ & $.848 \pm .03$ & $.724 \pm .06$ & 10/10 \\
-DKW Minimax & $.818 \pm .03$ & $.847 \pm .02$ & $.694 \pm .03$ & 10/10 \\
+Baseline & $\textbf{.892} \pm .03$ & $.792 \pm .05$ & $.732 \pm .07$ & 10/10 \\
+SMOTE & $.842 \pm .04$ & $.712 \pm .09$ & $.609 \pm .11$ & 10/10 \\
+Balanced Weights & $.846 \pm .03$ & $.803 \pm .07$ & $.683 \pm .07$ & 10/10 \\
+BMR & $.842 \pm .05$ & $.846 \pm .03$ & $.718 \pm .06$ & 10/10 \\
+Threshold & $.842 \pm .05$ & $.847 \pm .03$ & $.718 \pm .06$ & 10/10 \\
+Slacks Deltas & $.882 \pm .03$ & $.822 \pm .05$ & $\textbf{.736} \pm .07$ & 4/10 \\
+Min Deltas & $.849 \pm .04$ & $.845 \pm .04$ & $.719 \pm .05$ & 10/10 \\
+Max Deltas & $.851 \pm .05$ & $.829 \pm .04$ & $.718 \pm .06$ & 10/10 \\
+Avg Deltas & $.854 \pm .05$ & $.835 \pm .05$ & $.722 \pm .06$ & 10/10 \\
+F Deltas & $.849 \pm .04$ & $.845 \pm .04$ & $.719 \pm .05$ & 10/10 \\
+CP Sum & $.846 \pm .05$ & $.839 \pm .05$ & $.715 \pm .07$ & 10/10 \\
+CP Minimax & $.821 \pm .03$ & $.846 \pm .02$ & $.696 \pm .04$ & 10/10 \\
+DKW Sum & $.842 \pm .05$ & $\textbf{.849} \pm .03$ & $.720 \pm .06$ & 10/10 \\
+DKW Minimax & $.821 \pm .03$ & $.846 \pm .02$ & $.696 \pm .04$ & 10/10 \\
 \bottomrule
 \end{tabular}

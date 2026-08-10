@@ -56,7 +56,7 @@ def get_mortality(seed=True, complete=False, **kwargs):
     df.pop('los')
 
     # label
-    data['y'] = df.pop('outcome').to_numpy()
+    data['y'] = df.pop('outcome').to_numpy().copy()
     # swap the inds as use convention of minority being 1
     # data orignally is 0 is negative outcome (death or readdmission) - 1 successful discharge
     # but we change that to be the opposite
@@ -90,7 +90,7 @@ def get_sepsis(seed=True, **kwargs):
     df.pop('ID')
 
     # label
-    data['y'] = df.pop('SepsisLabel').to_numpy()
+    data['y'] = df.pop('SepsisLabel').to_numpy().copy()
 
     # features
     data['X'] = df.to_numpy()

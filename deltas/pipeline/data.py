@@ -162,12 +162,20 @@ def get_real_dataset(dataset='Breast Cancer', _print=True, scale=False, **kwargs
         # 'Blobs': sample_dataset_to_proportions(get_blobs),
     }
 
-    # check input correct dataset name
-    if dataset not in AVAILABLE_DATASETS.keys():
-        raise ValueError(f'dataset needs to be one of:{AVAILABLE_DATASETS.keys()}')
-
-    # load dataset
-    data_set = AVAILABLE_DATASETS[dataset](**kwargs)
+    # Names above are the legacy local loaders, kept because the published
+    # results were produced with them and their shuffling defines those exact
+    # splits. Anything else falls through to the sibling toy_datasets package,
+    # which carries all of these plus ~30 more - see loaders/sibling.py.
+    if dataset in AVAILABLE_DATASETS:
+        data_set = AVAILABLE_DATASETS[dataset](**kwargs)
+    else:
+        from deltas.data.loaders import sibling
+        if dataset not in sibling.available():
+            raise ValueError(
+                f'unknown dataset {dataset!r}. Local loaders: '
+                f'{sorted(AVAILABLE_DATASETS)}. '
+                f'toy_datasets: {sorted(sibling.available())}')
+        data_set = sibling.get_sibling_dataset(dataset, **kwargs)
     if not isinstance(data_set, dict):
         # convert to dict format needed
         train_data, test_data = data_set

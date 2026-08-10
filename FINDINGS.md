@@ -465,13 +465,14 @@ on pandas 2.2.1.
 The experiment loop is commented out; only `combine_tables` runs. Uncomment
 before trying to regenerate the non-separable tables.
 
-### 6.8 Environment is not pinned
+### 6.8 Environment is not pinned  — ✅ FIXED (2026-08-10, §12)
 
-Packaging moved to pdm in `c1c0a96` (`pyproject.toml`; `setup.py` and
-`requirements.txt` deleted). `pyproject.toml` lists the same dependency names
-with **no version bounds**. The env that works is conda `deltas`
-(python 3.10.13, sklearn **1.3.2**, numpy 1.26.4, pandas 2.2.1, scipy 1.11.4,
-imblearn 0.12.0, torch 2.1.1). sklearn must stay on 1.3.x — see §7.1.
+*Was:* packaging moved to pdm in `c1c0a96` with **no version bounds**, and the
+only working env was conda `deltas` (python 3.10.13, sklearn **1.3.2**), which
+sklearn could not move off — see §7.1.
+
+*Now:* **uv**, with a committed `uv.lock` (python 3.13, sklearn 1.9, numpy 2.4)
+and real lower bounds in `pyproject.toml`. The sklearn pin is gone. See §12.
 `costcla` is only needed by `deltas/data/loaders/costcla.py` (Credit Scoring /
 Direct Marketing datasets, unused in both papers); `deltas/costcla_local/` is a
 self-contained vendored copy that provides BMR and Thresholding. Consider making
@@ -488,12 +489,14 @@ fragile dependencies and none is needed to reproduce either paper's tables.
 |---|---|---|
 | B1 | `optimisation/optimise_deltas.py:82` | `J[constraints != 0] = max_loss + 1` uses exact float equality to filter the grid. Measured on a solvable projection: only 7508 of 10000 grid points have an exactly-zero residual; the other 2492 sit at ~1e-16 and are **discarded as constraint violations**. `tol_constraint = 1e-6` is defined on line 69 and never used (the correct lines are commented out just above). Change to `np.abs(constraints) > tol_constraint`. |
 | B2 | `model/downsample.py:88–95, 161` | `support_max_hit` is only assigned inside `if method in methods_supported`, but is read in the `len(losses) == 0` error branch. It happens to be safe today only because the read site is `if method not in methods_supported or support_max_hit == False` and Python short-circuits. Any reordering of that condition gives an `UnboundLocalError`. The method-name validation that would make this unnecessary is commented out at line 60, so an unrecognised `method` string silently falls through to the `'supports' in method` checks instead of raising. |
-| B3 | `data/loaders/breast_cancer_W.py:30` | `shuffle_data(data)` missing `seed=seed` → non-reproducible split. |
+| B3 | `data/loaders/breast_cancer_W.py:31` | ✅ **FIXED (§12.3)** — `shuffle_data(data)` was missing `seed=seed`, so that dataset was not reproducible at all. |
 | B4 | `model/non_sep.py:77-79` | `np.delete(line, 0)` / `np.delete(line, -1)` results discarded (numpy is not in-place). Harmless — `get_valid_linspace` already removed invalid points — but it means the intent is unimplemented. |
 | B5 | `notebooks-*/run_all*.py` `write_results` | `str(means[i])[1:sf]` truncates instead of rounding, and produces garbage for any value `≥ 1.0` or negative. |
 | B6 | `pipeline/evaluation.py:130` | `if xp1.shape[0] > xp2.shape[1]:` — compares a count against a *dimension*. Almost certainly meant `xp2.shape[0]`. Only affects plot colour/marker ordering. |
 | B7 | `utils/radius.py:24` | `calc_emp_R` is dead code that `print`s and returns `None`. |
 | B8 | `model/downsample.py:73` | `max_trials = min(len(y)//2, max_trials)` silently caps the budget for support-based methods, so passing `max_trials=10000` does not do what it says. Undocumented. |
+| B9 | `data/utils.py:22,31` | ⚠️ **FIXED (§12.3)** — `if seed == True` also matched the integer seed **1** (python: `1 == True`), replacing it with `RANDOM_STATE = 0`. Seeds 0 and 1 produced *identical* data, so every `range(10)` experiment used nine distinct datasets with seed 0 double-counted. Affects the six-dataset tables and §10.6 coverage; not the wide grid. |
+| B10 | `data/loaders/MIMIC_IV.py` | `MIMIC-IV` fails to load: a categorical column ('M'/'F') is left in `X`, so the normaliser raises `could not convert string to float: 'M'`. Pre-existing, unrelated to the uv/numpy migration, and unused by either paper — but it means that loader has never worked in this state. |
 
 ### 7.2 Smells worth cleaning
 
@@ -518,7 +521,8 @@ fragile dependencies and none is needed to reproduce either paper's tables.
 
 ## 8. Caching (the stated second direction)
 
-Measured on this machine (2026-08-07, conda `deltas` env):
+Measured on this machine (2026-08-07, the then-current conda env;
+superseded by uv in §12 but the relative costs are unchanged):
 
 | stage | Breast Cancer | MIMIC-III mortality |
 |---|---|---|
@@ -958,3 +962,159 @@ the quantity being measured is a coverage probability.**
 4. `NearestClassMean` deserves a paragraph of its own — it is the model the
    original derivation is written for, and it is the one where the untouched
    certificate is least wrong.
+
+---
+
+## 12. Migration to uv, and the end of the sklearn pin (2026-08-10)
+
+### 12.1 uv
+
+conda and pdm are gone. `uv sync --group dev` builds `.venv` from
+`pyproject.toml` + a committed `uv.lock`: **python 3.13, sklearn 1.9,
+numpy 2.4**. Run everything with `uv run`.
+
+`pyproject.toml` now declares real lower bounds (§6.8 complained it declared
+none) and the two sibling repos are editable path dependencies:
+
+```toml
+[tool.uv.sources]
+toy-datasets      = {path = "../../Repos/toy_datasets", editable = true}
+projection-models = {path = "../../Repos/projection_models", editable = true}
+```
+
+One resolver trap: `umap-learn` (via `toy_datasets`) puts no floor on its
+numba/llvmlite stack, so uv picked `llvmlite 0.36`, which refuses to build on
+python ≥ 3.10. Floors for `pynndescent`/`numba`/`llvmlite` are pinned in
+`pyproject.toml` to stop that.
+
+### 12.2 ⭐ The sklearn 1.3.2 pin dissolved on its own
+
+`deltas/classifiers/models.py` carried ~350 lines of vendored sklearn 1.3.x
+`MLPClassifier` internals (`_fit_weighted`, `_fit_stochastic_weighted`,
+`_backprop_weighted`, weighted losses) for one reason: upstream
+`MLPClassifier.fit` did not accept `sample_weight`, and the `Balanced Weights`
+baseline needs it. The code even cites the open PRs.
+
+**scikit-learn#25646 landed.** `MLPClassifier.fit(X, y, sample_weight=None)` is
+now standard, so `class_weight='balanced'` is a two-line weighted fit and the
+copy is deleted. `models.py`: **499 → 155 lines**, no private imports left.
+
+This is not a behaviour change — it is the same weighted backprop, now
+maintained by sklearn. Verified: on an imbalanced synthetic set the balanced
+`NN` gets minority recall 0.982 against 0.250 unweighted, i.e. the weighting is
+doing what it always did.
+
+Two smaller breakages the upgrade surfaced:
+
+- `_validate_data` was removed in sklearn 1.6 → `sklearn.utils.validation.validate_data(self, X, ...)`.
+- **`Series.to_numpy()` can be read-only under numpy 2**, so in-place
+  relabelling (`y[y == 2] = 0`) raises `ValueError: assignment destination is
+  read-only`. This had rotted **Hepatitis, Habermans, Wisconsin Breast Cancer
+  and both MIMIC-III loaders** (Wisconsin also hit pandas ≥ 2.2 refusing an int
+  into a str column). Hepatitis and MIMIC-III are used by *both papers*, so the
+  repo could not load its own headline datasets on a modern stack. Fixed by
+  `.copy()`-ing at every `data['y'] = ....to_numpy()` site in
+  `deltas/data/loaders/`. All 16 legacy loaders now load, and Breast Cancer
+  `[178, 17]`, Pima `[250, 25]` and MIMIC-III `[3317, 392]` match the published
+  splits exactly.
+
+### 12.3 ⚠️⚠️ `seed == True` collapsed seeds 0 and 1 (B9)
+
+`deltas/data/utils.py` had:
+
+```python
+if seed == True:
+    seed = RANDOM_STATE
+```
+
+In python `1 == True`, so **the integer seed 1 was silently replaced by
+`RANDOM_STATE`, which is 0**. Every experiment run over `range(10)` therefore
+used **nine distinct datasets with seed 0 counted twice**, on every dataset
+loaded through the local loaders.
+
+This affects `run_experiments.py` (the six-dataset tables), the §10.6
+`validate_bounds.py` coverage numbers, and every `notebooks-*/run_all*.py`
+result. It slightly understates the variance and gives seed 0 double weight.
+
+Fixed with `seed is True` (and a comment telling future readers not to "tidy"
+it back — the repo's house style is `== True`, but here that *is* the bug).
+Verified: seeds 0–3 now give four distinct splits on all five datasets tested.
+
+**The wide grid (§11) is not affected.** It splits via `toy_datasets`, whose
+`RANDOM_STATE` is 42 — so its `seed=1` maps to 42, which is outside the 0–9
+range used, and all ten seeds stay distinct. Confirmed empirically.
+
+Also fixed while in the file: **B3** (`breast_cancer_W` called `shuffle_data`
+without the seed, so that dataset was not reproducible at all).
+
+### 12.4 Delegating data and models to the siblings
+
+Both delegations are now first-class, and both are additive — the local
+loaders and models still work, because the published results are defined by
+their exact shuffling and hyperparameters.
+
+**Data.** `deltas/data/loaders/sibling.py`. `get_real_dataset` falls through to
+`toy_datasets` for any name it does not recognise, so
+`get_real_dataset('Stroke Prediction', ratio=10)` works. Every dataset the
+papers use exists there (checked in `tests/test_sibling.py`), plus ~30 more.
+
+**Models.** `deltas/classifiers/sibling.py`. `build('RandomForest')` returns a
+projection_models estimator wrapped in `as_deltas_classifier`, which supplies
+the one thing deltas needs and projection_models does not have:
+
+| | reports | relation |
+|---|---|---|
+| `projection_models` | `get_threshold() -> t`, `predict = projection > t` | |
+| `deltas` | `get_bias() -> b` | `t = -b` |
+
+11 model families against the local 3, and its MLP supports `sample_weight`
+and `class_weight='balanced'` natively — so there is no capability gap left
+that the vendored code was covering.
+
+### 12.5 Consequences to be aware of
+
+- **The classifier cache is invalidated.** Its key includes sklearn/numpy
+  versions (deliberately — different library, different fitted model). The old
+  533 MB of sklearn 1.3.2 classifier entries are now dead weight; clear with
+  `uv run python -c "import deltas.utils.cache as c; c.clear()"` once the new
+  results are in.
+- **The two-process bridge is obsolete.** `export_projections.py` ran under the
+  sibling venv only because of the pin. It now runs under `uv run` like
+  everything else, and is kept purely as a *cache* of fitted projections (and
+  because keeping the model out of `run_wide.py` makes the classifier-agnostic
+  claim structural).
+- **The six-dataset tables need regenerating**, both because sklearn changed
+  and because of the seed bug in §12.3. The wide grid does not.
+
+### 12.6 The six-dataset results after the migration
+
+Regenerated with `experiments/reproduce.sh` under python 3.13 / sklearn 1.9,
+with the §12.3 seed fix. Average rank by G-Mean over the six datasets:
+
+| method | was (§10.5) | now | solved |
+|---|---|---|---|
+| Min Deltas | 2.33 | 4.17 | 56/60 |
+| CP Minimax | 3.83 | 4.33 | **60/60** |
+| F Deltas | 2.67 | 4.33 | 56/60 |
+| DKW Minimax | 3.83 | 4.50 | **60/60** |
+| Slacks Deltas | 5.83 | 5.17 | 40/60 |
+| Thresholding | 8.25 | 5.75 | 60/60 |
+| Baseline | 12.17 | 12.33 | 60/60 |
+
+The ranks compressed: the four leading methods now sit within 0.33 of a rank of
+each other, and the Friedman statistic fell from χ²=49.3 (p<1e-4) to χ²=39.6
+(p=2e-4) — still significant, but six datasets cannot separate the leaders.
+That is the honest reading, and it is why §11's 224-cell grid matters.
+
+Two changes are directly attributable to the seed fix rather than to sklearn:
+
+- **Slacks Deltas now solves 1/10 Pima seeds rather than 0/10.** Seed 1 is a
+  genuinely new dataset now, and it happens to be feasible. The draft's claim
+  "fails on all ten Pima seeds" is now "9 of 10".
+- Its overall rank *improved* (5.83 → 5.17) because the extra Pima solve
+  removes one last-place rank.
+
+Certificate coverage (§10.6) barely moved: 0.83 naive against 0.96 nominal
+(was 0.81), 1.00 with the calibration split. The wide grid's 0.684 remains the
+number to quote — four datasets and one classifier family was never enough to
+measure this.

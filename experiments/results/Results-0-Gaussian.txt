@@ -1,4 +1,4 @@
-% 07/08/2026 20:17:29
+% 10/08/2026 11:21:11
 % Gaussian - 10 seeds Linear model
 % train:[1000, 10], test:[1000, 1000]
 % USE_TWO=True USE_GLOBAL_R=False RANDOM_STATE=0
@@ -6,19 +6,19 @@
 \toprule
 Methods & Accuracy & G-Mean & F1 & solved \\
 \midrule
-Baseline & $.516 \pm .01$ & $.167 \pm .06$ & $.061 \pm .04$ & 10/10 \\
-SMOTE & $.904 \pm .02$ & $.901 \pm .03$ & $.898 \pm .03$ & 10/10 \\
-Balanced Weights & $.908 \pm .02$ & $.906 \pm .02$ & $.904 \pm .03$ & 10/10 \\
-BMR & $.887 \pm .05$ & $.881 \pm .06$ & $.874 \pm .08$ & 10/10 \\
-Threshold & $.887 \pm .05$ & $.881 \pm .06$ & $.874 \pm .08$ & 10/10 \\
-Slacks Deltas & $.912 \pm .01$ & $.911 \pm .01$ & $.916 \pm .01$ & 8/10 \\
-Min Deltas & $\textbf{.913} \pm .01$ & $\textbf{.912} \pm .01$ & $\textbf{.916} \pm .01$ & 10/10 \\
-Max Deltas & $.876 \pm .07$ & $.866 \pm .09$ & $.857 \pm .10$ & 10/10 \\
-Avg Deltas & $.887 \pm .05$ & $.880 \pm .06$ & $.874 \pm .08$ & 10/10 \\
-F Deltas & $.911 \pm .01$ & $.910 \pm .01$ & $.914 \pm .01$ & 10/10 \\
-CP Sum & $.888 \pm .05$ & $.882 \pm .06$ & $.876 \pm .08$ & 10/10 \\
-CP Minimax & $.894 \pm .03$ & $.890 \pm .03$ & $.902 \pm .02$ & 10/10 \\
-DKW Sum & $.888 \pm .05$ & $.882 \pm .06$ & $.876 \pm .08$ & 10/10 \\
-DKW Minimax & $.896 \pm .03$ & $.892 \pm .03$ & $.903 \pm .02$ & 10/10 \\
+Baseline & $.515 \pm .01$ & $.161 \pm .06$ & $.057 \pm .04$ & 10/10 \\
+SMOTE & $.909 \pm .02$ & $.907 \pm .02$ & $.904 \pm .02$ & 10/10 \\
+Balanced Weights & $\textbf{.912} \pm .02$ & $\textbf{.911} \pm .02$ & $.910 \pm .02$ & 10/10 \\
+BMR & $.898 \pm .04$ & $.894 \pm .05$ & $.890 \pm .06$ & 10/10 \\
+Threshold & $.898 \pm .04$ & $.894 \pm .05$ & $.890 \pm .06$ & 10/10 \\
+Slacks Deltas & $.906 \pm .01$ & $.904 \pm .01$ & $.910 \pm .01$ & 8/10 \\
+Min Deltas & $.910 \pm .02$ & $.909 \pm .02$ & $\textbf{.914} \pm .01$ & 10/10 \\
+Max Deltas & $.886 \pm .05$ & $.879 \pm .07$ & $.873 \pm .08$ & 10/10 \\
+Avg Deltas & $.891 \pm .05$ & $.886 \pm .06$ & $.881 \pm .07$ & 10/10 \\
+F Deltas & $.908 \pm .02$ & $.907 \pm .02$ & $.912 \pm .01$ & 10/10 \\
+CP Sum & $.898 \pm .04$ & $.894 \pm .05$ & $.890 \pm .06$ & 10/10 \\
+CP Minimax & $.891 \pm .03$ & $.886 \pm .03$ & $.899 \pm .02$ & 10/10 \\
+DKW Sum & $.898 \pm .04$ & $.894 \pm .05$ & $.890 \pm .06$ & 10/10 \\
+DKW Minimax & $.892 \pm .03$ & $.888 \pm .03$ & $.900 \pm .02$ & 10/10 \\
 \bottomrule
 \end{tabular}

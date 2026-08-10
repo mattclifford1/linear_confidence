@@ -19,7 +19,7 @@ def get_ionosphere(**kwargs):
                      'datasets', 'Ionosphere', 'data.csv'), header=None)
     df.drop(df[df[0] == 'I'].index, inplace=True)
     df = df.replace({34: {'b': 0, 'g': 1}})
-    data['y'] = df.pop(34).to_numpy()  # type: ignore
+    data['y'] = df.pop(34).to_numpy().copy()  # type: ignore
     data['X'] = df.to_numpy()
     # add name and description
     with open(os.path.join(CURRENT_FILE, '..', 'datasets', 'Ionosphere', 'description.txt'), 'r') as f:

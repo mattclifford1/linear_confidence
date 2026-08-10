@@ -26,26 +26,48 @@ Other docs in the tree: `deltas/model/README.md` (per-class API reference),
 `deltas/data/loaders/readme.md`, `notebooks/README.md`,
 `notebooks-ECAI/README.md`, `notebooks-non-sep/README.md`.
 
-## Environment
-
-There is a working conda env — **use it, don't create a new one**:
+## Environment — **uv**
 
 ```bash
-/home/matt/anaconda3/envs/deltas/bin/python   # python 3.10.13, sklearn 1.3.2, numpy 1.26.4
-# or: conda activate deltas
+uv sync --group dev      # creates .venv, installs deltas + both siblings editable
+uv run pytest tests -q
+uv run python experiments/run_experiments.py
 ```
 
-The package is installed editable, so `import deltas` resolves to this working
-tree. Packaging moved to **pdm** in `c1c0a96` — deps are in `pyproject.toml`
-(`pdm install`, or `pip install -e .` via PEP 517). `setup.py` and
-`requirements.txt` no longer exist. `pyproject.toml` declares no version
-bounds; the conda env above is the known-good set.
+Python 3.13, sklearn 1.9, numpy 2.4. `uv.lock` is committed — that is the
+known-good set, so prefer `uv run` over activating anything.
 
-**Do not upgrade scikit-learn.** `deltas/classifiers/models.py` vendors ~350
-lines of sklearn 1.3.x `MLPClassifier` internals (`_fit_weighted`,
-`_fit_stochastic_weighted`, `_backprop_weighted`) to get sample-weighted
-training. It imports private symbols from
-`sklearn.neural_network._multilayer_perceptron` and will break on upgrade.
+There is no conda env any more, and no pdm. The old
+`/home/matt/anaconda3/envs/deltas` (python 3.10, sklearn 1.3.2) still exists on
+this machine but is **stale — do not use it**.
+
+The two sibling repos are **path dependencies** declared in
+`[tool.uv.sources]`, installed editable, so edits there are picked up here
+immediately:
+
+```toml
+toy-datasets      = {path = "../../Repos/toy_datasets", editable = true}
+projection-models = {path = "../../Repos/projection_models", editable = true}
+```
+
+### The sklearn pin is gone
+
+`deltas/classifiers/models.py` used to vendor ~350 lines of sklearn 1.3.x
+`MLPClassifier` internals (`_fit_weighted`, `_fit_stochastic_weighted`,
+`_backprop_weighted`) purely to get sample-weighted MLP training for the
+`Balanced Weights` baseline. scikit-learn#25646 landed `sample_weight` in
+`MLPClassifier.fit` upstream, so the copy was deleted and `class_weight=
+'balanced'` is now an ordinary weighted fit — same algorithm, maintained by
+sklearn. The file went 499 → 155 lines. **Do not reintroduce private sklearn
+imports.**
+
+Watch for two things the upgrade surfaced:
+
+- `_validate_data` was removed in sklearn 1.6; use
+  `sklearn.utils.validation.validate_data(self, X, ...)`.
+- `Series.to_numpy()` can return a **read-only** array under numpy 2, so
+  in-place relabelling (`y[y == 2] = 0`) raises. Three loaders had rotted this
+  way. Copy first.
 
 ## Repo map
 
@@ -94,25 +116,39 @@ versions and a `CACHE_VERSION` — bump `deltas/utils/cache.py::CACHE_VERSION` b
 hand if you change what a cached artefact *means* without changing its config.
 Inspect with `deltas.utils.cache.info()`, wipe with `cache.clear()`.
 
-## The sibling repos (`toy_datasets`, `projection_models`)
+## The sibling repos (`toy_datasets`, `projection_models`) — prefer them
 
 `/home/matt/Repos/toy_datasets` (54 datasets) and
-`/home/matt/Repos/projection_models` (11 model types with `get_projection`)
-feed the wide grid. **Neither can be imported into the deltas env** —
-`projection_models` needs sklearn ≥ 1.6 (`validate_data`), `toy_datasets` needs
-python ≥ 3.11 / numpy ≥ 2.3 / sklearn ≥ 1.7 — and this env cannot move off
-sklearn 1.3.2 (see the MLP warning above).
+`/home/matt/Repos/projection_models` (11 model families exposing
+`get_projection`) are now ordinary dependencies, and **new work should use them
+rather than the local loaders and models**:
 
-So they are used **out of process**. `projection_models/.venv` has both
-packages installed and is the export environment:
+```python
+from deltas.data.loaders import sibling as data_sibling
+from deltas.classifiers import sibling as clf_sibling
 
-```bash
-/home/matt/Repos/projection_models/.venv/bin/python experiments/export_projections.py
+train, test = data_sibling.get_sibling_dataset('Thyroid Sick', seed=0, ratio=10)
+clf = clf_sibling.build('RandomForest').fit(X, y)   # get_bias() shim included
 ```
 
-It writes 1-D projections to `experiments/projections/*.npz`; the deltas env
-consumes them via `deltas/classifiers/frozen.py::FrozenProjection`. Do not try
-to `pip install` either package into the deltas env.
+`deltas.pipeline.data.get_real_dataset` falls through to `toy_datasets`
+automatically for any name it does not recognise, so
+`get_real_dataset('Stroke Prediction')` just works.
+
+Why prefer them: every dataset the papers use exists in `toy_datasets` plus ~30
+more, and it is maintained against current numpy/sklearn (three local loaders
+had silently rotted under numpy 2). `projection_models` covers 11 model
+families against the local 3, and its MLP supports `sample_weight` /
+`class_weight` directly.
+
+**What is kept local, and why:** `deltas/data/loaders/*.py` and
+`deltas/classifiers/models.py` produced the published results — their exact
+shuffling and hyperparameters define those splits and numbers. Keep them
+working; do not delete them.
+
+The one API mismatch is naming and sign: `projection_models` reports
+`get_threshold()` (`predict = projection > t`), deltas wants `get_bias()`
+(`t = -b`). `deltas/classifiers/sibling.py::as_deltas_classifier` bridges it.
 
 Watch out for two things found the hard way:
 
@@ -173,8 +209,14 @@ Full list with reproductions in `FINDINGS.md`. The ones most likely to bite:
 2. `downsample.fit()` reads `support_max_hit` on a path where it may be
    unassigned; safe today only via `or` short-circuiting. Don't reorder that
    condition. The `method` name validation is commented out at line 60.
-3. `breast_cancer_W.get_Wisconsin_breast_cancer` calls `shuffle_data(data)`
-   without the seed → that dataset is not reproducible.
-4. `non_sep.optimise()` calls `np.delete(line, 0)` without assigning the result
+3. `non_sep.optimise()` calls `np.delete(line, 0)` without assigning the result
    (no-op; harmless because `get_valid_linspace` already filtered).
-5. `heart_disease.get_HD` hits the UCI network API on every call.
+4. `heart_disease.get_HD` hits the UCI network API on every call.
+5. ⚠️ **`seed == True` also matches the integer `1`** (python: `1 == True`).
+   `data/utils.py` used that idiom, so seed 1 was silently replaced by
+   `RANDOM_STATE = 0` and **seeds 0 and 1 gave identical data** — every
+   `range(10)` run really used nine distinct datasets. Fixed with `is True`;
+   the comment there says not to tidy it back. The repo's house style really is
+   `== True` everywhere else, so leave those alone, but never for a seed.
+   (`toy_datasets` has the same idiom with `RANDOM_STATE = 42`, which is
+   harmless for seeds 0–9 but the same trap outside that range.)

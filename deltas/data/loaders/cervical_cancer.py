@@ -18,7 +18,7 @@ def get_Habermans_breast_cancer(**kwargs):
     #TODO: sort out the missing values - remove or imput?
 
     #TODO: which col to use as class?
-    data['y'] = df.pop('????').to_numpy()
+    data['y'] = df.pop('????').to_numpy().copy()
 
     data['X'] = df.to_numpy()
     #TODO: which cols to use as features? (there might be multiple targets)

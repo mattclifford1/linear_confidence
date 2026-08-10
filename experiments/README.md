@@ -22,17 +22,17 @@ the filter — a flag that cannot touch the baseline classifier.
 ## Usage
 
 ```bash
-conda activate deltas
+# use `uv run <cmd>` from the repo root
 cd experiments
 
-python run_experiments.py                  # all datasets, all methods, seeds 0-9
-python run_experiments.py --datasets 2 3   # by index, see EXPERIMENTS in the script
-python run_experiments.py --seeds 30       # more seeds
-python run_experiments.py --no-cache       # bypass the classifier cache
+uv run python run_experiments.py                  # all datasets, all methods, seeds 0-9
+uv run python run_experiments.py --datasets 2 3   # by index, see EXPERIMENTS in the script
+uv run python run_experiments.py --seeds 30       # more seeds
+uv run python run_experiments.py --no-cache       # bypass the classifier cache
 
-python combine_tables.py                   # multi-row LaTeX table for the draft
-python make_figures.py                     # both figures -> the Overleaf draft
-python make_figures.py 1                   # just the loss-landscape figure
+uv run python combine_tables.py                   # multi-row LaTeX table for the draft
+uv run python make_figures.py                     # both figures -> the Overleaf draft
+uv run python make_figures.py 1                   # just the loss-landscape figure
 ```
 
 ## Outputs (`results/`)
@@ -72,36 +72,37 @@ The scripts above cover the six datasets of the papers. The wide grid covers
 **32 datasets × 7 models × 10 seeds × 2 calibration modes**, using the sibling
 repos `../../Repos/toy_datasets` and `../../Repos/projection_models`.
 
-### Why it is two processes
+### Why it is still two steps
 
-Neither sibling package can be imported into the deltas environment:
+It used to be two *environments*: the siblings need sklearn ≥ 1.6 and this repo
+was pinned to 1.3.2 by the vendored `MLPClassifier` internals, so models were
+fitted under the sibling venv and their projections shipped across. That pin is
+gone (see `CLAUDE.md`) and everything runs under one `uv` environment now.
 
-- `projection_models` calls `sklearn.utils.validation.validate_data` (sklearn ≥ 1.6)
-- `toy_datasets` needs python ≥ 3.11, numpy ≥ 2.3, sklearn ≥ 1.7
+The export step is kept because it is still worth having:
 
-and this env is pinned to python 3.10 / sklearn 1.3.2 because
-`deltas/classifiers/models.py` vendors sklearn 1.3.x `MLPClassifier` internals
-(see `CLAUDE.md`). Upgrading breaks deltas; downgrading breaks the siblings.
-
-The bridge works because a deltas estimator needs exactly one thing from a
-classifier — `get_projection(X) -> (n, 1)`. So models are fitted under the
-sibling venv, the 1-D projections are exported, and the deltas env does the
-maths on those arrays. `deltas/classifiers/frozen.py::FrozenProjection` is the
-identity shim that satisfies the constructor checks. A side effect worth
-having: the deltas code never sees a model, so the classifier-agnostic claim
-becomes structural rather than incidental.
+- **it is a cache.** Fitting 224 (dataset, model) pairs × 10 seeds × 2
+  calibration modes takes ~30 min; the deltas methods are then re-runnable in
+  minutes without refitting anything.
+- **it keeps the classifier out of the deltas code.** A deltas estimator needs
+  exactly one thing from a classifier, `get_projection(X) -> (n, 1)`. Exporting
+  that and nothing else makes the classifier-agnostic claim structural rather
+  than incidental — `run_wide.py` never sees a model.
+  `deltas/classifiers/frozen.py::FrozenProjection` is the identity shim that
+  satisfies the estimators' constructor checks.
 
 ```bash
-# step 1 - fit models and export projections (SIBLING venv, not deltas)
-/home/matt/Repos/projection_models/.venv/bin/python export_projections.py \
-    --seeds 10 --jobs 8
-# resumable: an existing, loadable .npz is skipped unless --force
+# step 1 - fit models and export projections (resumable; --force to redo)
+uv run python export_projections.py --seeds 10 --jobs 8
 
-# step 2 - run every deltas method over them (deltas env)
-python run_wide.py --seeds 10 --jobs 8
+# step 2 - run every deltas method over them
+uv run python run_wide.py --seeds 10 --jobs 8
 
 # step 3 - coverage, ranks, solve rates, LaTeX
-python analyse_wide.py
+uv run python analyse_wide.py
+
+# or all of it
+./reproduce_wide.sh
 ```
 
 Outputs: `projections/<dataset>__<model>.npz` (one per pair, all seeds and both

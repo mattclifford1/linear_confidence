@@ -83,6 +83,11 @@ Direct correspondence with the paper:
 | `calibration.py` | ⭐ The calibration split. `split_calibration` (stratified, refuses rather than return a useless split) and `fit_calibrated` (fit-part classifier + calibration-part certificate). See `CALIBRATION.md`. |
 | `pipeline_old.py` | Superseded. |
 
+`data.py::get_real_dataset` dispatches to the local loaders by name and
+**falls through to the sibling `toy_datasets` package** for anything else
+(`deltas/data/loaders/sibling.py`), so `get_real_dataset('Stroke Prediction')`
+works without touching this repo.
+
 **Why calibration lives here and not in the estimator:** by the time
 `model.fit(X, y, clf=clf)` runs, `clf` is already trained, so splitting inside
 that call would still count points the classifier had fitted to. The split has
@@ -91,17 +96,23 @@ to happen upstream of classifier training.
 ## `classifiers/models.py`
 
 `SVM`, `linear`, `NN` — sklearn subclasses that add `get_projection` and
-`get_bias`.
+`get_bias`. **Prefer `classifiers/sibling.py` for new work** (11 model families
+instead of 3); these are kept because the published results were produced with
+them.
 
 - `SVM.get_projection` uses `decision_function(X) − intercept_` for non-linear
   kernels, and the normalised `X·wᵀ` for linear.
-- `NN` carries **~350 lines of vendored sklearn `MLPClassifier` internals**
-  (`_fit_weighted`, `_fit_stochastic_weighted`, `_backprop_weighted`) so that
-  `class_weight='balanced'` works, which upstream still does not support. This
-  is the most version-fragile code in the repo — it imports private symbols
-  from `sklearn.neural_network._multilayer_perceptron`.
+- `NN` used to carry ~350 lines of vendored sklearn `MLPClassifier` internals
+  so that `class_weight='balanced'` worked. scikit-learn#25646 landed
+  `sample_weight` upstream, so that is now a plain weighted fit and the file
+  dropped from 499 to 155 lines. No private sklearn imports remain — don't
+  reintroduce any.
 - `delta_adjusted_clf` — a bare boundary+class-order predictor, used where a
   full deltas object isn't wanted.
+
+`classifiers/sibling.py` — `build(name)` constructs a `projection_models`
+estimator wrapped in `as_deltas_classifier`, which adds the one method deltas
+needs and projection_models lacks: `get_bias()`, the negated `get_threshold()`.
 
 `classifiers/frozen.py` — `FrozenProjection`, the identity projector over
 projections computed in another process. This is what lets models fitted under

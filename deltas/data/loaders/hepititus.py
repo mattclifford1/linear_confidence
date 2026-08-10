@@ -21,7 +21,9 @@ def get_hepatitis(seed=True, **kwargs):
     # df.pop('LIVERBIG')
     # df.pop('LIVERFIRM')
     df = df[~df.isin(['?']).any(axis=1)]
-    data['y'] = df.pop('Class').to_numpy()
+    # .to_numpy() can hand back a read-only view under numpy >= 2, so copy
+    # before relabelling in place
+    data['y'] = df.pop('Class').to_numpy().copy()
     data['y'][data['y'] == 2] = 0
     data['X'] = df.to_numpy()
     data['feature_names'] = df.columns.to_list()

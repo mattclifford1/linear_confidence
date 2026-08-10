@@ -51,7 +51,7 @@ def get_ready_for_discharge(seed=True, **kwargs):
 
 
     data = {}
-    data['y'] = df.pop('RFD').to_numpy()#[:6638+954]   # number from paper above
+    data['y'] = df.pop('RFD').to_numpy().copy()#[:6638+954]   # number from paper above
 
 
     # potentially try random selection of class 0?

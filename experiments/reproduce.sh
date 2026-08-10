@@ -9,7 +9,8 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-PY=${PY:-python}
+RUN=${RUN:-uv run}
+PY="$RUN python"
 
 if [[ "${FRESH:-0}" == "1" ]]; then
   echo "== wiping the cache =="
@@ -20,7 +21,7 @@ echo "== config =="
 $PY -c "import deltas.misc.use_two as u; print('USE_TWO', u.USE_TWO, '| USE_GLOBAL_R', u.USE_GLOBAL_R)"
 
 echo "== tests =="
-$PY -m pytest ../tests -q
+$RUN pytest ../tests -q
 
 echo "== experiments =="
 $PY run_experiments.py --seeds 10

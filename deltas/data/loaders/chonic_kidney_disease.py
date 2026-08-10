@@ -17,7 +17,7 @@ def get_Habermans_breast_cancer(**kwargs):
                      'datasets', 'chronic_kideny_disease', 'data.csv'))
     #TODO: sort out the missing values - remove or imput?
 
-    data['y'] = df.pop('class').to_numpy()
+    data['y'] = df.pop('class').to_numpy().copy()
     # classes are ?, notpresent, notckd and ckd (chronic kidney disease) 
     # take as ckd or not ckd for ML algorithms
     #TODO: process 'class'

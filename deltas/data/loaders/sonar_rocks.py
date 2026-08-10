@@ -28,7 +28,7 @@ def get_sonar(**kwargs):
     df = pd.read_csv(os.path.join(CURRENT_FILE, '..',
                      'datasets', 'sonar_rocks_mines', 'data.csv'), header=None)
     df = df.replace({60: {'R': 0, 'M': 1}})
-    data['y'] = df.pop(60).to_numpy() # type: ignore
+    data['y'] = df.pop(60).to_numpy().copy() # type: ignore
     data['X'] = df.to_numpy()
     data['feature_names'] = df.columns.to_list()
     # add name and description
