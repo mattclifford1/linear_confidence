@@ -79,7 +79,14 @@ Direct correspondence with the paper:
 | `data.py` | `get_real_dataset(name, seed, scale)` dispatches to `data/loaders/`; `get_data(...)` makes the synthetic 2-Gaussian set; `get_SMOTE_data`; PCA/UMAP reducers for plotting. |
 | `classifier.py` | `get_classifier(data_clf, model=...)` trains the baseline **and all comparison methods in one call**: Baseline, SMOTE, Balanced Weights, BMR, Threshold. Returns a `{name: clf}` dict. `model ∈ {'Linear', 'SVM', 'SVM-linear', 'SVM-rbf', 'SVM-rbf-fixed', 'MLP', 'MLP-small', 'MLP-deep', 'MLP-Gaussian', 'MIMIC', 'MIMIC-cross-val', 'MNIST'}`. `'SVM-rbf'` does a 5-fold grid search over C and gamma (three times — original, weighted, SMOTE). |
 | `evaluation.py` | `eval_test(clfs_dict, test_data)` → DataFrame of Accuracy / G-Mean / F1, plus the projected-space boundary plots. |
+| `cached.py` | Disk-cached `get_dataset` / `get_classifiers` / `get_data_and_classifiers`. Takes `calibration=<float>`; `get_deltas_fit_data(data_clf)` then returns the right `(X, y)` to fit a deltas model on. |
+| `calibration.py` | ⭐ The calibration split. `split_calibration` (stratified, refuses rather than return a useless split) and `fit_calibrated` (fit-part classifier + calibration-part certificate). See `CALIBRATION.md`. |
 | `pipeline_old.py` | Superseded. |
+
+**Why calibration lives here and not in the estimator:** by the time
+`model.fit(X, y, clf=clf)` runs, `clf` is already trained, so splitting inside
+that call would still count points the classifier had fitted to. The split has
+to happen upstream of classifier training.
 
 ## `classifiers/models.py`
 
@@ -95,6 +102,13 @@ Direct correspondence with the paper:
   from `sklearn.neural_network._multilayer_perceptron`.
 - `delta_adjusted_clf` — a bare boundary+class-order predictor, used where a
   full deltas object isn't wanted.
+
+`classifiers/frozen.py` — `FrozenProjection`, the identity projector over
+projections computed in another process. This is what lets models fitted under
+the sibling `projection_models` environment (whose sklearn is too new to import
+here) be used by every deltas estimator: the estimators only ever call
+`get_projection`, and all of them pass 1-D input straight through. See
+`experiments/README.md`.
 
 Also in `classifiers/`: torch nets for MNIST and MIMIC, and a large-margin
 loss implementation (Elsayed et al.). None feed the published results.

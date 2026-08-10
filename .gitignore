@@ -143,3 +143,6 @@ cache/
 
 # experiment run logs
 experiments/*.log
+
+# wide-grid exported projections (regenerate with experiments/export_projections.py)
+experiments/projections/

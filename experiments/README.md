@@ -66,6 +66,75 @@ Everything except MIMIC-III is seconds per seed. MIMIC is ~330 s per seed on the
 cache makes training a one-off cost. Wipe with
 `python -c "import deltas.utils.cache as c; c.clear()"`.
 
+## The wide grid (`export_projections.py` + `run_wide.py`)
+
+The scripts above cover the six datasets of the papers. The wide grid covers
+**32 datasets × 7 models × 10 seeds × 2 calibration modes**, using the sibling
+repos `../../Repos/toy_datasets` and `../../Repos/projection_models`.
+
+### Why it is two processes
+
+Neither sibling package can be imported into the deltas environment:
+
+- `projection_models` calls `sklearn.utils.validation.validate_data` (sklearn ≥ 1.6)
+- `toy_datasets` needs python ≥ 3.11, numpy ≥ 2.3, sklearn ≥ 1.7
+
+and this env is pinned to python 3.10 / sklearn 1.3.2 because
+`deltas/classifiers/models.py` vendors sklearn 1.3.x `MLPClassifier` internals
+(see `CLAUDE.md`). Upgrading breaks deltas; downgrading breaks the siblings.
+
+The bridge works because a deltas estimator needs exactly one thing from a
+classifier — `get_projection(X) -> (n, 1)`. So models are fitted under the
+sibling venv, the 1-D projections are exported, and the deltas env does the
+maths on those arrays. `deltas/classifiers/frozen.py::FrozenProjection` is the
+identity shim that satisfies the constructor checks. A side effect worth
+having: the deltas code never sees a model, so the classifier-agnostic claim
+becomes structural rather than incidental.
+
+```bash
+# step 1 - fit models and export projections (SIBLING venv, not deltas)
+/home/matt/Repos/projection_models/.venv/bin/python export_projections.py \
+    --seeds 10 --jobs 8
+# resumable: an existing, loadable .npz is skipped unless --force
+
+# step 2 - run every deltas method over them (deltas env)
+python run_wide.py --seeds 10 --jobs 8
+
+# step 3 - coverage, ranks, solve rates, LaTeX
+python analyse_wide.py
+```
+
+Outputs: `projections/<dataset>__<model>.npz` (one per pair, all seeds and both
+modes), then `results/wide.csv`, `results/wide_coverage.csv`,
+`results/wide_ranks.csv`, `results/wide_solve.csv`.
+
+### Grid
+
+- **Models** (`MODELS` in `export_projections.py`): Linear, LDA, SVM-rbf, MLP,
+  RandomForest, GradientBoosting, NearestClassMean. `NearestClassMean` is the
+  interesting control — centroid-plus-radius is exactly the geometry the
+  published ECAI derivation assumes.
+- **Datasets**: 4 synthetic, 26 tabular (natural imbalance from 1.1:1 to
+  19.5:1), 2 MedMNIST image sets flattened to 784 features.
+- **Hyperparameters are left at defaults**, unlike `run_experiments.py` which
+  grid-searches the SVM. The claim under test is about post-hoc bias
+  correction, not tuning, and a 5-fold search over 63 parameter settings per
+  cell would dominate the runtime.
+- **Splitting** follows the deltas convention: half the data to train, the
+  training minority thinned towards 10:1, balanced test set. Datasets that
+  cannot leave ≥ 8 minority training and ≥ 10 minority test points are skipped.
+
+### Calibration modes
+
+Each cell is run twice:
+
+- `naive` — classifier fitted on all training data, certificate computed on the
+  same points (what the papers do)
+- `split` — classifier fitted on 65%, certificate computed on the held-out 35%
+
+See `CALIBRATION.md` for what this fixes and why it cannot live inside the
+estimator.
+
 ## Caveat on the `Slacks Deltas` rows
 
 With `USE_TWO=True` the published slack method frequently finds no solution on

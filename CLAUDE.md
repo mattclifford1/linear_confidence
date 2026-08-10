@@ -18,6 +18,9 @@ Two papers live off this code:
 
 Read `FINDINGS.md` in this repo for the research state, known bugs and the
 open research directions. Read `deltas/README.md` for the package architecture.
+Read `CALIBRATION.md` for the calibration split — what it fixes (the reported
+certificate is optimistic when computed on the classifier's own training data),
+why it has to sit in the pipeline rather than the estimator, and what it costs.
 
 Other docs in the tree: `deltas/model/README.md` (per-class API reference),
 `deltas/data/loaders/readme.md`, `notebooks/README.md`,
@@ -55,6 +58,8 @@ deltas/              the package (see deltas/README.md)
   data/loaders/      one loader per dataset
   misc/use_two.py    GLOBAL config flags (USE_TWO, USE_GLOBAL_R, RANDOM_STATE)
 experiments/         ⭐ the current runner — start here for new experiments
+  export_projections.py  fits models under the SIBLING venv (see below)
+  run_wide.py            the 32-dataset x 7-model x 2-calibration-mode grid
 notebooks-ECAI/      experiments + figures for the published paper (legacy)
 notebooks-non-sep/   experiments for the non-separable follow-up (legacy)
 notebooks/           scratch/dev notebooks
@@ -88,6 +93,37 @@ per-seed MIMIC MLP training is paid once. The cache key includes library
 versions and a `CACHE_VERSION` — bump `deltas/utils/cache.py::CACHE_VERSION` by
 hand if you change what a cached artefact *means* without changing its config.
 Inspect with `deltas.utils.cache.info()`, wipe with `cache.clear()`.
+
+## The sibling repos (`toy_datasets`, `projection_models`)
+
+`/home/matt/Repos/toy_datasets` (54 datasets) and
+`/home/matt/Repos/projection_models` (11 model types with `get_projection`)
+feed the wide grid. **Neither can be imported into the deltas env** —
+`projection_models` needs sklearn ≥ 1.6 (`validate_data`), `toy_datasets` needs
+python ≥ 3.11 / numpy ≥ 2.3 / sklearn ≥ 1.7 — and this env cannot move off
+sklearn 1.3.2 (see the MLP warning above).
+
+So they are used **out of process**. `projection_models/.venv` has both
+packages installed and is the export environment:
+
+```bash
+/home/matt/Repos/projection_models/.venv/bin/python experiments/export_projections.py
+```
+
+It writes 1-D projections to `experiments/projections/*.npz`; the deltas env
+consumes them via `deltas/classifiers/frozen.py::FrozenProjection`. Do not try
+to `pip install` either package into the deltas env.
+
+Watch out for two things found the hard way:
+
+1. `toy_datasets.proportional_split`'s `minority_reduce_scaler` **is the target
+   ratio** — the minority training count is set to `len(majority_train) /
+   scaler`, so it must be sized against the majority count. Asking for more
+   minority training points than exist leaves that class an empty test index
+   list, and `np.concatenate` then returns a float array which fails as an
+   index.
+2. Its convention (`class 1 is the minority`) matches this repo's, but the raw
+   loaders do not guarantee it — relabel first.
 
 ## Conventions that matter
 

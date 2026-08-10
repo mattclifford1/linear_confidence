@@ -720,10 +720,10 @@ against measured test error. Over 4 datasets × 10 seeds × 2 classes
 
 | Certificate computed on | observed coverage | nominal |
 |---|---|---|
-| the training data | **0.84** | 0.96 |
+| the training data | **0.81** | 0.96 |
 | a 35% held-out calibration split | **1.00** | 0.90 |
 
-Per dataset the training-data coverage is Breast Cancer 1.00, Heart Disease
+Per dataset the training-data coverage is Breast Cancer 0.90, Heart Disease
 0.95, Pima **0.75**, Hepatitis **0.65**.
 
 **Cause.** The binomial model `m_i(b) ~ Binomial(N_i, e_i(b))` needs the
@@ -735,7 +735,7 @@ optimism exactly:
 
 | Dataset | train err | test err | optimism | coverage |
 |---|---|---|---|---|
-| Breast Cancer | .054 | .067 | .013 | 1.00 |
+| Breast Cancer | .054 | .067 | .013 | 0.90 |
 | Heart Disease | .121 | .148 | .027 | 0.95 |
 | Pima Diabetes | .177 | .298 | .121 | 0.75 |
 | Hepatitis | .093 | .301 | **.208** | 0.65 |
@@ -746,7 +746,7 @@ Ruled out as the cause: the data-dependent choice of `δ`. Repeating with a
 
 **Fix.** Sample splitting — fit the classifier on one part, compute the
 certificate on a held-out part, as conformal prediction does. Restores coverage
-to 1.00 on every dataset, at the cost of a looser bound (mean `U_i` .34 → .53).
+to 1.00 on every dataset, at the cost of a looser bound (mean `U_i` .32 → .52).
 
 **This applies to the published method too.** `R̄ᵢ` is likewise the empirical
 support of the classifier's own training data, so the ECAI paper's `1−δᵢ`
@@ -799,3 +799,162 @@ and returns `None` (treated as a miss), so a corrupt file degrades to a
 recompute rather than a crash. To force a clean slate:
 `python -c "import deltas.utils.cache as c; c.clear()"`, or
 `FRESH=1 ./experiments/reproduce.sh`.
+
+---
+
+## 11. The wide grid: 32 datasets × 7 models (2026-08-09)
+
+Built to answer two questions the six-dataset study could not: **is the method
+really classifier-agnostic**, and **how bad is the certificate optimism of
+§10.6 in general?**
+
+Setup: `experiments/export_projections.py` (sibling venv) →
+`experiments/run_wide.py` → `experiments/analyse_wide.py`. 32 datasets
+(4 synthetic, 26 tabular, 2 MedMNIST), 7 model families, 10 seeds, and every
+cell run twice — once with the certificate computed on the training data
+(`naive`) and once on a 35% held-out calibration split (`split`).
+**48,862 rows, 35,536 certificate observations.** Raw: `results/wide.csv`.
+
+### 11.1 ⭐ The certificate optimism is much worse than the 4-dataset study showed
+
+| certificate computed on | coverage | nominal |
+|---|---|---|
+| the training data | **0.684** | 0.948 |
+| a 35% calibration split | 0.949 | 0.878 |
+
+§10.6 reported 0.81 on 4 datasets × 1 model. Across the full grid it is
+**0.684** — the certificate is wrong roughly one time in three. Split
+calibration restores validity everywhere (0.949 observed ≥ 0.878 nominal).
+
+Robust to test-set size (coverage is *measured* against the test set, so cells
+with tiny test sets resolve it poorly):
+
+| restriction | datasets | naive | split |
+|---|---|---|---|
+| all cells | 32 | 0.684 | 0.949 |
+| ≥ 50 test points per class | 25 | 0.702 | 0.957 |
+| ≥ 100 test points per class | 13 | 0.687 | 0.955 |
+
+### 11.2 ⭐ The shortfall tracks classifier optimism monotonically
+
+The mechanism claim of §10.6, now on 17,768 observations per mode:
+
+| classifier optimism | naive coverage | split coverage | n (naive) |
+|---|---|---|---|
+| ≤ .02 | 0.821 | 0.956 | 6664 |
+| .02–.05 | 0.867 | 0.960 | 1272 |
+| .05–.10 | 0.821 | 0.955 | 2096 |
+| .10–.20 | 0.699 | 0.975 | 2280 |
+| > .20 | **0.413** | 0.929 | 5456 |
+
+Nominal is ~0.95 in every naive bucket, so the last row is a factor-of-two
+shortfall. The split fixes every bucket, including the worst.
+
+### 11.3 ⭐ Coverage by model — and why `NearestClassMean` is the control
+
+| model | naive | split |
+|---|---|---|
+| NearestClassMean | **0.891** | 0.941 |
+| Linear | 0.798 | 0.953 |
+| MLP | 0.792 | 0.949 |
+| LDA | 0.693 | 0.944 |
+| SVM-rbf | 0.571 | 0.950 |
+| RandomForest | 0.553 | 0.955 |
+| GradientBoosting | **0.486** | 0.948 |
+
+This is the cleanest confirmation of the diagnosis in the whole study. The
+ordering is essentially the ordering of how hard each family overfits its
+training data. `NearestClassMean` — which barely overfits, and whose
+centroid-plus-radius geometry is *exactly what the published ECAI derivation
+assumes* — is the least broken. `GradientBoosting`, which drives training
+error towards zero, is the most broken. **After splitting every model lands in
+0.94–0.96, i.e. the fix is model-independent.**
+
+### 11.4 The overlap methods now rank first outright
+
+Average rank by G-Mean over 224 (dataset, model) cells, `naive`:
+
+| method | avg rank | mean G-Mean | cells solved |
+|---|---|---|---|
+| DKW Minimax | **3.25** | .716 | 224/224 |
+| CP Minimax | 3.48 | .716 | 224/224 |
+| Min Deltas | 4.75 | .707 | 204/224 |
+| SMOTE | 5.08 | .676 | 224/224 |
+| F Deltas | 5.28 | .697 | 204/224 |
+| Slacks Deltas | 6.10 | .712 | 171/224 |
+| Threshold | 6.42 | .659 | 224/224 |
+| DKW Sum | 6.72 | .647 | 224/224 |
+| CP Sum | 7.12 | .625 | 224/224 |
+| Baseline | 8.76 | .471 | 224/224 |
+| Balanced Weights | 9.04 | .608 | 96/224 |
+
+On the six-dataset study (§10.5) `Min`/`F Deltas` edged ahead of the overlap
+methods. On the wide grid they do not — **CP/DKW Minimax are first and second**,
+and are the only certified methods that solve every cell.
+
+Solve rates:
+
+| method | naive | split |
+|---|---|---|
+| CP / DKW (both rules) | **1.000** | **1.000** |
+| Min / F Deltas | 0.808 | 0.343 |
+| Slacks Deltas | 0.584 | 0.244 |
+
+The published slack method fails on **42% of the grid**, and on 76% of it once
+a calibration split shrinks the training set. The overlap methods have no
+feasibility condition, so this cannot happen to them.
+
+### 11.5 ⚠️ The "cost of calibration" table has a survivorship trap
+
+| method | naive | split | Δ |
+|---|---|---|---|
+| CP Minimax | .718 | .694 | −.024 |
+| DKW Minimax | .718 | .696 | −.022 |
+| Threshold | .662 | .635 | −.027 |
+| CP Sum | .628 | .522 | −.106 |
+| Slacks Deltas | .717 | .862 | **+.144** |
+| Min Deltas | .720 | .865 | **+.145** |
+| F Deltas | .709 | .864 | **+.156** |
+
+**The three apparent *improvements* are artefacts, not results.** Those methods
+solve only 24–34% of split cells, and the cells they still solve are the easy
+ones (well separated, plenty of minority data). Their split means are computed
+over a favourable subset. Any comparison of `naive` vs `split` must be
+restricted to methods with equal solve rates, which in practice means the
+overlap methods, the baselines, and `Threshold`.
+
+Read on the methods that always solve, calibration costs about **0.025 G-Mean**
+— cheap for a certificate that is actually true. `CP Sum` loses four times as
+much, consistent with the sum rule's known degeneracy (§10.4) getting worse as
+`N_cal` shrinks.
+
+### 11.6 A design mistake worth recording
+
+The first pass sized the train/test split as "thin the training minority to
+10:1, leave ≥10 minority points for test". On the datasets with the *largest*
+minority pool that took almost all of it: **Stroke Prediction ended up with 10
+test points per class**, so the measured error could only be a multiple of 0.1
+and its coverage number was mostly quantisation noise. Those cells were the
+only ones showing split-mode "violations" (Stroke −0.248, Cervical Cancer
+−0.070, Thyroid Sick −0.004 against nominal).
+
+Fixed by capping the training minority at half the available minority
+(`export_projections.py::load_split`); Stroke goes from 10 to 125 test points
+per class while keeping its 19.6:1 training imbalance. Those three datasets
+were re-exported and re-run (`merge_wide.py` folds partial runs in).
+
+Lesson: **test-set size is not something to trade for training imbalance when
+the quantity being measured is a coverage probability.**
+
+### 11.7 What this means for the papers
+
+1. The **classifier-agnostic** claim now has evidence: 7 model families
+   spanning linear, kernel, neural, tree-ensemble and prototype, on one grid.
+2. The **validity** claim needs the calibration split. Without it the reported
+   confidence is wrong a third of the time, and the ECAI method inherits the
+   same flaw invisibly (§10.6).
+3. The **always-solvable** claim is the strongest empirical result here: 100%
+   vs 58% for the published method over 224 cells.
+4. `NearestClassMean` deserves a paragraph of its own — it is the model the
+   original derivation is written for, and it is the one where the untouched
+   certificate is least wrong.

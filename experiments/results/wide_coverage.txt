@@ -1,0 +1,8 @@
+\begin{tabular}{lrrrr}
+\toprule
+Certificate computed on & coverage & nominal & mean $U_i$ & $n$ \\
+\midrule
+the training data & $\mathbf{.684}$ & $.948$ & $.302$ & 17768 \\
+a held-out calibration split & $.949$ & $.878$ & $.501$ & 17768 \\
+\bottomrule
+\end{tabular}
