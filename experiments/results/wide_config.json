@@ -22,6 +22,7 @@
     "DKW Sum",
     "DKW Minimax"
   ],
-  "n_files": 21,
-  "n_rows": 4620
+  "n_files": 14,
+  "n_rows": 3080,
+  "timeout": 300.0
 }
