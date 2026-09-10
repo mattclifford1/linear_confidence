@@ -817,27 +817,27 @@ Setup: `experiments/export_projections.py` (sibling venv) →
 (4 synthetic, 26 tabular, 2 MedMNIST), 7 model families, 10 seeds, and every
 cell run twice — once with the certificate computed on the training data
 (`naive`) and once on a 35% held-out calibration split (`split`).
-**48,862 rows, 35,536 certificate observations.** Raw: `results/wide.csv`.
+**4,480 fitted classifiers, 49,280 method evaluations, 35,840 certificate
+observations.** Raw: `results/wide.csv`.
 
 ### 11.1 ⭐ The certificate optimism is much worse than the 4-dataset study showed
 
 | certificate computed on | coverage | nominal |
 |---|---|---|
-| the training data | **0.684** | 0.948 |
-| a 35% calibration split | 0.949 | 0.878 |
+| the training data | **0.681** | 0.948 |
+| a 35% calibration split | 0.948 | 0.878 |
 
 §10.6 reported 0.81 on 4 datasets × 1 model. Across the full grid it is
-**0.684** — the certificate is wrong roughly one time in three. Split
-calibration restores validity everywhere (0.949 observed ≥ 0.878 nominal).
+**0.681** — the certificate is wrong roughly one time in three. Split
+calibration restores validity everywhere (0.948 observed ≥ 0.878 nominal).
 
 Robust to test-set size (coverage is *measured* against the test set, so cells
 with tiny test sets resolve it poorly):
 
 | restriction | datasets | naive | split |
 |---|---|---|---|
-| all cells | 32 | 0.684 | 0.949 |
-| ≥ 50 test points per class | 25 | 0.702 | 0.957 |
-| ≥ 100 test points per class | 13 | 0.687 | 0.955 |
+| all cells | 32 | 0.681 | 0.948 |
+| ≥ 50 test points per class | 25 | 0.701 | 0.957 |
 
 ### 11.2 ⭐ The shortfall tracks classifier optimism monotonically
 
@@ -845,11 +845,11 @@ The mechanism claim of §10.6, now on 17,768 observations per mode:
 
 | classifier optimism | naive coverage | split coverage | n (naive) |
 |---|---|---|---|
-| ≤ .02 | 0.821 | 0.956 | 6664 |
-| .02–.05 | 0.867 | 0.960 | 1272 |
-| .05–.10 | 0.821 | 0.955 | 2096 |
-| .10–.20 | 0.699 | 0.975 | 2280 |
-| > .20 | **0.413** | 0.929 | 5456 |
+| ≤ .02 | 0.821 | 0.955 | 6680 |
+| .02–.05 | 0.868 | 0.960 | 1280 |
+| .05–.10 | 0.820 | 0.954 | 2104 |
+| .10–.20 | 0.697 | 0.975 | 2320 |
+| > .20 | **0.410** | 0.928 | 5536 |
 
 Nominal is ~0.95 in every naive bucket, so the last row is a factor-of-two
 shortfall. The split fixes every bucket, including the worst.
@@ -858,13 +858,13 @@ shortfall. The split fixes every bucket, including the worst.
 
 | model | naive | split |
 |---|---|---|
-| NearestClassMean | **0.891** | 0.941 |
+| NearestClassMean | **0.889** | 0.941 |
 | Linear | 0.798 | 0.953 |
-| MLP | 0.792 | 0.949 |
+| MLP | 0.788 | 0.948 |
 | LDA | 0.693 | 0.944 |
 | SVM-rbf | 0.571 | 0.950 |
-| RandomForest | 0.553 | 0.955 |
-| GradientBoosting | **0.486** | 0.948 |
+| RandomForest | 0.548 | 0.953 |
+| GradientBoosting | **0.482** | 0.948 |
 
 This is the cleanest confirmation of the diagnosis in the whole study. The
 ordering is essentially the ordering of how hard each family overfits its
@@ -880,12 +880,12 @@ Average rank by G-Mean over 224 (dataset, model) cells, `naive`:
 
 | method | avg rank | mean G-Mean | cells solved |
 |---|---|---|---|
-| DKW Minimax | **3.25** | .716 | 224/224 |
-| CP Minimax | 3.48 | .716 | 224/224 |
-| Min Deltas | 4.75 | .707 | 204/224 |
-| SMOTE | 5.08 | .676 | 224/224 |
-| F Deltas | 5.28 | .697 | 204/224 |
-| Slacks Deltas | 6.10 | .712 | 171/224 |
+| DKW Minimax | **3.27** | .717 | 224/224 |
+| CP Minimax | 3.50 | .716 | 224/224 |
+| Min Deltas | 4.75 | .705 | 205/224 |
+| SMOTE | 5.17 | .675 | 224/224 |
+| F Deltas | 5.28 | .695 | 205/224 |
+| Slacks Deltas | 6.09 | .713 | 171/224 |
 | Threshold | 6.42 | .659 | 224/224 |
 | DKW Sum | 6.72 | .647 | 224/224 |
 | CP Sum | 7.12 | .625 | 224/224 |
@@ -901,11 +901,11 @@ Solve rates:
 | method | naive | split |
 |---|---|---|
 | CP / DKW (both rules) | **1.000** | **1.000** |
-| Min / F Deltas | 0.808 | 0.343 |
-| Slacks Deltas | 0.584 | 0.244 |
+| Min / F Deltas | 0.808 | 0.340 |
+| Slacks Deltas | 0.584 | 0.242 |
 
-The published slack method fails on **42% of the grid**, and on 76% of it once
-a calibration split shrinks the training set. The overlap methods have no
+The published slack method fails on **42% of the grid** (1308/2240 solved), and
+on 76% of it once a calibration split shrinks the training set (542/2240). The overlap methods have no
 feasibility condition, so this cannot happen to them.
 
 ### 11.5 ⚠️ The "cost of calibration" table has a survivorship trap
@@ -1118,3 +1118,236 @@ Certificate coverage (§10.6) barely moved: 0.83 naive against 0.96 nominal
 (was 0.81), 1.00 with the calibration split. The wide grid's 0.684 remains the
 number to quote — four datasets and one classifier family was never enough to
 measure this.
+
+### 12.7 The wide grid re-run under uv (2026-08-10)
+
+Cache cleared of its 121 pre-migration entries (549 MB of sklearn 1.3.2
+classifiers; the 120 current entries were kept, so MIMIC still loads
+instantly), then the whole of §11 regenerated from scratch —
+`FRESH=1 JOBS=16 ./reproduce_wide.sh`, 17 min to re-export all 224
+(dataset, model) pairs and 30 min for the deltas methods.
+
+**The conclusions are unchanged.** Every headline number moved by ≤ 0.005:
+
+| | before (mixed envs) | now (uv, sklearn 1.9) |
+|---|---|---|
+| naive coverage | 0.684 | 0.681 |
+| split coverage | 0.949 | 0.948 |
+| naive, ≥50 test/class | 0.702 | 0.701 |
+| optimism > .20, naive | 0.413 | 0.410 |
+| GradientBoosting naive | 0.486 | 0.482 |
+| NearestClassMean naive | 0.891 | 0.889 |
+| DKW Minimax avg rank | 3.25 | 3.27 |
+| Slacks Deltas solve rate | 0.584 | 0.584 |
+
+That stability is itself worth recording: the grid is insensitive to a
+scikit-learn minor version and a fresh set of fitted models, which is what you
+want of a result about post-hoc bias correction.
+
+Two things did improve:
+
+- **The run is now internally consistent.** The previous `wide.csv` was
+  stitched together by `merge_wide.py` from a main run, a late
+  PneumoniaMNIST/GradientBoosting export and a three-dataset re-run after the
+  §11.6 sizing fix. This one is a single pass under a single environment.
+- **The split-mode violations all but vanished.** Stroke Prediction went from
+  −0.248 to −0.023 against nominal (the §11.6 test-set fix), leaving three
+  datasets marginally under: Cervical Cancer −0.034, Stroke −0.023, Thyroid
+  Sick −0.006. With ~80 (seed, class, method) observations per dataset a true
+  coverage of 0.97 has a standard error of ≈0.019, so all three are inside
+  noise rather than evidence that the bound fails.
+
+---
+
+## 13. Cost-sensitive deltas (2026-08-10)
+
+`overlap.base_overlap_deltas.fit` has taken `costs=(c1, c2)` since the
+published paper and **has never been used**: every experiment in this repo, and
+both papers, run `(1, 1)`. The three Costcla datasets ship genuine per-sample
+cost matrices, so `experiments/run_costs.py` supplies real costs and charges
+real cost. 3 datasets × 4 models × 10 seeds × 2 calibration modes.
+
+Costs are the mean *net* cost of an error — `FP − TN` for class 0, `FN − TP`
+for class 1 — taken over the training split only. Evaluation charges each test
+decision its own per-sample cost. `Oracle (test)` is the cost-minimising
+threshold chosen on the test set: the best any bias shift could have done.
+
+### 13.1 The headline: deltas is good on cost, but not because of `costs`
+
+Mean cost relative to the oracle (1.00 = optimal), naive mode:
+
+| method | rel. cost |
+|---|---|
+| Baseline | 1.533 |
+| Threshold (cost-sensitive) | 1.285 |
+| CP minimax, **uncosted** | 1.176 |
+| CP minimax, prior-corrected costs | 1.173 |
+| CP minimax, **raw costs** | 1.286 |
+| CP sum, raw costs | 1.352 |
+
+Two things stand out, and only one of them is good news.
+
+**Good:** the overlap methods cut excess cost from 53% to ~18% above optimal
+and beat *explicit cost-sensitive threshold moving* (1.285) — **while being
+told nothing about the costs**. A method optimising a certified balanced-error
+bound turns out to be a strong cost-sensitive baseline for free.
+
+**Bad:** ⚠️ **supplying the real costs makes it worse** (1.176 → 1.286).
+
+### 13.2 Why: `costs` weights error *rates*, not risks
+
+Per dataset, naive, CP minimax:
+
+| dataset | cost ratio | uncosted | raw costs | prior-corrected |
+|---|---|---|---|---|
+| Direct Marketing | 9.0 | 1.257 | **1.165** | 1.232 |
+| PAKDD 2009 | 2.8 | 1.145 | **1.110** | 1.159 |
+| Kaggle 2011 | 14.5 | **1.127** | 1.583 | 1.128 |
+
+The objective is `c1 L1(b) + c2 L2(b)` (or the max), where `Li` bounds a
+**class-conditional error rate**. But realised cost is a *risk*:
+
+    cost  ∝  π₀ c₁ e₁  +  π₁ c₂ e₂
+
+The class priors are missing. Passing raw costs therefore over-weights the
+minority by exactly the imbalance factor — precisely the regime this method
+exists for. On Kaggle 2011 the prior-corrected weights are
+`0.933 × 864 = 806` against `0.067 × 12511 = 842`, i.e. **essentially equal**,
+so the uncosted `(1,1)` run is already near-optimal and raw costs drive the
+boundary far past it: minority error falls .343 → .134 while majority error
+explodes .257 → .725, against an oracle that wants .218/.316.
+
+Ruled out: cost heterogeneity. Kaggle's per-sample costs are the *least*
+skewed of the three (mean ≈ median on both FP and FN), so this is not a
+mean-summarises-badly problem.
+
+### 13.3 But prior correction is not the fix either
+
+Prior-correcting (`πᵢcᵢ`) repairs Kaggle (1.583 → 1.128) and gives back the
+gains on the other two (Direct Marketing 1.165 → 1.232). Averaged over the
+three it lands on **1.173 against 1.176 uncosted — no better than ignoring
+costs entirely.**
+
+So the honest statement is: **the `costs` argument does not yet deliver
+cost-sensitive deltas.** Weighting a certified *rate* is not the same as
+bounding a risk, and prior-correcting the weights is necessary but not
+sufficient. The likely remaining culprit is the looseness of `L2`: multiplying
+a bound that is far from tight by a large cost buys reductions in the *bound*
+rather than in the error, which is the §10.4 degeneracy showing up again in
+cost-weighted form.
+
+**This is a real gap and a concrete piece of theory to do**, not a bug: derive
+the loss from a cost-weighted risk bound with the priors in it, rather than
+weighting the existing per-class losses. Until then, run the overlap methods
+uncosted — they are already the best cost-sensitive option measured here.
+
+### 13.4 Reproduce
+
+```bash
+uv run python experiments/run_costs.py --seeds 10
+```
+Raw rows in `experiments/results/costs.csv`.
+
+---
+
+## 14. Two clinical datasets, and the first tight certificate (2026-08-10)
+
+Grid extended to **34 datasets × 7 models × 10 seeds** (52,360 rows, 38,080
+certificate observations) by adding, both via `toy_datasets`:
+
+- **MIMIC-III Mortality** — the dataset both papers lead with, which was
+  somehow absent from the wide grid.
+- **MIMIC-IV Ready for Discharge** — 1.6M rows, **212:1** natural imbalance,
+  **7,634 minority**. Training majority capped at 50k (see §14.3).
+
+The aggregate conclusions do not move: naive coverage 0.684 against 0.951
+nominal, split 0.950 against 0.884. What MIMIC-IV adds is a regime we had
+never reached.
+
+### 14.1 ⭐ The certificate is finally informative
+
+Every result before this was in the regime §10.4 calls vacuous: a
+distribution-free bound from `N₂` minority points cannot certify an error
+below roughly `ln(1/δ)/N₂`, and with `N₂` in the tens that floor is ~0.4.
+MIMIC-IV has ~3,800 minority calibration points.
+
+| minority points in the certificate set | mean `U` (naive) | mean `U` (split) |
+|---|---|---|
+| < 1000 (the other 33 datasets) | 0.303 | 0.500 |
+| ≥ 1000 (MIMIC-IV) | **0.069** | **0.083** |
+
+**A 7–8% certified error bound, rather than a 30–50% one.** This is the first
+point in the whole study where the method reports something a practitioner
+could act on — "at most 8.3% of discharge-ready patients are missed, with
+confidence 0.998" is a usable statement in a way that "at most 50%" is not.
+
+Coverage on MIMIC-IV is 0.882 naive / **0.991 split**, so the tight bound is
+also a true one once calibrated.
+
+This is the strongest available argument that the method's limitation is
+**sample size, not the formulation**. The bound was never wrong, just starved.
+
+### 14.2 ⚠️ The published method cannot run on either dataset
+
+| | Slacks Deltas | Min Deltas | CP Minimax | DKW Minimax |
+|---|---|---|---|---|
+| MIMIC-III solve rate | **0.07** | 0.54 | **1.00** | **1.00** |
+| MIMIC-IV solve rate | **0.05** | 0.96 | **1.00** | **1.00** |
+| MIMIC-IV median seconds | **300 (timeout)** | 74.4 | 4.1 | 1.4 |
+
+Two *distinct* failure modes, and both are fatal:
+
+- On **MIMIC-III** the slack method is **infeasible** — it returns in 7s
+  having found no solution, on 93% of fits.
+- On **MIMIC-IV** it **cannot finish**: 133 of 140 fits hit the 300s budget.
+  Its downsampling loop is O(N) iterations each costing O(N), so it is
+  quadratic in the training set.
+
+`run_wide.py` grew a `--timeout` for this. A fit that overruns is recorded as
+`fit=False, reason='timeout'`, distinct from a genuine no-solution — the
+distinction matters, because they are different criticisms of the method.
+
+### 14.3 Protocol note: capping the majority
+
+MIMIC-IV's 1.6M rows are fine for a linear model and hopeless for an O(n²)
+kernel SVM. Rather than subsample both classes — which would have thrown away
+the very minority data that makes this dataset worth having — the **training
+majority is capped at 50k and every available minority point is kept**. Train
+is `[50000, 3817]` at 13:1, test balanced at `[3817, 3817]`.
+
+The cap is a new `majority_max` option added to
+**`toy_datasets.proportional_split`** (the repo's rule is that data features
+live there, not here), applied before `minority_reduce_scaler` so a requested
+ratio is taken against the capped count.
+
+Two bugs were fixed in that package on the way:
+
+1. **`equal_test` and `minority_reduce_scaler_test` deleted rows from `X` and
+   `y` only**, silently desynchronising any other per-instance array. That is
+   what would have corrupted the `cost_matrix` in §13 — the costs would have
+   stayed attached to the wrong samples.
+2. `np.concatenate` over python index lists returns **float64** when one class
+   list is empty, which then fails as an index. Now forced to `int`, with the
+   over-request that caused it clamped.
+
+Also skipped: SMOTE where balancing would exceed 40k rows. On MIMIC-IV that
+meant fitting an RBF SVM to 100k points, which ran for over an hour per seed
+and is not a baseline anyone would use. Recorded as unavailable, not silently
+dropped.
+
+### 14.4 A 55× speedup in the Clopper-Pearson path
+
+`_per_class_loss_table` evaluated a dense `(N+1) × delta_resolution` grid of
+Beta quantiles — 10⁸ evaluations at N=50k, taking **209s per fit**. The loss
+is unimodal in δ (checked over 111 `(N, m)` cases), so a ternary search over
+grid *indices* finds the same minimum in ~40 evaluations per `m`:
+**209s → 3.8s**, with losses and bounds identical to the dense path to
+machine zero.
+
+Used for Clopper-Pearson only, above 5M cells. DKW keeps the dense path: its
+bound clips at 1 for small δ, creating a plateau a ternary search can step
+across, and it has no Beta quantile to avoid anyway (1.4s at N=50k).
+
+Verified that no dataset in the previous 32 crosses the threshold, and a
+re-run of Stroke Prediction/Linear reproduces the stored results **bit for
+bit across 220 rows** — so §11's numbers are untouched by this change.
