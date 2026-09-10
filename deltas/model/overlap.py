@@ -279,6 +279,12 @@ class base_overlap_deltas:
             self.plot_loss()
         return self
 
+    #: above this many (m, delta) pairs, build the table by searching rather
+    #: than by evaluating the whole grid - see _per_class_loss_table. Only
+    #: worth it when the bound itself is expensive, so subclasses with a cheap
+    #: closed form set this to infinity and always take the dense path.
+    dense_table_limit = np.inf
+
     def _per_class_loss_table(self, N):
         '''
         for every possible m in 0..N, minimise
@@ -291,6 +297,10 @@ class base_overlap_deltas:
                              self.delta_resolution)
         eff = deltas / self._delta_correction(N)      # union bound correction
         ms = np.arange(N + 1)
+
+        if (N + 1) * self.delta_resolution > self.dense_table_limit:
+            return self._sparse_loss_table(ms, deltas, eff, N)
+
         # (N+1, resolution) grids
         bounds = self._upper_bound(ms[:, None], N, eff[None, :])
         # the delta paid in the loss is the *nominal* per-class confidence
@@ -299,6 +309,56 @@ class base_overlap_deltas:
         return {'loss': L[ms, idx],
                 'delta': deltas[idx],
                 'bound': bounds[ms, idx]}
+
+    def _sparse_loss_table(self, ms, deltas, eff, N):
+        '''
+        same table, found by ternary search instead of evaluating every cell
+
+        The dense path costs (N+1) x delta_resolution evaluations of the bound,
+        which is 10^8 Beta quantiles at N = 50k and takes minutes. The loss is
+        unimodal in delta at fixed m - it tends to 1 at both ends, since a
+        vanishing delta buys a vacuous bound and a delta near 1 pays for itself
+        - so a ternary search over grid *indices* finds the same grid minimum
+        in ~40 evaluations per m rather than 2000.
+
+        This returns the same losses as the dense path (checked in
+        tests/test_overlap.py); only the delta reported at an exact tie may
+        differ, and tied deltas give the same loss by definition.
+
+        Only safe where the loss is *strictly* unimodal. It is not used for
+        DKW, whose bound clips at 1 for small delta and so carries a flat
+        plateau there that a ternary search can step across - and DKW needs no
+        speedup anyway, having no Beta quantile to evaluate.
+        '''
+        def loss_at(idx):
+            idx = np.clip(idx, 0, len(deltas) - 1)
+            b = self._upper_bound(ms, N, eff[idx])
+            return (1.0 - deltas[idx]) * b + deltas[idx], b
+
+        lo = np.zeros(len(ms), dtype=int)
+        hi = np.full(len(ms), len(deltas) - 1, dtype=int)
+        while np.any(hi - lo > 2):
+            third = np.maximum((hi - lo) // 3, 1)
+            m1, m2 = lo + third, hi - third
+            L1, _ = loss_at(m1)
+            L2, _ = loss_at(m2)
+            take_left = L1 <= L2
+            hi = np.where(take_left, np.maximum(m2 - 1, lo), hi)
+            lo = np.where(take_left, lo, np.minimum(m1 + 1, hi))
+
+        # settle the last few indices exactly, keeping the lowest index on ties
+        # so the tie-breaking matches np.argmin on the dense grid
+        best_L = np.full(len(ms), np.inf)
+        best_d = np.zeros(len(ms))
+        best_b = np.zeros(len(ms))
+        for offset in range(0, 3):
+            idx = np.clip(lo + offset, 0, hi)
+            L, b = loss_at(idx)
+            better = L < best_L
+            best_L = np.where(better, L, best_L)
+            best_d = np.where(better, deltas[idx], best_d)
+            best_b = np.where(better, b, best_b)
+        return {'loss': best_L, 'delta': best_d, 'bound': best_b}
 
     # -- prediction ---------------------------------------------------------
     def _project(self, X):
@@ -368,6 +428,9 @@ class base_overlap_deltas:
 class binomial_deltas(base_overlap_deltas):
     '''Clopper-Pearson (exact binomial) upper bound on the class error'''
     bound_name = 'Clopper-Pearson'
+    #: each cell is a Beta quantile, so the dense (N+1) x resolution table is
+    #: 10^8 evaluations at N = 50k. Search instead above this size.
+    dense_table_limit = 5_000_000
 
     def _upper_bound(self, m, N, delta):
         return clopper_pearson_upper(m, N, delta)

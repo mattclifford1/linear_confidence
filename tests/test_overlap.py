@@ -114,3 +114,30 @@ def test_orientation_is_symmetric(model):
     a = model(objective='minimax').fit(*_toy(z1, z2))
     b = model(objective='minimax').fit(*_toy(-z2, -z1))
     assert a.boundary == pytest.approx(-b.boundary, abs=1e-9)
+
+
+# ------------------------------------------------- the ternary-search path ---
+def test_sparse_loss_table_matches_the_dense_one():
+    '''
+    the ternary search is a speedup, not a different method
+
+    binomial_deltas switches to _sparse_loss_table once (N+1) * resolution
+    passes dense_table_limit, which is what makes MIMIC-IV tractable. The
+    losses it returns must match the dense grid exactly - only the delta
+    reported at an exact tie may differ, and tied deltas give the same loss.
+    '''
+    for N in (50, 200, 1001):
+        m = overlap.binomial_deltas(delta_resolution=200)
+        dense = m._per_class_loss_table(N)
+        m.dense_table_limit = 1            # force the search path
+        sparse = m._per_class_loss_table(N)
+        assert np.allclose(sparse['loss'], dense['loss'], atol=1e-12)
+        assert np.allclose(sparse['bound'], dense['bound'], atol=1e-12)
+
+
+def test_dkw_never_takes_the_search_path():
+    '''
+    DKW's bound clips at 1 for small delta, so its loss carries a flat
+    plateau a ternary search can step across. It must stay on the dense path.
+    '''
+    assert overlap.dkw_deltas().dense_table_limit == np.inf
