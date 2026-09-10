@@ -2,7 +2,7 @@
 \toprule
 Certificate computed on & coverage & nominal & mean $U_i$ & $n$ \\
 \midrule
-the training data & $\mathbf{.684}$ & $.948$ & $.302$ & 17768 \\
-a held-out calibration split & $.949$ & $.878$ & $.501$ & 17768 \\
+the training data & $\mathbf{.684}$ & $.951$ & $.296$ & 19040 \\
+a held-out calibration split & $.950$ & $.884$ & $.488$ & 19040 \\
 \bottomrule
 \end{tabular}
