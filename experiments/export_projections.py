@@ -73,7 +73,19 @@ TABULAR = [
     'Thoracic Surgery', 'Thyroid Sick', 'Z-Alizadeh Sani CAD',
 ]
 IMAGE = ['BreastMNIST', 'PneumoniaMNIST']
-ALL_DATASETS = SYNTHETIC + TABULAR + IMAGE
+#: clinical, and the reason they are listed apart: MIMIC-III Mortality is the
+#: dataset both papers lead with and was oddly missing from this grid, and
+#: MIMIC-IV is the only set here with a minority large enough (7634) for the
+#: certificate to be tight rather than vacuous - see MAJORITY_MAX.
+CLINICAL = ['MIMIC-III Mortality', 'MIMIC-IV Ready for Discharge']
+ALL_DATASETS = SYNTHETIC + TABULAR + IMAGE + CLINICAL
+
+#: per-dataset cap on majority TRAINING rows (toy_datasets `majority_max`).
+#: MIMIC-IV has 1.6M majority rows: fine for linear/tree models, hopeless for
+#: a kernel SVM (O(n^2)) and for the slack method, whose downsample loop is
+#: O(N) iterations. Capping keeps every model in the grid comparable on the
+#: same data. The test split is untouched.
+MAJORITY_MAX = {'MIMIC-IV Ready for Discharge': 50_000}
 
 #: model name -> (factory, supports_class_weight)
 MODELS = {
@@ -123,6 +135,13 @@ def load_split(name, seed):
     natural = n_maj / max(n_min, 1)
     n_maj_train = int(n_maj * 0.5)
 
+    # cap the majority TRAIN rows where the dataset is too large to fit every
+    # model family on. The ratio below is then taken against the capped count,
+    # which is what toy_datasets' majority_max guarantees.
+    majority_max = MAJORITY_MAX.get(name)
+    if majority_max is not None:
+        n_maj_train = min(n_maj_train, majority_max)
+
     # Never give more than half the minority to training. The test set is
     # what the certificate is *measured* against, and on the datasets with the
     # largest minority pool the 1/TARGET_RATIO rule would otherwise take
@@ -140,7 +159,8 @@ def load_split(name, seed):
 
     train, test = proportional_split(
         {'X': X, 'y': y}, train_size=0.5, seed=seed,
-        minority_reduce_scaler=scaler, equal_test=True)
+        minority_reduce_scaler=scaler, equal_test=True,
+        majority_max=majority_max)
 
     if len(np.unique(test['y'])) < 2:
         raise ValueError('test split lost a class')
@@ -148,6 +168,7 @@ def load_split(name, seed):
         raise ValueError(f'only {int((train["y"] == 1).sum())} minority train '
                          f'points (need {MIN_MINORITY_TRAIN})')
     return train, test, {'natural_ratio': float(natural),
+                         'majority_max': majority_max,
                          'scaler': float(scaler),
                          'train_ratio': float(
                              (train['y'] == 0).sum() /
@@ -190,13 +211,23 @@ def fit_weighted(model_name, X, y, seed):
         return None
 
 
+#: SMOTE balances the minority up to the majority count, so the fit set is
+#: roughly 2x the majority. Past this, an O(n^2) kernel SVM stops being a
+#: baseline anyone would run - MIMIC-IV would mean fitting an RBF SVM to 100k
+#: rows, which took over an hour per seed. Skipped and recorded as unavailable
+#: rather than silently distorting the timings.
+SMOTE_MAX_RESAMPLED = 40_000
+
+
 def fit_smote(model_name, X, y, seed):
-    n_min = int(np.bincount(y, minlength=2)[1])
+    n_maj, n_min = np.bincount(y, minlength=2)
     if n_min < 6:
+        return None
+    if 2 * int(n_maj) > SMOTE_MAX_RESAMPLED:
         return None
     try:
         Xs, ys = SMOTE(random_state=seed,
-                       k_neighbors=min(5, n_min - 1)).fit_resample(X, y)
+                       k_neighbors=min(5, int(n_min) - 1)).fit_resample(X, y)
         return fit_model(model_name, Xs, ys, seed)
     except Exception:
         return None

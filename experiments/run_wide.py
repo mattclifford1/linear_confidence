@@ -16,9 +16,11 @@ Writes experiments/results/wide.csv - one row per
 bounds and whether those bounds actually held.
 '''
 import argparse
+import contextlib
 import glob
 import json
 import os
+import signal
 import time
 
 import numpy as np
@@ -71,6 +73,42 @@ def _nan_scores():
             list(METRICS) + ['err_0', 'err_1']}
 
 
+class _Timeout(Exception):
+    pass
+
+
+@contextlib.contextmanager
+def time_budget(seconds):
+    '''
+    abort a fit that overruns
+
+    Needed once MIMIC-IV joined the grid: at N = 54k the published slack
+    method does not finish at all (its downsampling loop is O(N) iterations,
+    each O(N)), and the order-statistic variants take minutes per fit. A
+    method that cannot produce an answer in the budget is recorded as
+    unsolved-with-reason 'timeout', which is a scaling result rather than a
+    missing measurement. Zero or None disables the budget.
+    '''
+    if not seconds:
+        yield
+        return
+
+    def _fire(signum, frame):
+        raise _Timeout()
+
+    try:
+        old = signal.signal(signal.SIGALRM, _fire)
+    except ValueError:          # not the main thread - run unbounded
+        yield
+        return
+    signal.setitimer(signal.ITIMER_REAL, float(seconds))
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, old)
+
+
 def _best_balanced_threshold(z, y):
     '''
     Thresholding baseline: the threshold on the fit projections minimising
@@ -89,7 +127,7 @@ def _best_balanced_threshold(z, y):
     return float(mids[int(np.argmin(err))])
 
 
-def run_file(path, methods, seeds):
+def run_file(path, methods, seeds, timeout=0):
     rows = []
     with np.load(path, allow_pickle=False) as f:
         meta = json.loads(str(f['meta'][0]))
@@ -104,12 +142,13 @@ def run_file(path, methods, seeds):
                 z_fit, y_fit = f[p + 'z_fit'], f[p + 'y_fit'].astype(int)
                 thr = float(f[p + 'threshold'][0])
                 rows += _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit,
-                             z_test, y_test, thr, f, p, keys, methods)
+                             z_test, y_test, thr, f, p, keys, methods,
+                             timeout)
     return rows
 
 
 def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
-         f, p, keys, methods):
+         f, p, keys, methods, timeout):
     # how optimistic is this classifier on the points it was fitted to? This
     # is the quantity the calibration split exists to neutralise, so record it
     # per row: the coverage shortfall should track it.
@@ -132,8 +171,8 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
             'optimism': test_err - fit_err}
     rows = []
 
-    def add(method, preds=None, fitted=None, ok=True):
-        rec = {**base, 'method': method, 'fit': ok}
+    def add(method, preds=None, fitted=None, ok=True, reason=''):
+        rec = {**base, 'method': method, 'fit': ok, 'reason': reason}
         rec.update(_scores(y_test, preds) if ok else _nan_scores())
         rec.update({'U_0': np.nan, 'U_1': np.nan, 'delta_0': np.nan,
                     'delta_1': np.nan, 'covered_0': np.nan,
@@ -160,15 +199,20 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
     clf = FrozenProjection(thr, name=meta['model'])
     Xc, Xt = z_cert[:, None], z_test[:, None]
     for name in methods:
+        t0 = time.time()
         try:
-            fitted = DELTAS_METHODS[name](clf, Xc, y_cert)
+            with time_budget(timeout):
+                fitted = DELTAS_METHODS[name](clf, Xc, y_cert)
             if bool(getattr(fitted, 'is_fit', False)):
                 preds = np.asarray(fitted.predict(Xt)).squeeze().astype(int)
                 add(name, preds=preds, fitted=fitted)
             else:
                 add(name, ok=False)
+        except _Timeout:
+            add(name, ok=False, reason='timeout')
         except Exception:
-            add(name, ok=False)
+            add(name, ok=False, reason='error')
+        rows[-1]['seconds'] = round(time.time() - t0, 3)
     return rows
 
 
@@ -179,6 +223,8 @@ def main():
     ap.add_argument('--methods', nargs='*', default=list(DELTAS_METHODS))
     ap.add_argument('--seeds', type=int, default=10)
     ap.add_argument('--jobs', type=int, default=1)
+    ap.add_argument('--timeout', type=float, default=0,
+                    help='per-fit seconds budget; 0 disables. A fit that\n                          overruns is recorded as unsolved (reason=timeout).')
     ap.add_argument('--out', default='wide.csv')
     args = ap.parse_args()
 
@@ -203,11 +249,12 @@ def main():
     if args.jobs > 1:
         from joblib import Parallel, delayed
         chunks = Parallel(n_jobs=args.jobs, verbose=5)(
-            delayed(run_file)(f, args.methods, seeds) for f in files)
+            delayed(run_file)(f, args.methods, seeds, args.timeout)
+            for f in files)
     else:
         chunks = []
         for i, f in enumerate(files):
-            chunks.append(run_file(f, args.methods, seeds))
+            chunks.append(run_file(f, args.methods, seeds, args.timeout))
             print(f'  [{i + 1}/{len(files)}] {os.path.basename(f)[:-4]} '
                   f'({time.time() - t0:.0f}s)', flush=True)
 
@@ -219,7 +266,8 @@ def main():
     config = {'USE_TWO': use_two_cfg.USE_TWO,
               'USE_GLOBAL_R': use_two_cfg.USE_GLOBAL_R,
               'seeds': seeds, 'methods': args.methods,
-              'n_files': len(files), 'n_rows': len(df)}
+              'n_files': len(files), 'n_rows': len(df),
+              'timeout': args.timeout}
     with open(os.path.join(RESULTS, 'wide_config.json'), 'w') as fh:
         json.dump(config, fh, indent=2)
 
