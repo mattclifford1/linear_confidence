@@ -1,0 +1,15 @@
+{
+  "datasets": [
+    "Costcla Direct Marketing",
+    "Costcla Credit Scoring Kaggle 2011",
+    "Costcla Credit Scoring PAKDD 2009"
+  ],
+  "models": [
+    "Linear",
+    "LDA",
+    "RandomForest",
+    "GradientBoosting"
+  ],
+  "seeds": 10,
+  "cal_frac": 0.35
+}
