@@ -69,7 +69,7 @@ cache makes training a one-off cost. Wipe with
 ## The wide grid (`export_projections.py` + `run_wide.py`)
 
 The scripts above cover the six datasets of the papers. The wide grid covers
-**32 datasets × 7 models × 10 seeds × 2 calibration modes**, using the sibling
+**34 datasets × 7 models × 10 seeds × 2 calibration modes**, using the sibling
 repos `../../Repos/toy_datasets` and `../../Repos/projection_models`.
 
 ### Why it is still two steps
@@ -81,7 +81,7 @@ gone (see `CLAUDE.md`) and everything runs under one `uv` environment now.
 
 The export step is kept because it is still worth having:
 
-- **it is a cache.** Fitting 224 (dataset, model) pairs × 10 seeds × 2
+- **it is a cache.** Fitting 238 (dataset, model) pairs × 10 seeds × 2
   calibration modes takes ~30 min; the deltas methods are then re-runnable in
   minutes without refitting anything.
 - **it keeps the classifier out of the deltas code.** A deltas estimator needs
@@ -116,7 +116,10 @@ modes), then `results/wide.csv`, `results/wide_coverage.csv`,
   interesting control — centroid-plus-radius is exactly the geometry the
   published ECAI derivation assumes.
 - **Datasets**: 4 synthetic, 26 tabular (natural imbalance from 1.1:1 to
-  19.5:1), 2 MedMNIST image sets flattened to 784 features.
+  19.5:1), 2 MedMNIST image sets flattened to 784 features, and 2 clinical
+  ICU sets (MIMIC-III Mortality at 8.5:1, MIMIC-IV Ready for Discharge at
+  212:1 — by far the most imbalanced in the grid, and the only one whose
+  minority is large enough for the certificate to be informative).
 - **Hyperparameters are left at defaults**, unlike `run_experiments.py` which
   grid-searches the SVM. The claim under test is about post-hoc bias
   correction, not tuning, and a 5-fold search over 63 parameter settings per

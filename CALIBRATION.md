@@ -49,13 +49,13 @@ valid; the failure is in an assumption upstream of them.
 
 ### Measured, on the wide grid
 
-`experiments/run_wide.py` + `analyse_wide.py`, **32 datasets × 7 model families
-× 10 seeds**, 35,536 certificate observations:
+`experiments/run_wide.py` + `analyse_wide.py`, **34 datasets × 7 model families
+× 10 seeds**, 38,080 certificate observations:
 
 | certificate computed on | coverage | nominal |
 |---|---|---|
-| the training data | **0.684** | 0.948 |
-| a 35% held-out calibration split | 0.949 | 0.878 |
+| the training data | **0.684** | 0.951 |
+| a 35% held-out calibration split | 0.950 | 0.884 |
 
 The certificate is wrong about **one time in three**. The shortfall tracks
 classifier optimism monotonically, and the model ordering is essentially the
@@ -63,20 +63,21 @@ ordering of how hard each family overfits:
 
 | model | naive | split |
 |---|---|---|
-| NearestClassMean | 0.891 | 0.941 |
-| Logistic regression | 0.798 | 0.953 |
-| MLP | 0.792 | 0.949 |
-| LDA | 0.693 | 0.944 |
-| SVM-rbf | 0.571 | 0.950 |
-| RandomForest | 0.553 | 0.955 |
-| GradientBoosting | **0.486** | 0.948 |
+| NearestClassMean | 0.888 | 0.943 |
+| Logistic regression | 0.805 | 0.955 |
+| MLP | 0.788 | 0.950 |
+| LDA | 0.710 | 0.947 |
+| SVM-rbf | 0.573 | 0.953 |
+| RandomForest | 0.539 | 0.954 |
+| GradientBoosting | **0.485** | 0.949 |
 
 Every family is repaired to 0.94–0.96, from starting points ranging over 0.49
 to 0.89 — the fix is not model-specific. `NearestClassMean` being least
 affected is a nice consistency check: it barely overfits, and its
 centroid-plus-radius geometry is exactly what the published derivation assumes.
 
-See `FINDINGS.md` §11 for the full breakdown.
+See `FINDINGS.md` §11 for the full breakdown (§11 records the earlier
+32-dataset run; the numbers above are the 34-dataset re-run of §12.6).
 
 ### Measured, earlier and smaller
 
