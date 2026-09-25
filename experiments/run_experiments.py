@@ -31,7 +31,7 @@ from imblearn.metrics import geometric_mean_score
 
 import deltas.misc.use_two as use_two_cfg
 from deltas.pipeline import cached, evaluation  # noqa: F401
-from deltas.model import downsample, non_sep, overlap
+from deltas.methods import METHODS, describe_all
 import deltas.utils.cache as cache
 
 
@@ -55,27 +55,12 @@ SHORT_NAMES = {'Gaussian': 'Gaussian',
                'Heart Disease': 'Heart Disease',
                'MIMIC-III-mortality': 'MIMIC ICU'}
 
-# the deltas methods under test. name -> callable(clf) -> fitted model
-DELTAS_METHODS = {
-    'Slacks Deltas': lambda clf, X, y: downsample.downsample_deltas(clf).fit(
-        X, y, max_trials=10000, parallel=True),
-    'Min Deltas': lambda clf, X, y: non_sep.deltas(clf).fit(
-        X, y, loss_type='min'),
-    'Max Deltas': lambda clf, X, y: non_sep.deltas(clf).fit(
-        X, y, loss_type='max'),
-    'Avg Deltas': lambda clf, X, y: non_sep.deltas(clf).fit(
-        X, y, loss_type='mean'),
-    'F Deltas': lambda clf, X, y: non_sep.deltas(clf).fit(
-        X, y, only_furtherest_k=True),
-    'CP Sum': lambda clf, X, y: overlap.binomial_deltas(
-        clf, objective='sum').fit(X, y),
-    'CP Minimax': lambda clf, X, y: overlap.binomial_deltas(
-        clf, objective='minimax').fit(X, y),
-    'DKW Sum': lambda clf, X, y: overlap.dkw_deltas(
-        clf, objective='sum').fit(X, y),
-    'DKW Minimax': lambda clf, X, y: overlap.dkw_deltas(
-        clf, objective='minimax').fit(X, y),
-}
+# the deltas methods under test, by name from the single registry
+# (deltas/methods/). Each is callable(clf, X, y) -> fitted model, with the
+# options this runner has always used.
+DELTAS_METHODS = {name: METHODS[name] for name in (
+    'Slacks Deltas', 'Min Deltas', 'Max Deltas', 'Avg Deltas', 'F Deltas',
+    'CP Sum', 'CP Minimax', 'DKW Sum', 'DKW Minimax')}
 
 METRICS = {'Accuracy': accuracy_score,
            'G-Mean': geometric_mean_score,
@@ -209,6 +194,7 @@ def main():
               'USE_GLOBAL_R': use_two_cfg.USE_GLOBAL_R,
               'RANDOM_STATE': use_two_cfg.RANDOM_STATE,
               'methods': list(DELTAS_METHODS),
+              'method_specs': describe_all(list(DELTAS_METHODS)),
               'python': sys.version.split()[0],
               'started': datetime.now().isoformat()}
     print(json.dumps({k: config[k] for k in
