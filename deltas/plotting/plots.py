@@ -4,7 +4,7 @@ from matplotlib.colors import ListedColormap
 from sklearn.decomposition import PCA
 import numpy as np
 import deltas.utils.projection as projection
-import deltas.utils.radius as radius
+import deltas.legacy.ecai2024.radius as radius
 
 # plot colours
 cm_bright = ListedColormap(["#0000FF", "#FF0000"])

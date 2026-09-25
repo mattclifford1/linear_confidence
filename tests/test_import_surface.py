@@ -60,3 +60,34 @@ def test_import_path_resolves(module):
     missing = [name for name in SURFACE[module] if not hasattr(mod, name)]
     assert not missing, f'{module} lost {missing}'
 
+
+
+#: old path -> where the frozen code now lives
+MOVED = {
+    'deltas.model.base': 'deltas.legacy.ecai2024.base',
+    'deltas.model.downsample': 'deltas.legacy.ecai2024.downsample',
+    'deltas.utils.equations': 'deltas.legacy.ecai2024.equations',
+    'deltas.utils.radius': 'deltas.legacy.ecai2024.radius',
+    'deltas.optimisation.optimise_deltas': 'deltas.legacy.ecai2024.optimise_deltas',
+    'deltas.optimisation.optimise_contraint': 'deltas.legacy.ecai2024.optimise_contraint',
+    'deltas.model.non_sep': 'deltas.legacy.non_separable.non_sep',
+    'deltas.model.data_info': 'deltas.legacy.non_separable.data_info',
+    'deltas.model.SSL': 'deltas.legacy.exploratory.SSL',
+    'deltas.model.reprojection': 'deltas.legacy.exploratory.reprojection',
+    'deltas.model.SVM_supports': 'deltas.legacy.exploratory.SVM_supports',
+}
+
+
+@pytest.mark.parametrize('old', sorted(MOVED))
+def test_old_path_is_the_same_module_object(old):
+    '''an alias, not a copy: classes, globals and monkeypatches are shared'''
+    assert importlib.import_module(old) is importlib.import_module(MOVED[old])
+
+
+def test_from_package_import_gives_the_legacy_module():
+    from deltas.model import downsample, non_sep
+    from deltas.legacy.ecai2024 import downsample as d2
+    from deltas.legacy.non_separable import non_sep as n2
+    assert downsample is d2 and non_sep is n2
+    assert downsample.downsample_deltas.__module__ == \
+        'deltas.legacy.ecai2024.downsample'
