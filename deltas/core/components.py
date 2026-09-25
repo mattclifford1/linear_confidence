@@ -97,7 +97,7 @@ class CountBound(Bound):
     '''
     a bound that depends on b only through the count m(b) of training points
     on the wrong side (Clopper-Pearson, DKW, ...). Rank-based: flat between
-    data points and floored beyond them (see the working notes, Props 2-3).
+    data points and floored beyond them (see the working notes' "flat" and "floor" results).
 
     Subclasses supply upper(m, N, delta); the rest is shared.
     '''

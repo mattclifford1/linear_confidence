@@ -7,7 +7,7 @@ For each boundary and class, choose the delta minimising
     form='union'     U(b; delta) + delta                  (unconditional form)
 
 Both read "with probability 1 - delta the error is at most U, otherwise at
-most 1" as a bound on the *expected* error (working notes, Sec. 3.3); the
+most 1" as a bound on the *expected* error (working notes, "The loss is an expected-error bound"); the
 first is exact when the error on the good event is at most U. This is a good
 *decision* device. The delta it picks is chosen from the data, so it should
 not be quoted as a confidence; certify at a fixed delta instead.

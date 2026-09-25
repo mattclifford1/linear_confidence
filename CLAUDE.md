@@ -256,7 +256,7 @@ Full list with reproductions in `FINDINGS.md`. The ones most likely to bite:
 
 Items 1–3 are in the frozen `deltas/legacy/` code and are kept on purpose
 (they feed the published numbers); `base_deltas.fit` also crashes on an
-infeasible problem (FINDINGS B11).
+infeasible problem (the "infeasible-fit crash", FINDINGS B11).
 
 1. `optimise_deltas.optimise()` filters the grid with `J[constraints != 0]` —
    exact float equality. ~25% of genuinely valid grid points get discarded by

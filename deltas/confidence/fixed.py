@@ -3,7 +3,7 @@ Fixed delta: the confidence level is set in advance.
 
 This is the setting under which a high-probability bound can be *quoted*: with
 probability at least 1 - delta, every class error is below its curve at every
-boundary at once, including the one the method chose (working notes, Lemma 1).
+boundary at once, including the one the method chose (working notes, the "uniform for free" lemma).
 '''
 import numpy as np
 

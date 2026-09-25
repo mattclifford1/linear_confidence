@@ -15,7 +15,7 @@ from deltas.core import DeltasEstimator
 from deltas.methods.base import Method
 from deltas.rules import Minimax, NeymanPearson
 
-REF = 'deltas-other-concentration working notes, Sec. 5-6'
+REF = 'deltas-other-concentration working notes, "The menu" and "How the envelope responds to imbalance"'
 CERTIFY = [GaussianConfidence(), 'clopper_pearson']
 
 

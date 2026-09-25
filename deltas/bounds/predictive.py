@@ -12,7 +12,7 @@ StudentTPredictive
     reference prior p(mu, sigma) ~ 1/sigma. Small N gives heavier tails and a
     wider scale; a larger s gives a wider scale. It is the spread-aware heir
     of the published 1/(N+1), and the recommended *decision* curve (working
-    notes, Sec. 6.1). It has no delta, so it is not a certificate - pair it
+    notes, "How much room?"). It has no delta, so it is not a certificate - pair it
     with certify=[...] at a fixed delta.
 '''
 import numpy as np

@@ -21,7 +21,7 @@ PublishedFence (ECAI 2024)
     agree; the boundaries can differ.
 
     radius='two_sided' is the published radius max|z - mean|; 'one_sided'
-    uses only the points facing the boundary (the fix for Issue 3.2 of the
+    uses only the points facing the boundary (the fix for the "two-sided distances" problem of the
     working notes). `factor` is the USE_TWO factor, passed explicitly.
 
 KthPointFence (non-separable draft, Dec 2024)

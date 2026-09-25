@@ -8,7 +8,7 @@ from deltas.core import DeltasEstimator
 from deltas.methods.base import Method
 from deltas.rules import Sum
 
-REF = 'deltas-other-concentration working notes, Sec. 3'
+REF = 'deltas-other-concentration working notes, "What goes wrong"'
 
 
 def _fence(bound):
