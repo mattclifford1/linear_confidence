@@ -1,162 +1,136 @@
 # `deltas` package internals
 
-Map of the code, and how the modules line up with the equations in the ECAI
-paper (`m598.tex`).
+Map of the code: how a deltas method is put together, where each piece lives,
+and how the frozen code behind the published numbers is kept apart.
 
 ## The pipeline in one line
 
+Every deltas method, old or new, is the same pipeline with six slots:
+
 ```
-X, y ──clf.get_projection──> 1-D scores ──data_info──> (mean_i, R̄_i, N_i, D̂)
-     ──optimise δ_i──> boundary ──> predict
+scores ─[transform]→ per-class samples ─[bound]→ ─[confidence]→ curves L₁(b), L₂(b)
+       over [search] candidates ─[rule]→ boundary b ─[certify]→ certificates
 ```
 
-Everything the method needs lives in the **projected (1-D) space**. The
-classifier is only ever used as a projection function, which is what makes the
-method classifier-agnostic.
+Everything the method needs lives in the **projected (1-D) space**: the
+classifier is only ever used as a projection function (`get_projection(X) ->
+(n, 1)`), which is what makes the method classifier-agnostic.
 
-See also `model/README.md` for a method-by-method API reference of
-`base_deltas`, and `data/loaders/readme.md` for the dataset list.
+| slot | question it answers | folder | options |
+|---|---|---|---|
+| bound | how much of class *i* lies beyond *b*? | `bounds/` | Clopper–Pearson, DKW; Gaussian/logistic/*t* envelopes; Student-*t* predictive; Saw–Yang–Mo, Cantelli, VP; the published fences |
+| confidence | how is δ set? | `confidence/` | `FixedDelta(δ)`, `OptimisedDelta` (the published loss) |
+| rule | how do two curves give one *b*? | `rules/` | minimax, sum, risk, Neyman–Pearson |
+| search | which *b* are tried? | `search/` | data midpoints, grid, auto |
+| transform | which monotone map of the score? | `transforms/` | identity, logit, standardise, Yeo–Johnson |
+| certify | what is reported? | (estimator argument) | the deciding curves, or any bounds at a fixed δ |
 
-## `model/` — the estimators
+## Folder map
 
-All are sklearn-shaped: `.fit(X, y)`, `.predict(X)`, `.predict_proba(X)`
-(delegates to the wrapped classifier), `.get_bias()`, and `.is_fit`.
+```
+deltas/
+├── core/          DeltasEstimator + the slot base classes + ClassSample/ProjectedData + registry
+├── bounds/        the concentration inequalities (one file per family)
+├── confidence/    delta handling
+├── rules/         decision rules
+├── search/        candidate boundaries
+├── transforms/    monotone score maps
+├── methods/       named methods (what the experiment runners select by name)
+├── legacy/        FROZEN: the code behind every reported number
+│   ├── ecai2024/        the published method (base, downsample, equations, radius, optimisation)
+│   ├── non_separable/   the Dec 2024 draft (non_sep, data_info)
+│   ├── exploratory/     SSL, reprojection, SVM_supports
+│   └── overlap/         the original Clopper–Pearson/DKW code (reference for the shim)
+├── model/         old import paths: aliases of legacy/ modules, and overlap.py (a shim)
+├── optimisation/  old import paths: aliases of legacy/ecai2024
+├── utils/         cache.py, projection.py, data.py; equations.py/radius.py are aliases
+├── pipeline/      data -> classifier -> evaluation glue used by the experiments
+├── classifiers/   models exposing get_projection (local, sibling, frozen)
+├── data/          dataset loaders
+├── plotting/      plots.py
+├── costcla_local/ vendored BMR / Thresholding baselines
+└── misc/          use_two.py: the global flags the legacy code reads
+```
 
-| Module | Class | What it is |
-|---|---|---|
-| `base.py` | `base_deltas` | The core separable method. `get_data_info()` builds the stats dict; `_optimise()` solves for `δ₁, δ₂`; `_make_boundary()` places the bias. **Fails when the projected classes overlap.** |
-| `downsample.py` | `downsample_deltas` | ⭐ **The published method.** Wraps `base_deltas` and, when the constraint is infeasible, iteratively removes support points (the binary slack variables, §4.2 of the paper) until it is, penalising the loss by `α·(removed/N)`. `continuous_slacks=True` gives the Appendix B variant. Parallelised over trials with `multiprocessing`. |
-| `non_sep.py` | `deltas` | ⭐ **The non-separable follow-up.** Replaces slacks with the *k*-th furthest order statistic. Sweeps candidate biases and picks the argmin of the loss. `loss_type ∈ {'min','max','mean'}`, or `only_furtherest_k=True` to recover the ECAI behaviour. |
-| `data_info.py` | `data_info` | Successor to `base.get_data_info()`'s dict. Used **only** by `non_sep`. Adds sorted per-point distances `d_i` (needed for the order statistics) and `min_conc_i`. |
-| `SSL.py` | `SSL_deltas` | Superset learning — lets points be relabelled rather than removed. Exploratory. |
-| `reprojection.py` | `reprojectioner`, `reprojection_deltas` | Fit a *second* model (e.g. an SVM) to produce the 1-D projection, for classifiers that have no `get_projection`. Exploratory. |
-| `SVM_supports.py` | `SVM_supports_deltas` | `downsample_deltas` + SVM reprojection. Exploratory. |
+Each new folder has its own short README.
 
-The three exploratory ones are not used by either paper.
-
-**Note the two incompatible `data_info` representations** — `base.py` uses a
-plain dict with keys like `'empirical R1'`, `non_sep.py` uses the class with
-attributes like `R1_emp`. They are not interchangeable.
-
-## `utils/equations.py` — the maths
-
-Direct correspondence with the paper:
-
-| Function | Paper |
-|---|---|
-| `class_cost`, `loss` | Eq. 6, `L = Σ (1−δᵢ)/(Nᵢ+1) + δᵢ` |
-| `loss_one_delta` | Eq. 6 with `δ₂` eliminated via the constraint |
-| `contraint_eq7` / `eq7_matt` | Eq. 7, `R̂₁ + R̂₂ − D̂ = 0` |
-| `delta2_given_delta1_matt` | Eq. 8, `δ₂ = exp[−½(B√N₂/R̄₂ − 2)²]` |
-| `dd2_dd1`, `J_derivative` | Eqs. 9, 10 (analytic gradients for SLSQP) |
-| `contraint_eq8` | margin-based variant, unused |
-
-`utils/radius.py`:
-
-- `supremum(X, x0)` → `R̄ᵢ`, the empirical class support (max distance from the
-  mean in the projected space).
-- `error_upper_bound(R, N, δ)` → `(R/√N)(2 + √(2 ln 1/δ))`, doubled when
-  `USE_TWO`. This is the concentration term of Eq. 4/5.
-- `R_upper_bound` → Eq. 5.
-
-## `optimisation/`
-
-- `optimise_deltas.optimise()` — the solver. Default path is a **1-D grid search
-  over `δ₁`** on 10 000 points (`grid_search=True`), keeping only points where
-  the constraint holds. Falls back to `scipy.minimize` with the analytic
-  gradient when `grid_search=False`, and to a 2-D unconstrained grid when
-  `grid_2D=True` and the constraint is infeasible. Returns `None` when
-  unsolvable — that `None` is what becomes `is_fit == False`.
-- `optimise_contraint.py` — helper to find a feasible starting `(δ₁, δ₂)`.
-
-> The constraint filter on line 82 uses exact float equality; see
-> `FINDINGS.md` §7.1 B1.
-
-## `pipeline/` — experiment glue
-
-| Module | Role |
-|---|---|
-| `data.py` | `get_real_dataset(name, seed, scale)` dispatches to `data/loaders/`; `get_data(...)` makes the synthetic 2-Gaussian set; `get_SMOTE_data`; PCA/UMAP reducers for plotting. |
-| `classifier.py` | `get_classifier(data_clf, model=...)` trains the baseline **and all comparison methods in one call**: Baseline, SMOTE, Balanced Weights, BMR, Threshold. Returns a `{name: clf}` dict. `model ∈ {'Linear', 'SVM', 'SVM-linear', 'SVM-rbf', 'SVM-rbf-fixed', 'MLP', 'MLP-small', 'MLP-deep', 'MLP-Gaussian', 'MIMIC', 'MIMIC-cross-val', 'MNIST'}`. `'SVM-rbf'` does a 5-fold grid search over C and gamma (three times — original, weighted, SMOTE). |
-| `evaluation.py` | `eval_test(clfs_dict, test_data)` → DataFrame of Accuracy / G-Mean / F1, plus the projected-space boundary plots. |
-| `cached.py` | Disk-cached `get_dataset` / `get_classifiers` / `get_data_and_classifiers`. Takes `calibration=<float>`; `get_deltas_fit_data(data_clf)` then returns the right `(X, y)` to fit a deltas model on. |
-| `calibration.py` | ⭐ The calibration split. `split_calibration` (stratified, refuses rather than return a useless split) and `fit_calibrated` (fit-part classifier + calibration-part certificate). See `CALIBRATION.md`. |
-| `pipeline_old.py` | Superseded. |
-
-`data.py::get_real_dataset` dispatches to the local loaders by name and
-**falls through to the sibling `toy_datasets` package** for anything else
-(`deltas/data/loaders/sibling.py`), so `get_real_dataset('Stroke Prediction')`
-works without touching this repo.
-
-**Why calibration lives here and not in the estimator:** by the time
-`model.fit(X, y, clf=clf)` runs, `clf` is already trained, so splitting inside
-that call would still count points the classifier had fitted to. The split has
-to happen upstream of classifier training.
-
-## `classifiers/models.py`
-
-`SVM`, `linear`, `NN` — sklearn subclasses that add `get_projection` and
-`get_bias`. **Prefer `classifiers/sibling.py` for new work** (11 model families
-instead of 3); these are kept because the published results were produced with
-them.
-
-- `SVM.get_projection` uses `decision_function(X) − intercept_` for non-linear
-  kernels, and the normalised `X·wᵀ` for linear.
-- `NN` used to carry ~350 lines of vendored sklearn `MLPClassifier` internals
-  so that `class_weight='balanced'` worked. scikit-learn#25646 landed
-  `sample_weight` upstream, so that is now a plain weighted fit and the file
-  dropped from 499 to 155 lines. No private sklearn imports remain — don't
-  reintroduce any.
-- `delta_adjusted_clf` — a bare boundary+class-order predictor, used where a
-  full deltas object isn't wanted.
-
-`classifiers/sibling.py` — `build(name)` constructs a `projection_models`
-estimator wrapped in `as_deltas_classifier`, which adds the one method deltas
-needs and projection_models lacks: `get_bias()`, the negated `get_threshold()`.
-
-`classifiers/frozen.py` — `FrozenProjection`, the identity projector over
-projections computed in another process. This is what lets models fitted under
-the sibling `projection_models` environment (whose sklearn is too new to import
-here) be used by every deltas estimator: the estimators only ever call
-`get_projection`, and all of them pass 1-D input straight through. See
-`experiments/README.md`.
-
-Also in `classifiers/`: torch nets for MNIST and MIMIC, and a large-margin
-loss implementation (Elsayed et al.). None feed the published results.
-
-## `data/`
-
-- `loaders/` — one module per dataset, each returning `(train, test)` dicts with
-  `X`, `y`, and relabelling so **class 1 is the minority**. Registered in
-  `pipeline/data.py::get_real_dataset`.
-- `datasets/` — the small CSVs, committed.
-- `utils.py` — `normaliser` (MinMax to [−1,1], **fit on train only**),
-  `shuffle_data`, `proportional_split(data, size, ratio)` where `ratio` forces
-  a train-set imbalance (e.g. `ratio=10` → 10:1).
-
-## `costcla_local/`
-
-Self-contained port of the parts of `costcla` needed for the BMR
-(`Bahnsen et al.`) and Thresholding (`Sheng & Ling`) baselines, because the
-upstream package is unmaintained. `models.BMR` and `models.Thresholding` are
-the entry points.
-
-## `misc/use_two.py` — global config ⚠️
+## Using it
 
 ```python
-USE_TWO = True        # factor of 2 on the concentration error term
-USE_GLOBAL_R = False  # use sup||proj(x)|| over all data instead of per-class R̄_i
-RANDOM_STATE = 0
+from deltas.core import DeltasEstimator
+from deltas.bounds import StudentTPredictive, GaussianConfidence
+
+model = DeltasEstimator(clf,
+                        bound=StudentTPredictive(),       # decide (average-case)
+                        rule='minimax',
+                        certify=[GaussianConfidence(), 'clopper_pearson'],
+                        delta_report=0.05)
+model.fit(X_cal, y_cal)          # the calibration split (CALIBRATION.md)
+model.predict(X_test); model.get_bias(); model.certificates_
+
+# or by name, as the experiment runners do
+from deltas.methods import METHODS
+fitted = METHODS['CP Minimax'](clf, X, y)
 ```
 
-Module-level constants read at import time throughout the package. Changing
-them changes the maths of every experiment, and nothing records which setting
-produced a given results file. The `results-two/` and `results-two2/`
-directories are ablations produced by hand-editing this file.
+Slots take a registered name (`'clopper_pearson'`), a `(name, kwargs)` pair
+(`('fixed', {'delta': 0.1})`) or a component object. `bound` may also be a dict
+by class label, e.g. counts for a large majority and a Gaussian envelope for a
+scarce minority. `DeltasEstimator` is an sklearn `BaseEstimator`: `clone`,
+`get_params` and `set_params` work, and component objects passed in are never
+mutated. `model.describe()` gives a JSON-friendly spec for results files.
 
-## `plotting/plots.py`
+The default composition (Clopper–Pearson, optimised δ, minimax, data
+midpoints) is bit-for-bit `deltas.model.overlap.binomial_deltas(objective='minimax')`.
 
-`plot_classes`, `plot_decision_boundary` (feature space, optional PCA/UMAP
-reduction for >2-D), `plot_projection` / `deltas_projected_boundary` (the 1-D
-projected space with the `R̂ᵢ` bars — the paper's Figs 2, 4, 5) and
-`conc_projected_boundary` (the `non_sep` version).
+## Adding something new
+
+| to add | do |
+|---|---|
+| a concentration inequality | subclass `core.Bound` (or `core.CountBound` if it only depends on the count of wrong-side points) in a new file under `bounds/`, decorate with `@register('bound', 'name')`, export it from `bounds/__init__.py` |
+| a way to handle δ | subclass `core.DeltaPolicy` in `confidence/` |
+| a decision rule | subclass `core.DecisionRule` in `rules/` (override `bind` if it needs the data, `class_weights` if it reweights the classes) |
+| a search | subclass `core.CandidateSet` in `search/` |
+| a transform | subclass `core.Transform` in `transforms/` (set `requires_fit` if it learns from data) |
+| a named method | add a `Method` to `methods/envelope.py` (or a new module listed in `methods/__init__.py`) |
+
+Tests for a new component go in `tests/modular/`. Check coverage by simulation
+for any high-probability bound.
+
+## Legacy code
+
+`deltas/legacy/` is frozen: it is the code behind the published numbers and
+the 34-dataset grid, moved verbatim (only its own import lines changed). Known
+bugs that feed the published results (`FINDINGS.md` §7.1 B1, B2, B8, B11)
+are deliberately kept. `tests/golden/` pins the exact outputs of every legacy
+estimator under both settings of `USE_TWO`. Fix forward in the modular code,
+never in `legacy/`.
+
+The old import paths still work and are the *same* module objects
+(`deltas.model.base is deltas.legacy.ecai2024.base`), so every notebook and
+script is unaffected. `deltas/model/overlap.py` is the one exception: it is a
+shim over `DeltasEstimator`, proven bit-identical to the original in
+`legacy/overlap/`.
+
+`misc/use_two.py` holds module-level flags (`USE_TWO`, `USE_GLOBAL_R`,
+`RANDOM_STATE`) read at import time by the legacy code only. To reproduce the
+paper, set `USE_TWO = False` before importing anything else from `deltas`.
+`deltas.methods` imports the legacy code lazily, so importing it first is
+safe. New components never read these flags: every setting (e.g. the fence's
+`factor`) is an explicit parameter.
+
+## `pipeline/`, `classifiers/`, `data/`
+
+| module | role |
+|---|---|
+| `pipeline/data.py` | `get_real_dataset(name, seed, scale)` dispatches to `data/loaders/` and falls through to the sibling `toy_datasets` |
+| `pipeline/classifier.py` | trains the baseline and every comparison method (SMOTE, Balanced Weights, BMR, Threshold) in one call |
+| `pipeline/evaluation.py` | Accuracy / G-Mean / F1, and projected-space boundary plots |
+| `pipeline/cached.py` | disk-cached datasets and classifiers; `calibration=0.35` holds out a calibration split |
+| `pipeline/calibration.py` | the calibration split (`CALIBRATION.md`) |
+| `classifiers/models.py` | `SVM`, `linear`, `NN` with `get_projection` / `get_bias` (the published results' models) |
+| `classifiers/sibling.py` | the 11 `projection_models` families, with a `get_bias` shim — prefer these for new work |
+| `classifiers/frozen.py` | `FrozenProjection`: the identity projector over pre-computed projections |
+| `data/loaders/` | one module per dataset; class 1 is always the minority |
+
+See also `data/loaders/readme.md` and `CALIBRATION.md`.

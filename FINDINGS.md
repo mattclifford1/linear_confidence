@@ -1352,3 +1352,52 @@ across, and it has no Beta quantile to avoid anyway (1.4s at N=50k).
 Verified that no dataset in the previous 32 crosses the threshold, and a
 re-run of Stroke Prediction/Linear reproduces the stored results **bit for
 bit across 220 rows** — so §11's numbers are untouched by this change.
+
+---
+
+## 15. The modular refactor (2026-09-25)
+
+Done on branch `modular-deltas`, in five phases, each with its own commit. The
+package layout is now in `deltas/README.md`. What matters for the research record:
+
+- **No reported number moved.** `tests/golden/` pins the exact outputs of every
+  legacy estimator on five fixtures, under both `USE_TWO` settings, before any
+  code was touched. That covers the published method (serial/parallel,
+  binary/continuous slacks), the non-separable variants, CP/DKW, the
+  exploratory estimators and the pure functions. They pass unchanged after
+  every phase. The fixtures are Breast Cancer and Pima from the published
+  pipeline, plus three synthetic sets. Mutation checks confirmed the tests
+  catch 10⁻⁶-sized changes.
+- **The frozen code moved verbatim** to `deltas/legacy/`. Only its own import
+  lines changed (checked file by file against the pre-move version). The old
+  paths are aliases (the same module objects), so the notebooks are
+  unaffected.
+- **The overlap methods are now compositions** of components
+  (`ClopperPearson`/`DKW` + `OptimisedDelta` + minimax/sum + data midpoints).
+  They are bit-identical to the original over 22 data sets × 2 bounds × 2
+  rules, with costs, and on the ternary-search path.
+  `deltas.model.overlap` is the shim.
+- **New components** from the other-concentration notes: Gaussian confidence
+  envelopes (exact, and a Monte Carlo simultaneous band), logistic/t/laplace
+  envelopes, the Student-t predictive curve, Saw–Yang–Mo, Cantelli, one-sided
+  VP, the published and k-th-point fences as curves (for ablations), and the
+  risk and Neyman–Pearson rules. Each is tested for coverage by simulation
+  where it makes a high-probability claim. The closed-form minimax boundary
+  (notes, Prop. 4) matches the numerical one to 10⁻⁹.
+- **One single method registry** (`deltas/methods/`) feeds both runners, with
+  the same names and options as before (tested against the old tables on real
+  fixtures).
+
+Found on the way:
+
+- **B11** (§7.1): `base_deltas.fit` raises `TypeError` on any infeasible
+  problem. That includes separable data narrower than the minimum margin
+  `R̄ᵢ(1 + 4/√Nᵢ)`.
+- The published objective is **nearly flat** when the gap is wide (every
+  feasible boundary scores ≈ 1/(N₁+1) + 1/(N₂+1)). Its arg-min therefore
+  depends on the search: the legacy δ₁ grid stops at 10⁻⁴, and with the
+  paper's factor 1 on a wide synthetic gap the two searches pick boundaries
+  0.85 apart whose objective values differ by < 10⁻³.
+- The count-based **sum rule breaks ties by taking the first minimiser**, which
+  is not mirror-symmetric. Kept in the shim for exactness; new compositions
+  default to the plateau midpoint.

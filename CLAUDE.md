@@ -22,15 +22,21 @@ Read `CALIBRATION.md` for the calibration split — what it fixes (the reported
 certificate is optimistic when computed on the classifier's own training data),
 why it has to sit in the pipeline rather than the estimator, and what it costs.
 
-Other docs in the tree: `deltas/model/README.md` (per-class API reference),
-`deltas/data/loaders/readme.md`, `notebooks/README.md`,
-`notebooks-ECAI/README.md`, `notebooks-non-sep/README.md`.
+Other docs in the tree: a README in each package folder (`deltas/core/`,
+`deltas/bounds/` — the assumption ladder — `confidence/`, `rules/`, `search/`,
+`transforms/`, `methods/`, `legacy/` — the frozen code's API reference),
+`tests/golden/README.md`, `deltas/data/loaders/readme.md`,
+`notebooks/README.md`, `notebooks-ECAI/README.md`, `notebooks-non-sep/README.md`.
+
+The shape-aware ("other concentration") direction is planned in the Overleaf
+working notes `../../Repos/Overleaf/deltas/deltas-other-concentration/main.tex`.
 
 ## Environment — **uv**
 
 ```bash
 uv sync --group dev      # creates .venv, installs deltas + both siblings editable
-uv run pytest tests -q
+uv run pytest tests -q                  # everything (~2 min)
+uv run pytest tests -q -m "not golden"  # skip the golden tests while iterating
 uv run python experiments/run_experiments.py
 ```
 
@@ -73,12 +79,22 @@ Watch for two things the upgrade surfaced:
 
 ```
 deltas/              the package (see deltas/README.md)
-  model/             the deltas estimators — this is the core research code
-  optimisation/      scipy / grid-search over delta_1
-  utils/equations.py the paper's equations (loss, constraint, delta2(delta1))
+  core/              ⭐ DeltasEstimator + the slot base classes + registry
+  bounds/            ⭐ the concentration inequalities, one file per family
+  confidence/        delta handling (fixed / optimised)
+  rules/             minimax, sum, risk, Neyman-Pearson
+  search/            candidate boundaries
+  transforms/        monotone score maps (identity, logit, Yeo-Johnson)
+  methods/           ⭐ named methods — what the runners select by name
+  legacy/            FROZEN: the code behind every reported number
+    ecai2024/          the published method (base, downsample, equations, radius, optimisation)
+    non_separable/     the Dec 2024 draft (non_sep, data_info)
+    exploratory/       SSL, reprojection, SVM_supports
+    overlap/           the original CP/DKW code (reference for the shim)
+  model/             old import paths: aliases of legacy/, and overlap.py (a shim)
   pipeline/          data -> classifier -> evaluation glue used by experiments
   data/loaders/      one loader per dataset
-  misc/use_two.py    GLOBAL config flags (USE_TWO, USE_GLOBAL_R, RANDOM_STATE)
+  misc/use_two.py    GLOBAL config flags read by the legacy code only
 experiments/         ⭐ the current runner — start here for new experiments
   export_projections.py  fits models under the SIBLING venv (see below)
   run_wide.py            the 32-dataset x 7-model x 2-calibration-mode grid
@@ -89,7 +105,35 @@ dev/                 dead-end / exploratory scripts (MNIST, MIMIC, large-margin)
 jonny/               collaborator's independent implementation
 data/                large local datasets (MIMIC-III/IV, MNIST, IMDB) — gitignored
 cache/               joblib cache of datasets + trained classifiers — gitignored
+tests/golden/        exact outputs of every legacy estimator, both USE_TWO settings
+tests/modular/       the modular components, estimator contract, equivalence
 ```
+
+## The modular deltas — how to add a method
+
+Every method is one pipeline with six slots: **bound** (the concentration
+inequality: how much of class *i* lies beyond *b*), **confidence** (how δ is
+set), **rule** (how two per-class curves give one *b*), **search** (which *b*
+are tried), **transform** (a monotone map of the score) and **certify** (what
+is reported). `deltas.core.DeltasEstimator` runs it; each slot takes a
+registered name, a `(name, kwargs)` pair or a component object.
+
+- A new concentration inequality is a `core.Bound` subclass in `deltas/bounds/`
+  with `@register('bound', 'name')`. Test its coverage by simulation in
+  `tests/modular/`.
+- A new rule, δ policy, search or transform goes in its folder the same way.
+- A new named method is a `Method` in `deltas/methods/` (`envelope.py` for the
+  shape-aware family). The runners pick methods from `deltas.methods.METHODS`.
+  `run_wide.py --methods` accepts any registered name.
+
+**Never edit `deltas/legacy/` to change behaviour.** It produced the published
+numbers and the 34-dataset grid. `tests/golden/` pins its exact outputs under
+both `USE_TWO` settings. If a number is *meant* to move, re-record with
+`uv run python tests/golden/record.py` and say so in the commit. Old import
+paths (`deltas.model.base`, `deltas.utils.radius`, ...) are aliases of the
+legacy modules: the same objects, so notebooks are unaffected.
+`deltas.model.overlap` is a shim over `DeltasEstimator`, bit-identical to
+`legacy/overlap/`.
 
 ## Running experiments
 
@@ -169,8 +213,11 @@ Watch out for two things found the hard way:
 - Any classifier passed to a deltas model **must** expose `get_projection(X) ->
   (n, 1)` and ideally `get_bias()`. See `deltas/classifiers/models.py`.
 - Deltas estimators are sklearn-shaped: `.fit(X, y)`, `.predict(X)`,
-  `.get_bias()`, `.is_fit`. `is_fit == False` means *no solution was found* —
-  the experiment runners silently skip that seed and try the next one.
+  `.get_bias()`, `.is_fit`. `is_fit == False` means *no solution was found*.
+  `experiments/` records it as unsolved; the old `notebooks-*/run_all*.py`
+  scripts silently skipped the seed. `DeltasEstimator` is a real sklearn
+  `BaseEstimator` (`clone`, `get_params` work); certificates are in
+  `certified_error()` / `certificates_`.
 - `deltas/misc/use_two.py` holds **module-level global flags** that change the
   maths (`USE_TWO` toggles the factor of 2 in the concentration bound). Results
   directories `results-two/`, `results-two2/` are ablations produced by hand-
@@ -181,8 +228,10 @@ Watch out for two things found the hard way:
   test point back into empirical ones) — the paper's Eq. 5 drops it while its
   own Eq. 4 keeps it. So don't "fix" HEAD back to `False`; it is the published
   numbers that used the loose bound.
-  To reproduce the paper, set it before any other `deltas` import (modules bind
-  the value at import time):
+  Only the legacy code reads it — new components take every setting (e.g. the
+  fence's `factor`) as an explicit parameter, and `deltas.methods` imports the
+  legacy code lazily. To reproduce the paper, set it before any other `deltas`
+  import (the legacy modules bind the value at import time):
   ```python
   import deltas.misc.use_two as ut; ut.USE_TWO = False
   from deltas.pipeline import data, classifier, evaluation   # after, not before
@@ -192,16 +241,22 @@ Watch out for two things found the hard way:
 ## Style
 
 Match the existing style: plain numpy/sklearn, `_print` / `_plot` keyword flags
-for verbosity, dicts (`data_info`) passed around rather than dataclasses.
-The newer `deltas/model/data_info.py` class is the successor to the
-`get_data_info()` dict in `base.py` — the non-separable code uses the class, the
-ECAI code uses the dict. Don't mix them.
+for verbosity. Results and certificates are plain dicts. The modular code is the
+one agreed exception to "no classes for configuration": components are small
+classes (they have to be, to slot in), and per-class data is a
+`core.ClassSample` — the successor of both legacy `data_info` forms (the dict in
+`legacy/ecai2024/base.py`, the class in `legacy/non_separable/data_info.py`).
+Don't mix the three.
 
 Comparisons are written `if x == True:` throughout. Leave existing ones alone.
 
 ## Gotchas found in the code
 
 Full list with reproductions in `FINDINGS.md`. The ones most likely to bite:
+
+Items 1–3 are in the frozen `deltas/legacy/` code and are kept on purpose
+(they feed the published numbers); `base_deltas.fit` also crashes on an
+infeasible problem (FINDINGS B11).
 
 1. `optimise_deltas.optimise()` filters the grid with `J[constraints != 0]` —
    exact float equality. ~25% of genuinely valid grid points get discarded by

@@ -49,15 +49,20 @@ uv run python make_figures.py 1                   # just the loss-landscape figu
 ## Methods under test
 
 Literature baselines come from `pipeline.classifier.get_classifier`
-(Baseline, SMOTE, Balanced Weights, BMR, Threshold). The deltas methods are in
-`DELTAS_METHODS` at the top of `run_experiments.py`:
+(Baseline, SMOTE, Balanced Weights, BMR, Threshold). The deltas methods come by
+name from the single registry `deltas.methods.METHODS` (`deltas/methods/`).
+`DELTAS_METHODS` at the top of each runner picks that runner's set:
 
-- `Slacks Deltas` — the published ECAI method (`model/downsample.py`)
-- `Min / Max / Avg / F Deltas` — the non-separable loss variants (`model/non_sep.py`)
-- `CP Sum / CP Minimax` — Clopper–Pearson overlap-native (`model/overlap.py`)
+- `Slacks Deltas` — the published ECAI method (`deltas/legacy/ecai2024/`)
+- `Min / Max / Avg / F Deltas` — the non-separable loss variants (`deltas/legacy/non_separable/`)
+- `CP Sum / CP Minimax` — Clopper–Pearson overlap-native (`deltas.model.overlap`, a shim over `deltas.core.DeltasEstimator`)
 - `DKW Sum / DKW Minimax` — DKW overlap-native
 
-Add a method by adding one lambda to that dict.
+Add a method by adding a `Method` to `deltas/methods/` (see its README) and its
+name to the runner's list. `run_wide.py --methods` accepts any registered name,
+e.g. the shape-aware family `Gaussian Predictive`, `Gaussian Envelope`, ….
+Each run stamps the full specification of every method into `config.json`
+(`method_specs`).
 
 ## Timing
 
