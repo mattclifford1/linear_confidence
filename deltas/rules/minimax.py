@@ -12,6 +12,12 @@ from deltas.core.components import DecisionRule
 from deltas.core.registry import register
 
 
+def plateau_midpoint(candidates, losses, tolerance=1e-12):
+    '''the midpoint, in value, of the run of candidates tied for the minimum'''
+    plateau = np.flatnonzero(losses <= losses.min() + tolerance)
+    return 0.5 * float(candidates[plateau[0]] + candidates[plateau[-1]])
+
+
 @register('rule', 'minimax')
 class Minimax(DecisionRule):
     #: losses within this of the minimum count as tied
@@ -27,10 +33,7 @@ class Minimax(DecisionRule):
         happen to be spaced, and breaks mirror symmetry.)
         '''
         losses = np.maximum(L_low, L_high)
-        plateau = np.flatnonzero(losses <= losses.min() + self.tie_tolerance)
-        boundary = 0.5 * float(candidates[plateau[0]] +
-                               candidates[plateau[-1]])
-        return boundary, losses
+        return plateau_midpoint(candidates, losses, self.tie_tolerance), losses
 
     def combine(self, l_low, l_high):
         return max(l_low, l_high)

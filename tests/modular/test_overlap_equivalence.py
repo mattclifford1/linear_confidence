@@ -16,6 +16,7 @@ import pytest
 
 from deltas.core import DeltasEstimator
 from deltas.legacy.overlap import overlap as legacy
+from deltas.rules import Sum
 from deltas.model import overlap as shim
 
 SCALARS = ['boundary', 'loss', 'delta1', 'delta2', 'error_bound_1',
@@ -64,7 +65,10 @@ def _fit_all(bound, rule, z, y, costs):
     return {
         'legacy': getattr(legacy, cls_name)(objective=rule).fit(X, y, costs=costs),
         'shim': getattr(shim, cls_name)(objective=rule).fit(X, y, costs=costs),
-        'direct': DeltasEstimator(bound=reg_name, rule=rule).fit(
+        # the original sum rule breaks ties by taking the first minimiser
+        'direct': DeltasEstimator(
+            bound=reg_name,
+            rule=Sum(tie_break='first') if rule == 'sum' else 'minimax').fit(
             X, y, costs=costs),
     }
 

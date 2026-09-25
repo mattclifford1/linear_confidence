@@ -41,5 +41,7 @@ class NoDeltaCurve(PreparedCurve):
         self.bound = bound
 
     def __call__(self, b):
+        if self.bound.self_resolving:
+            return self.bound.resolve(b)
         U = np.asarray(self.bound.curve(b, None), dtype=float)
         return {'L': U, 'delta': np.full(U.shape, np.nan), 'U': U}

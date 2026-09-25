@@ -10,13 +10,28 @@ from scipy.optimize import minimize_scalar
 
 from deltas.core.components import DecisionRule
 from deltas.core.registry import register
+from deltas.rules.minimax import plateau_midpoint
 
 
 @register('rule', 'sum')
 class Sum(DecisionRule):
+    '''
+    tie_break='midpoint' takes the middle (in value) of the candidates tied
+    for the minimum, like minimax: symmetric under mirroring the data.
+    tie_break='first' takes the first of them - what the overlap methods have
+    always done, kept so 'CP Sum' / 'DKW Sum' reproduce exactly.
+    '''
+
+    def __init__(self, tie_break='midpoint'):
+        if tie_break not in ('midpoint', 'first'):
+            raise ValueError("tie_break must be 'midpoint' or 'first'")
+        self.tie_break = tie_break
+
     def choose(self, candidates, L_low, L_high):
         losses = L_low + L_high
-        return float(candidates[int(np.argmin(losses))]), losses
+        if self.tie_break == 'first':
+            return float(candidates[int(np.argmin(losses))]), losses
+        return plateau_midpoint(candidates, losses), losses
 
     def combine(self, l_low, l_high):
         return l_low + l_high
@@ -28,8 +43,8 @@ class Sum(DecisionRule):
             b = np.array([b])
             return w_low * curve_low(b)['L'][0] + w_high * curve_high(b)['L'][0]
         lo, hi = bracket
-        if not hi > lo:
-            return None
+        if not hi > lo or not (np.isfinite(total(lo)) and np.isfinite(total(hi))):
+            return None       # e.g. an infeasible stretch of a fence curve
         res = minimize_scalar(total, bounds=(lo, hi), method='bounded',
                               options={'xatol': 1e-12})
         return float(res.x) if res.success else None
