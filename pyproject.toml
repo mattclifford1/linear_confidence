@@ -56,6 +56,9 @@ packages = ["deltas"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "golden: characterisation tests pinning the legacy estimators' exact outputs (~30 s; deselect with -m 'not golden')",
+]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",

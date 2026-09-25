@@ -1,0 +1,79 @@
+{
+  "gauss_wide": {
+    "source": "synthetic",
+    "n0": 200,
+    "n1": 20,
+    "mean1": 12.0,
+    "seed": 2,
+    "n_train": [
+      200,
+      20
+    ],
+    "n_test": [
+      200,
+      200
+    ]
+  },
+  "gauss_sep": {
+    "source": "synthetic",
+    "n0": 200,
+    "n1": 20,
+    "mean1": 6.0,
+    "seed": 0,
+    "n_train": [
+      200,
+      20
+    ],
+    "n_test": [
+      200,
+      200
+    ]
+  },
+  "gauss_overlap": {
+    "source": "synthetic",
+    "n0": 300,
+    "n1": 15,
+    "mean1": 2.0,
+    "seed": 1,
+    "n_train": [
+      300,
+      15
+    ],
+    "n_test": [
+      200,
+      200
+    ]
+  },
+  "breast_cancer": {
+    "source": "deltas.pipeline.cached",
+    "dataset": "Breast Cancer",
+    "model": "SVM-rbf",
+    "seed": 0,
+    "sklearn": "1.9.0",
+    "numpy": "2.4.6",
+    "n_train": [
+      178,
+      17
+    ],
+    "n_test": [
+      179,
+      195
+    ]
+  },
+  "pima": {
+    "source": "deltas.pipeline.cached",
+    "dataset": "Pima Indian Diabetes",
+    "model": "SVM-rbf",
+    "seed": 0,
+    "sklearn": "1.9.0",
+    "numpy": "2.4.6",
+    "n_train": [
+      250,
+      25
+    ],
+    "n_test": [
+      250,
+      243
+    ]
+  }
+}

@@ -497,6 +497,7 @@ fragile dependencies and none is needed to reproduce either paper's tables.
 | B8 | `model/downsample.py:73` | `max_trials = min(len(y)//2, max_trials)` silently caps the budget for support-based methods, so passing `max_trials=10000` does not do what it says. Undocumented. |
 | B9 | `data/utils.py:22,31` | ⚠️ **FIXED (§12.3)** — `if seed == True` also matched the integer seed **1** (python: `1 == True`), replacing it with `RANDOM_STATE = 0`. Seeds 0 and 1 produced *identical* data, so every `range(10)` experiment used nine distinct datasets with seed 0 double-counted. Affects the six-dataset tables and §10.6 coverage; not the wide grid. |
 | B10 | `data/loaders/MIMIC_IV.py` | `MIMIC-IV` fails to load: a categorical column ('M'/'F') is left in `X`, so the normaliser raises `could not convert string to float: 'M'`. Pre-existing, unrelated to the uv/numpy migration, and unused by either paper — but it means that loader has never worked in this state. |
+| B11 | `model/base.py:59` | `base_deltas.fit` **raises `TypeError`** on any infeasible problem instead of returning `is_fit=False`: `optimise_deltas.optimise` returns `None` and `fit` indexes into it. Infeasible is common — including cleanly separable data whose gap is narrower than the minimum margin `R̄ᵢ(1+4/√Nᵢ)` (golden fixture `gauss_sep`). `downsample_deltas` handles the same case, which is why the experiments never hit it; `reprojection_deltas` inherits the crash. Pinned by the golden tests (`tests/golden/`), not fixed. |
 
 ### 7.2 Smells worth cleaning
 
