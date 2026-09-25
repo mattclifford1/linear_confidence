@@ -126,19 +126,19 @@ class DeltasEstimator(BaseEstimator):
         curves = {side: comp['confidence'].prepare(b)
                   for side, b in bounds.items()}
 
-        # the per-class weights: costs are given in label order
-        c_low = costs[0] if self.class_nums[0] == 0 else costs[1]
-        c_high = costs[0] if self.class_nums[1] == 0 else costs[1]
+        # a private copy of the rule, shown the data; it sets the per-class
+        # weights (costs, given in label order, and for some rules priors)
+        rule = copy.deepcopy(comp['rule']).bind(data)
+        c_low, c_high = rule.class_weights(data, costs)
 
         candidates = comp['search'].generate(data, bounds)
         low, high = curves['low'](candidates), curves['high'](candidates)
         L_low = c_low * low['L']
         L_high = c_high * high['L']
-        rule = comp['rule']
         boundary, losses = rule.choose(candidates, L_low, L_high)
 
         # smooth curves: polish the grid choice between its neighbours
-        if comp['refine'] and all(b.continuous for b in bounds.values()):
+        if comp['refine'] and all(b.smooth for b in bounds.values()):
             boundary = self._refine(rule, curves, (c_low, c_high),
                                     candidates, boundary)
 
@@ -172,6 +172,7 @@ class DeltasEstimator(BaseEstimator):
             self.error_bound_1 = self.bound_high
             self.error_bound_2 = self.bound_low
 
+        self.rule_info_ = dict(getattr(rule, 'info_', {}))
         self.certificates_ = self._certify(comp['certify'], comp['bound'],
                                            data, boundary)
 
@@ -188,9 +189,12 @@ class DeltasEstimator(BaseEstimator):
         return self
 
     def _refine(self, rule, curves, weights, candidates, boundary):
+        # the neighbouring candidates on either side; symmetric under
+        # mirroring the data, so the refined answer is too
         i = int(np.searchsorted(candidates, boundary))
+        on_candidate = i < len(candidates) and candidates[i] == boundary
         lo = candidates[max(i - 1, 0)]
-        hi = candidates[min(i + 1, len(candidates) - 1)]
+        hi = candidates[min(i + 1 if on_candidate else i, len(candidates) - 1)]
         if not hi > lo:
             return boundary
         new = rule.refine(curves['low'], curves['high'], weights, (lo, hi))

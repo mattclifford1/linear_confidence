@@ -14,8 +14,11 @@ from deltas.transforms import Identity, Logit, Standardise, YeoJohnson
 
 
 # --------------------------------------------------------------- registry ---
-def test_registry_lists_the_phase_one_components():
-    assert {'clopper_pearson', 'dkw'} <= set(registry.available('bound'))
+def test_registry_lists_the_components():
+    assert {'clopper_pearson', 'dkw', 'gaussian', 'location_scale',
+            'predictive_t', 'saw_yang_mo', 'cantelli', 'vysochanskij_petunin',
+            'published_fence', 'kth_point_fence'} <= set(registry.available('bound'))
+    assert {'risk', 'neyman_pearson'} <= set(registry.available('rule'))
     assert {'fixed', 'optimised'} <= set(registry.available('confidence'))
     assert {'minimax', 'sum'} <= set(registry.available('rule'))
     assert {'data_midpoints', 'grid', 'auto'} <= set(registry.available('search'))

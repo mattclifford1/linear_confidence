@@ -69,8 +69,16 @@ class Bound(Component):
     guarantee = 'high_probability'
     #: False for bounds with no confidence level (e.g. predictive curves)
     needs_delta = True
-    #: False for step curves that only change at data points (counts)
+    #: False for step curves that only change at data points (counts): the
+    #: data midpoints then contain every distinct value, no grid is needed
     continuous = True
+    #: False for curves with flat steps anywhere (counts, the Monte Carlo
+    #: band, Saw-Yang-Mo): refining the grid choice by root finding or 1-D
+    #: minimisation needs a curve without flat stretches
+    smooth = True
+    #: True for bounds that fix delta themselves from b (the published
+    #: fence); they implement resolve(b) -> {'L', 'delta', 'U'}
+    self_resolving = False
 
     def fit(self, sample):
         self.sample = sample
@@ -78,6 +86,10 @@ class Bound(Component):
 
     def curve(self, b, delta):
         '''values in [0, 1] at every boundary in b (and delta, broadcast)'''
+        raise NotImplementedError
+
+    def resolve(self, b):
+        '''for self-resolving bounds only'''
         raise NotImplementedError
 
 
@@ -90,6 +102,7 @@ class CountBound(Bound):
     Subclasses supply upper(m, N, delta); the rest is shared.
     '''
     continuous = False
+    smooth = False
     #: above (N+1) x resolution cells, the optimised-delta table is built by
     #: ternary search instead of a dense grid; only worth it when upper() is
     #: expensive, so the default is never
@@ -133,6 +146,19 @@ class DeltaPolicy(Component):
 
 # ------------------------------------------------------------------- rule ---
 class DecisionRule(Component):
+    def bind(self, data):
+        '''
+        see the data before choosing (e.g. which class is protected); called on
+        a private copy, so it may store state. Returns the rule.
+        '''
+        return self
+
+    def class_weights(self, data, costs):
+        '''(w_low, w_high) multiplying the two curves; costs are by label'''
+        c_low = costs[0] if data.low.label == 0 else costs[1]
+        c_high = costs[0] if data.high.label == 0 else costs[1]
+        return c_low, c_high
+
     def choose(self, candidates, L_low, L_high):
         '''(boundary, losses over the candidates)'''
         raise NotImplementedError

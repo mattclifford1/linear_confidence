@@ -27,8 +27,8 @@ import numpy as np
 from deltas.bounds.counts import (DKW, ClopperPearson, clopper_pearson_upper,
                                   dkw_upper)
 from deltas.confidence.optimised import OptimisedDelta
-from deltas.core import registry
 from deltas.core.estimator import DeltasEstimator
+from deltas.rules import Minimax, Sum
 from deltas.search.candidates import DataMidpoints
 
 __all__ = ['base_overlap_deltas', 'binomial_deltas', 'dkw_deltas',
@@ -74,9 +74,11 @@ class base_overlap_deltas(DeltasEstimator):
         raise NotImplementedError
 
     def _components(self):
+        # the original sum rule takes the first of tied minima
+        rule = Sum(tie_break='first') if self.objective == 'sum' else Minimax()
         return {'bound': self._make_bound(),
                 'confidence': OptimisedDelta(resolution=self.delta_resolution),
-                'rule': registry.get('rule', self.objective),
+                'rule': rule,
                 'search': DataMidpoints(),
                 'transform': None,
                 'certify': 'decision',

@@ -27,6 +27,17 @@ COMPOSITIONS = {
     'dkw_sum': dict(bound='dkw', rule='sum'),
     'cp_fixed': dict(bound='clopper_pearson', confidence=('fixed', {'delta': 0.1})),
     'per_class': dict(bound={0: 'dkw', 1: 'clopper_pearson'}),
+    'gaussian_fixed': dict(bound='gaussian', confidence=('fixed', {'delta': 0.05})),
+    'gaussian_mc': dict(bound=('gaussian', {'band': 'mc', 'draws': 10000}),
+                        confidence=('fixed', {'delta': 0.05})),
+    'predictive_certified': dict(bound='predictive_t',
+                                 certify=['gaussian', 'clopper_pearson']),
+    'saw_yang_mo_sum': dict(bound='saw_yang_mo', rule='sum'),
+    'neyman_pearson': dict(bound='gaussian', confidence=('fixed', {'delta': 0.05}),
+                           rule=('neyman_pearson', {'alpha': 0.2})),
+    'mixed_counts_minority_gaussian': dict(
+        bound={0: 'clopper_pearson', 1: 'gaussian'},
+        confidence=('fixed', {'delta': 0.05})),
 }
 
 
