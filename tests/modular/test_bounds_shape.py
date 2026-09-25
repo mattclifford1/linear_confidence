@@ -120,7 +120,7 @@ def test_student_t_predictive_is_exact_for_a_fixed_rule():
         pytest.approx(exact, rel=1e-12)
 
 
-# ---------------------------------------------- the closed form (Prop. 4) ---
+# ------------------------------- the closed-form minimax boundary (notes) ---
 def _two_class(seed=9, n0=400, n1=12, m1=3.0, s1=1.5):
     rng = np.random.default_rng(seed)
     z = np.r_[rng.normal(0, 1, n0), rng.normal(m1, s1, n1)]
@@ -144,7 +144,7 @@ class _GaussianExtremesCantelliTail(GaussianConfidence):
 
 
 def test_minimax_boundary_does_not_depend_on_the_tail_shape():
-    '''Prop. 5: only the certified value changes'''
+    '''the "shape-free" result: only the certified value changes'''
     X, y = _two_class()
     kw = dict(confidence=FixedDelta(0.05), search='grid')
     g = DeltasEstimator(bound=GaussianConfidence(), **kw).fit(X, y)

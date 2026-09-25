@@ -25,7 +25,7 @@ Certificates: certify='decision' reports the (U, delta) of the deciding
 curves at the chosen boundary, as the overlap methods always have. Pass a
 list of bounds instead to report each of them at the fixed `delta_report` -
 the statement that is actually quotable when the decision used an optimised
-delta or an average-case curve (working notes, Sec. 4.1).
+delta or an average-case curve (working notes, "Deciding and certifying").
 '''
 import copy
 

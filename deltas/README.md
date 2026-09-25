@@ -101,8 +101,10 @@ for any high-probability bound.
 
 `deltas/legacy/` is frozen: it is the code behind the published numbers and
 the 34-dataset grid, moved verbatim (only its own import lines changed). Known
-bugs that feed the published results (`FINDINGS.md` §7.1 B1, B2, B8, B11)
-are deliberately kept. `tests/golden/` pins the exact outputs of every legacy
+bugs that feed the published results are deliberately kept: the exact-float
+grid filter, the possibly-unassigned `support_max_hit`, the silent
+`max_trials` cap and the infeasible-fit crash (`FINDINGS.md` §7.1, rows B1,
+B2, B8, B11). `tests/golden/` pins the exact outputs of every legacy
 estimator under both settings of `USE_TWO`. Fix forward in the modular code,
 never in `legacy/`.
 

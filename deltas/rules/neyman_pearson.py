@@ -3,7 +3,7 @@ Neyman-Pearson: minimise the error of one class subject to the other's
 curve staying at or below alpha.
 
 The rule for "miss at most alpha of the minority, with confidence 1 - delta"
-- the guaranteed-protection use case of the working notes (Sec. 6.1). With a
+- the guaranteed-protection use case of the working notes ("How much room?"). With a
 count-based bound on held-out data this is the umbrella algorithm of Tong,
 Feng & Li (2018); with a location-scale bound it is the parametric version
 of Tong et al. (2020).

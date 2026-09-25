@@ -152,7 +152,7 @@ def test_neyman_pearson_reports_an_unreachable_alpha():
     X, y = _imbalanced()
     m = DeltasEstimator(bound='clopper_pearson', confidence=FixedDelta(0.05),
                         rule=NeymanPearson(alpha=0.01)).fit(X, y)
-    # 30 minority points cannot certify below ~0.1: the floor of Prop. 3
+    # 30 minority points cannot certify below ~0.1: the "floor" result of the notes
     assert m.rule_info_['constraint_met'] is False
     assert m.is_fit
 

@@ -3,7 +3,7 @@ Level 2 of the assumption ladder: location-scale envelopes.
 
 Model (after any fixed increasing transform of the score): the class-i scores
 are mu_i + sigma_i * eps with eps ~ F_0 known (Gaussian by default). A
-confidence region for (mu, sigma) gives, by Lemma 1 of the working notes, an
+confidence region for (mu, sigma) gives, by the "uniform for free" lemma of the working notes, an
 envelope valid at every boundary at once:
 
     U(b) = sup over the region of P(error at b)
@@ -63,7 +63,7 @@ class _LocationScale(Bound):
 
     def closed_form_minimax(self, other, delta):
         '''
-        Prop. 4 of the working notes: with the same tail on both sides the
+        The "closed-form minimax boundary" of the working notes: with the same tail on both sides the
         minimax boundary splits the gap between the two cautious means in
         proportion to the two inflated spreads. `other` is the other class's
         fitted bound. Returns (b*, value), or None when the cautious means
@@ -127,7 +127,7 @@ class GaussianConfidence(_LocationScale):
                       (works with any delta policy)
     band='mc'         a simultaneous band over tail levels [p_min, 0.5],
                       calibrated by Monte Carlo: about half the cost of the
-                      rectangle (working notes, Sec. 5.1). Fixed delta only;
+                      rectangle (working notes, "Level 2: location-scale envelopes"). Fixed delta only;
                       beyond the p_min level it reports p_min.
     '''
 

@@ -13,10 +13,10 @@ under both settings of `deltas.misc.use_two.USE_TWO`.
 | `overlap/` | the original Clopper–Pearson / DKW code | (none: `deltas.model.overlap` is now a shim over `DeltasEstimator`, proven bit-identical to this) |
 
 Known bugs kept on purpose, because they feed the published numbers
-(`FINDINGS.md` §7.1): B1 (exact float equality in the grid filter), B2
-(`support_max_hit` read on a path where it may be unassigned), B8 (the
-silent `max_trials` cap), B11 (`base_deltas.fit` raises `TypeError` on an
-infeasible problem).
+(`FINDINGS.md` §7.1, table rows in brackets): the exact-float grid filter
+(B1), `support_max_hit` read on a path where it may be unassigned (B2), the
+silent `max_trials` cap (B8), and the infeasible-fit crash, where
+`base_deltas.fit` raises `TypeError` on an infeasible problem (B11).
 
 The per-method API reference that used to live in `deltas/model/README.md` is
 below.
@@ -27,7 +27,7 @@ below.
 D, M, means, counts), optimises δ₁ (δ₂ follows from the constraint) and sets
 `boundary`. Attributes: `delta1`, `delta2`, `boundary`, `class_nums`,
 `solution_possible`, `solution_found`, `data_info`. Crashes on an infeasible
-problem (B11).
+problem (the infeasible-fit crash, FINDINGS B11).
 
 ## `ecai2024/downsample.py` — `downsample_deltas`
 
