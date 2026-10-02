@@ -16,7 +16,9 @@ Published fences, for ablations:
     published_fence       PublishedFence(factor, radius)
     kth_point_fence       KthPointFence(factor, aggregate, loss_form)
 
-See bounds/README.md for the assumption ladder.
+One public class per file: counts/, moments/, location_scale/, predictive/
+and fences/ are packages, base.py holds Bound and CountBound. See
+bounds/README.md for the assumption ladder.
 '''
 from deltas.bounds.base import Bound, CountBound
 from deltas.bounds.counts import (DKW, ClopperPearson, clopper_pearson_upper,
