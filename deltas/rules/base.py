@@ -1,8 +1,11 @@
 '''
 Base class of the rule slot: how the two per-class curves become one
 boundary. A rule may see the data first (bind) and set the per-class weights
-(class_weights); it gets a private copy per fit.
+(class_weights); it gets a private copy per fit. plateau_midpoint is the
+tie-break the count-based rules share.
 '''
+import numpy as np
+
 from deltas.core.component import Component
 
 
@@ -34,3 +37,9 @@ class DecisionRule(Component):
         are continuous. Returns a boundary, or None to keep the grid choice.
         '''
         return None
+
+
+def plateau_midpoint(candidates, losses, tolerance=1e-12):
+    '''the midpoint, in value, of the run of candidates tied for the minimum'''
+    plateau = np.flatnonzero(losses <= losses.min() + tolerance)
+    return 0.5 * float(candidates[plateau[0]] + candidates[plateau[-1]])

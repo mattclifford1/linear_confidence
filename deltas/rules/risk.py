@@ -12,7 +12,7 @@ deployment priors (training sets are frequently thinned to a target ratio),
 so pass the real ones when known.
 '''
 from deltas.core.registry import register
-from deltas.rules.balanced import Sum
+from deltas.rules.sum import Sum
 
 
 @register('rule', 'risk')

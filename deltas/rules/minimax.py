@@ -8,14 +8,8 @@ since G-mean >= 1 - max(e1, e2) it guards the G-mean.
 import numpy as np
 from scipy.optimize import brentq
 
-from deltas.rules.base import DecisionRule
+from deltas.rules.base import DecisionRule, plateau_midpoint
 from deltas.core.registry import register
-
-
-def plateau_midpoint(candidates, losses, tolerance=1e-12):
-    '''the midpoint, in value, of the run of candidates tied for the minimum'''
-    plateau = np.flatnonzero(losses <= losses.min() + tolerance)
-    return 0.5 * float(candidates[plateau[0]] + candidates[plateau[-1]])
 
 
 @register('rule', 'minimax')

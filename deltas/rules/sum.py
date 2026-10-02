@@ -8,9 +8,8 @@ towards the minority (FINDINGS.md §10.4). With smooth curves it is well posed.
 import numpy as np
 from scipy.optimize import minimize_scalar
 
-from deltas.rules.base import DecisionRule
+from deltas.rules.base import DecisionRule, plateau_midpoint
 from deltas.core.registry import register
-from deltas.rules.minimax import plateau_midpoint
 
 
 @register('rule', 'sum')
