@@ -25,7 +25,7 @@ the envelope is 1 everywhere.
 
     base.py          _LocationScale: the shared envelope and closed_form_minimax
     gaussian.py      GaussianConfidence (registry name 'gaussian')
-    monte_carlo.py   LocationScaleConfidence (registry name 'location_scale')
+    monte_carlo.py   LocationScaleConfidence (registry name 'location_scale_mc')
 '''
 from deltas.bounds.location_scale.gaussian import GaussianConfidence
 from deltas.bounds.location_scale.monte_carlo import LocationScaleConfidence

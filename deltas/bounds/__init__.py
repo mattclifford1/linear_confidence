@@ -10,7 +10,7 @@ Level 1, moments without a shape:
     vysochanskij_petunin  VysochanskijPetunin(score_range)  unimodal
 Level 2, a location-scale shape:
     gaussian              GaussianConfidence(band)          exact pivots
-    location_scale        LocationScaleConfidence(family)   Monte Carlo pivots
+    location_scale_mc     LocationScaleConfidence(family)   Monte Carlo pivots
     predictive_t          StudentTPredictive()              average-case
 Published fences, for ablations:
     published_fence       PublishedFence(factor, radius)

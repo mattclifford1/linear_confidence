@@ -31,7 +31,7 @@ def _pivot_draws(family, df, N, draws, seed):
     return eps.mean(axis=1) / s, s
 
 
-@register('bound', 'location_scale')
+@register('bound', 'location_scale_mc')
 class LocationScaleConfidence(_LocationScale):
     '''
     confidence envelope for any location-scale family, from Monte Carlo

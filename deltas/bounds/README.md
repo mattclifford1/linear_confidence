@@ -16,7 +16,7 @@ tail envelopes" and "The menu"):
 | 1 | + moments, known range | `moments/cantelli.py` | `cantelli` | high-probability | falls polynomially; loose at small N |
 | 1 | + moments, known range, unimodal | `moments/vysochanskij_petunin.py` | `vysochanskij_petunin` | high-probability | falls polynomially; loose at small N |
 | 2 | + a Gaussian shape | `location_scale/gaussian.py` | `gaussian` (exact; `band='mc'` tighter, fixed δ only) | high-probability | keeps falling |
-| 2 | + a location–scale shape | `location_scale/monte_carlo.py` | `location_scale` (logistic, *t*, laplace, gaussian) | high-probability | keeps falling |
+| 2 | + a location–scale shape | `location_scale/monte_carlo.py` | `location_scale_mc` (logistic, *t*, laplace, gaussian) | high-probability | keeps falling |
 | 2 | + Gaussian shape | `predictive/student_t.py` | `predictive_t` | average-case | keeps falling |
 | — | the published fence | `fences/published.py` | `published_fence` | average-case | — (for ablations) |
 | — | the k-th point fence | `fences/kth_point.py` | `kth_point_fence` | average-case | — (for ablations) |
