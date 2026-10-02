@@ -1425,6 +1425,9 @@ specification (`method_specs`). The Monte Carlo Gaussian band
 
 ### What comes next (nothing run yet)
 
+The live, ordered to-do list (merge, clean-up, questions, experiments) is
+`NEXT_STEPS.md`; this subsection is the record as of the refactor.
+
 The working notes (*deltas-other-concentration*) plan six experiments, to run
 on a branch `envelope-deltas` once agreed:
 
