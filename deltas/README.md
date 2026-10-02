@@ -30,7 +30,7 @@ classifier is only ever used as a projection function (`get_projection(X) ->
 ```
 deltas/
 ├── core/          DeltasEstimator + Component + ClassSample/ProjectedData + registry
-├── bounds/        the concentration inequalities (one file per family)
+├── bounds/        the concentration inequalities (one package per family, one file per bound)
 ├── confidence/    delta handling
 ├── rules/         decision rules
 ├── search/        candidate boundaries
@@ -53,6 +53,15 @@ deltas/
 ```
 
 Each new folder has its own short README.
+
+Layout rule for the modular packages: one public class per file, named
+after its registry name; a package's `base.py` holds its base class and the
+helpers its files share; `__init__.py` re-exports the flat public surface
+(`from deltas.bounds import GaussianConfidence`), which is what callers and
+`tests/test_import_surface.py` rely on, so the files underneath are free to
+move. `tests/modular/` mirrors the tree, one test file per module.
+`deltas/legacy/` is exempt: it is frozen and the alias modules depend on
+its paths.
 
 ## Using it
 
@@ -87,15 +96,16 @@ midpoints) is bit-for-bit `deltas.model.overlap.binomial_deltas(objective='minim
 
 | to add | do |
 |---|---|
-| a concentration inequality | subclass `bounds.base.Bound` (or `bounds.base.CountBound` if it only depends on the count of wrong-side points) in a new file under `bounds/`, decorate with `@register('bound', 'name')`, export it from `bounds/__init__.py` |
-| a way to handle δ | subclass `confidence.base.DeltaPolicy` in `confidence/` |
-| a decision rule | subclass `rules.base.DecisionRule` in `rules/` (override `bind` if it needs the data, `class_weights` if it reweights the classes) |
-| a search | subclass `search.base.CandidateSet` in `search/` |
-| a transform | subclass `transforms.base.Transform` in `transforms/` (set `requires_fit` if it learns from data) |
+| a concentration inequality | subclass `bounds.base.Bound` (or `bounds.base.CountBound` if it only depends on the count of wrong-side points) in a new file under its family package in `bounds/`, decorate with `@register('bound', 'name')`, import it in that package's and in `bounds/__init__.py` |
+| a way to handle δ | subclass `confidence.base.DeltaPolicy` in its own file in `confidence/` |
+| a decision rule | subclass `rules.base.DecisionRule` in its own file in `rules/` (override `bind` if it needs the data, `class_weights` if it reweights the classes) |
+| a search | subclass `search.base.CandidateSet` in its own file in `search/` |
+| a transform | subclass `transforms.base.Transform` in its own file in `transforms/` (set `requires_fit` if it learns from data) |
 | a named method | add a `Method` to `methods/envelope.py` (or a new module listed in `methods/__init__.py`) |
 
-Tests for a new component go in `tests/modular/`. Check coverage by simulation
-for any high-probability bound.
+Tests for a new component go in the matching folder of `tests/modular/`, one
+test file per module. Check coverage by simulation for any high-probability
+bound (the `coverage` fixture in `tests/modular/conftest.py`).
 
 ## Legacy code
 

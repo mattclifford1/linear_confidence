@@ -80,7 +80,7 @@ Watch for two things the upgrade surfaced:
 ```
 deltas/              the package (see deltas/README.md)
   core/              ⭐ DeltasEstimator + the slot base classes + registry
-  bounds/            ⭐ the concentration inequalities, one file per family
+  bounds/            ⭐ the concentration inequalities, one package per family, one file per bound
   confidence/        delta handling (fixed / optimised)
   rules/             minimax, sum, risk, Neyman-Pearson
   search/            candidate boundaries
@@ -118,9 +118,10 @@ are tried), **transform** (a monotone map of the score) and **certify** (what
 is reported). `deltas.core.DeltasEstimator` runs it; each slot takes a
 registered name, a `(name, kwargs)` pair or a component object.
 
-- A new concentration inequality is a `deltas.bounds.base.Bound` subclass in `deltas/bounds/`
-  with `@register('bound', 'name')`. Test its coverage by simulation in
-  `tests/modular/`.
+- A new concentration inequality is a `deltas.bounds.base.Bound` subclass in its
+  own file under the family package in `deltas/bounds/`, with
+  `@register('bound', 'name')`. Test its coverage by simulation in the matching
+  folder of `tests/modular/`.
 - A new rule, δ policy, search or transform goes in its folder the same way.
 - A new named method is a `Method` in `deltas/methods/` (`envelope.py` for the
   shape-aware family). The runners pick methods from `deltas.methods.METHODS`.
