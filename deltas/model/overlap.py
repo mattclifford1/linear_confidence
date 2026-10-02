@@ -29,7 +29,7 @@ from deltas.bounds.counts import (DKW, ClopperPearson, clopper_pearson_upper,
 from deltas.confidence.optimised import OptimisedDelta
 from deltas.core.estimator import DeltasEstimator
 from deltas.rules import Minimax, Sum
-from deltas.search.candidates import DataMidpoints
+from deltas.search import DataMidpoints
 
 __all__ = ['base_overlap_deltas', 'binomial_deltas', 'dkw_deltas',
            'clopper_pearson_upper', 'dkw_upper']
