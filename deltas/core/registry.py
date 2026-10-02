@@ -61,7 +61,7 @@ def resolve(kind, spec):
         (name, kwargs)   -> the registered component with those parameters
         a component      -> itself
     '''
-    from deltas.core.components import Component
+    from deltas.core.component import Component
     if isinstance(spec, Component):
         return spec
     if isinstance(spec, str):

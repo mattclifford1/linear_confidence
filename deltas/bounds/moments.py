@@ -23,7 +23,7 @@ the answer for scarce ones.
 import numpy as np
 
 from deltas.bounds.location_scale import _LocationScale
-from deltas.core.components import Bound
+from deltas.bounds.base import Bound
 from deltas.core.registry import register
 
 

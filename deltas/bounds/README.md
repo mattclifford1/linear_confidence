@@ -25,3 +25,5 @@ minimax boundary does not depend on the tail shape (the "shape-free" result).
 Any monotone transform of the score (`deltas/transforms/`) is free for the
 classifier and matters to level 1–2 bounds. Fit a data-dependent one on the
 classifier's fit split, never on the calibration data.
+
+`base.py` holds the slot's base classes `Bound` and `CountBound`, moved here from `core/components.py` so they live next to their implementations.

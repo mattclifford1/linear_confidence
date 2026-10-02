@@ -118,7 +118,7 @@ are tried), **transform** (a monotone map of the score) and **certify** (what
 is reported). `deltas.core.DeltasEstimator` runs it; each slot takes a
 registered name, a `(name, kwargs)` pair or a component object.
 
-- A new concentration inequality is a `core.Bound` subclass in `deltas/bounds/`
+- A new concentration inequality is a `deltas.bounds.base.Bound` subclass in `deltas/bounds/`
   with `@register('bound', 'name')`. Test its coverage by simulation in
   `tests/modular/`.
 - A new rule, δ policy, search or transform goes in its folder the same way.

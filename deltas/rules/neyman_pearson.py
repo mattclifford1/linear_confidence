@@ -15,7 +15,7 @@ returned and `rule_info_['constraint_met']` is False on the estimator.
 '''
 import numpy as np
 
-from deltas.core.components import DecisionRule
+from deltas.rules.base import DecisionRule
 from deltas.core.registry import register
 from deltas.rules.minimax import plateau_midpoint
 

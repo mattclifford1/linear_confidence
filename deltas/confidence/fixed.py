@@ -7,7 +7,7 @@ boundary at once, including the one the method chose (working notes, the "unifor
 '''
 import numpy as np
 
-from deltas.core.components import DeltaPolicy, PreparedCurve
+from deltas.confidence.base import DeltaPolicy, NoDeltaCurve, PreparedCurve
 from deltas.core.registry import register
 
 
@@ -32,16 +32,3 @@ class _FixedCurve(PreparedCurve):
     def __call__(self, b):
         U = np.asarray(self.bound.curve(b, self.delta), dtype=float)
         return {'L': U, 'delta': np.full(U.shape, self.delta), 'U': U}
-
-
-class NoDeltaCurve(PreparedCurve):
-    '''for curves with no confidence level (average-case, predictive)'''
-
-    def __init__(self, bound):
-        self.bound = bound
-
-    def __call__(self, b):
-        if self.bound.self_resolving:
-            return self.bound.resolve(b)
-        U = np.asarray(self.bound.curve(b, None), dtype=float)
-        return {'L': U, 'delta': np.full(U.shape, np.nan), 'U': U}

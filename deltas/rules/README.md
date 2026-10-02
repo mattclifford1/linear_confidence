@@ -9,3 +9,5 @@
 
 A rule can see the data (`bind`) and set the per-class weights
 (`class_weights`); it gets a private copy per fit.
+
+`base.py` holds the slot's base class `DecisionRule`, moved here from `core/components.py` so it lives next to its implementations.

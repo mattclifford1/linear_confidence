@@ -33,7 +33,7 @@ KthPointFence (non-separable draft, Dec 2024)
 '''
 import numpy as np
 
-from deltas.core.components import Bound
+from deltas.bounds.base import Bound
 from deltas.core.registry import register
 
 

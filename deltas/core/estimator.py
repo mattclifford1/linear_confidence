@@ -14,7 +14,7 @@ an instance of.
     model.certified_error()
 
 Each slot takes a registered name, a (name, kwargs) pair, or a component
-object (see deltas/core/components.py and deltas/core/registry.py). The default
+object (see the base.py of each slot package and deltas/core/registry.py). The default
 composition is Clopper-Pearson minimax, bit-for-bit the same as
 deltas.model.overlap.binomial_deltas(objective='minimax').
 
@@ -34,7 +34,6 @@ from sklearn.base import BaseEstimator
 
 import deltas.plotting.plots as plots
 from deltas.core import registry
-from deltas.core.components import Transform
 from deltas.core.sample import ProjectedData
 
 

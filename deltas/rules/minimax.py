@@ -8,7 +8,7 @@ since G-mean >= 1 - max(e1, e2) it guards the G-mean.
 import numpy as np
 from scipy.optimize import brentq
 
-from deltas.core.components import DecisionRule
+from deltas.rules.base import DecisionRule
 from deltas.core.registry import register
 
 

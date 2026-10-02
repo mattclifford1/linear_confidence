@@ -18,6 +18,7 @@ Published fences, for ablations:
 
 See bounds/README.md for the assumption ladder.
 '''
+from deltas.bounds.base import Bound, CountBound
 from deltas.bounds.counts import (DKW, ClopperPearson, clopper_pearson_upper,
                                   dkw_upper)
 from deltas.bounds.fences import KthPointFence, PublishedFence
@@ -26,7 +27,8 @@ from deltas.bounds.location_scale import (GaussianConfidence,
 from deltas.bounds.moments import Cantelli, SawYangMo, VysochanskijPetunin
 from deltas.bounds.predictive import StudentTPredictive
 
-__all__ = ['Cantelli', 'ClopperPearson', 'DKW', 'GaussianConfidence',
+__all__ = ['Bound', 'Cantelli', 'ClopperPearson', 'CountBound', 'DKW',
+           'GaussianConfidence',
            'KthPointFence', 'LocationScaleConfidence', 'PublishedFence',
            'SawYangMo', 'StudentTPredictive', 'VysochanskijPetunin',
            'clopper_pearson_upper', 'dkw_upper']

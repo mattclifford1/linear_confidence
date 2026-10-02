@@ -7,3 +7,5 @@
 
 `NoDeltaCurve` handles bounds with no confidence level (average-case curves)
 and bounds that fix δ themselves (the published fence).
+
+`base.py` holds the slot's base classes `DeltaPolicy` and `PreparedCurve`, and `NoDeltaCurve`, moved here from `core/components.py` and `fixed.py` so they live next to their implementations.

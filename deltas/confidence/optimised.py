@@ -18,8 +18,8 @@ methods fast; the code is the overlap methods', moved here unchanged.
 '''
 import numpy as np
 
-from deltas.core.components import CountBound, DeltaPolicy, PreparedCurve
-from deltas.confidence.fixed import NoDeltaCurve
+from deltas.bounds.base import CountBound
+from deltas.confidence.base import DeltaPolicy, NoDeltaCurve, PreparedCurve
 from deltas.core.registry import register
 
 

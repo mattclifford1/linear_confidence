@@ -15,7 +15,7 @@ deltas/legacy/overlap/ as the reference the equivalence tests compare against.
 import numpy as np
 from scipy.stats import beta
 
-from deltas.core.components import CountBound
+from deltas.bounds.base import CountBound
 from deltas.core.registry import register
 
 

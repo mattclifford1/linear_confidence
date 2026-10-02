@@ -8,3 +8,5 @@
 
 For smooth curves the estimator then refines the grid choice between its
 neighbours (root of L₁ − L₂ for minimax, 1-D minimisation for sum).
+
+`base.py` holds the slot's base class `CandidateSet`, moved here from `core/components.py` so it lives next to its implementations.

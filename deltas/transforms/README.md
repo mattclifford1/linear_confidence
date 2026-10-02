@@ -15,3 +15,5 @@ A fitted transform must be fitted **before** the deltas fit, on the
 classifier's fit split: choosing it on the calibration data voids the
 certificate. The estimator refuses an unfitted one. Boundaries are reported in
 the classifier's own units (`get_bias()` uses `inverse`).
+
+`base.py` holds the slot's base class `Transform`, moved here from `core/components.py` so it lives next to its implementations.

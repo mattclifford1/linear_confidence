@@ -9,8 +9,10 @@ Slot: how the two per-class curves become one boundary.
                                   protect)
 '''
 from deltas.rules.balanced import Sum
+from deltas.rules.base import DecisionRule
 from deltas.rules.minimax import Minimax, plateau_midpoint
 from deltas.rules.neyman_pearson import NeymanPearson
 from deltas.rules.risk import Risk
 
-__all__ = ['Minimax', 'NeymanPearson', 'Risk', 'Sum', 'plateau_midpoint']
+__all__ = ['DecisionRule', 'Minimax', 'NeymanPearson', 'Risk', 'Sum',
+           'plateau_midpoint']

@@ -29,7 +29,7 @@ classifier is only ever used as a projection function (`get_projection(X) ->
 
 ```
 deltas/
-├── core/          DeltasEstimator + the slot base classes + ClassSample/ProjectedData + registry
+├── core/          DeltasEstimator + Component + ClassSample/ProjectedData + registry
 ├── bounds/        the concentration inequalities (one file per family)
 ├── confidence/    delta handling
 ├── rules/         decision rules
@@ -87,11 +87,11 @@ midpoints) is bit-for-bit `deltas.model.overlap.binomial_deltas(objective='minim
 
 | to add | do |
 |---|---|
-| a concentration inequality | subclass `core.Bound` (or `core.CountBound` if it only depends on the count of wrong-side points) in a new file under `bounds/`, decorate with `@register('bound', 'name')`, export it from `bounds/__init__.py` |
-| a way to handle δ | subclass `core.DeltaPolicy` in `confidence/` |
-| a decision rule | subclass `core.DecisionRule` in `rules/` (override `bind` if it needs the data, `class_weights` if it reweights the classes) |
-| a search | subclass `core.CandidateSet` in `search/` |
-| a transform | subclass `core.Transform` in `transforms/` (set `requires_fit` if it learns from data) |
+| a concentration inequality | subclass `bounds.base.Bound` (or `bounds.base.CountBound` if it only depends on the count of wrong-side points) in a new file under `bounds/`, decorate with `@register('bound', 'name')`, export it from `bounds/__init__.py` |
+| a way to handle δ | subclass `confidence.base.DeltaPolicy` in `confidence/` |
+| a decision rule | subclass `rules.base.DecisionRule` in `rules/` (override `bind` if it needs the data, `class_weights` if it reweights the classes) |
+| a search | subclass `search.base.CandidateSet` in `search/` |
+| a transform | subclass `transforms.base.Transform` in `transforms/` (set `requires_fit` if it learns from data) |
 | a named method | add a `Method` to `methods/envelope.py` (or a new module listed in `methods/__init__.py`) |
 
 Tests for a new component go in `tests/modular/`. Check coverage by simulation

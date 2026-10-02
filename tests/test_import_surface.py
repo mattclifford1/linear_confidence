@@ -9,6 +9,10 @@ built by grepping notebooks*/, dev/, experiments/, jonny/ and tests/ for
 before the refactor and are deliberately absent: deltas.pipeline.run,
 deltas.model_deltas and deltas.classifiers.large_margin_train. The torch-only
 modules (MNIST/MIMIC nets) are skipped because torch is an optional extra.
+
+The modular packages are listed too: their flat public surface
+(`from deltas.bounds import GaussianConfidence`) is the contract, and the
+files underneath are free to move.
 '''
 import importlib
 
@@ -51,6 +55,24 @@ SURFACE = {
     'deltas.data.loaders.sibling': ['get_sibling_dataset'],
     'deltas.data.utils': ['shuffle_data', 'normaliser'],
     'deltas.costcla_local.models': ['Thresholding', 'BMR'],
+    # the modular packages: the flat public surface stays put while the
+    # files underneath move (one public class per file)
+    'deltas.core': ['Component', 'DeltasEstimator', 'ClassSample',
+                    'ProjectedData', 'registry'],
+    'deltas.bounds': ['Bound', 'CountBound', 'ClopperPearson', 'DKW',
+                      'SawYangMo', 'Cantelli', 'VysochanskijPetunin',
+                      'GaussianConfidence', 'LocationScaleConfidence',
+                      'StudentTPredictive', 'PublishedFence',
+                      'KthPointFence', 'clopper_pearson_upper', 'dkw_upper'],
+    'deltas.confidence': ['DeltaPolicy', 'PreparedCurve', 'NoDeltaCurve',
+                          'FixedDelta', 'OptimisedDelta'],
+    'deltas.rules': ['DecisionRule', 'Minimax', 'Sum', 'Risk',
+                     'NeymanPearson', 'plateau_midpoint'],
+    'deltas.search': ['CandidateSet', 'DataMidpoints', 'Grid', 'Auto'],
+    'deltas.transforms': ['Transform', 'Identity', 'Logit', 'Standardise',
+                          'YeoJohnson'],
+    'deltas.methods': ['METHODS', 'Method', 'get', 'available', 'make',
+                       'describe_all'],
 }
 
 

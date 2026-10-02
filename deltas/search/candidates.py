@@ -8,7 +8,7 @@ a grid, and benefit from refining the grid choice afterwards.
 '''
 import numpy as np
 
-from deltas.core.components import CandidateSet
+from deltas.search.base import CandidateSet
 from deltas.core.registry import register
 
 

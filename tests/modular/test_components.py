@@ -7,7 +7,8 @@ import pytest
 
 from deltas.bounds import DKW, ClopperPearson, clopper_pearson_upper
 from deltas.confidence import FixedDelta, OptimisedDelta
-from deltas.core import Bound, ClassSample, ProjectedData, registry
+from deltas.bounds import Bound
+from deltas.core import ClassSample, ProjectedData, registry
 from deltas.rules import Minimax, Sum
 from deltas.search import Auto, DataMidpoints, Grid
 from deltas.transforms import Identity, Logit, Standardise, YeoJohnson

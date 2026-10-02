@@ -5,11 +5,11 @@ Nothing here knows about any particular inequality.
 | file | what |
 |---|---|
 | `estimator.py` | `DeltasEstimator`: the one sklearn-shaped class every modular method is an instance of. It projects, orients the classes, fits one bound per class, resolves δ, searches, applies the rule (with optional refinement for smooth curves) and reports certificates |
-| `components.py` | the slot base classes: `Bound`, `CountBound`, `DeltaPolicy`, `PreparedCurve`, `DecisionRule`, `CandidateSet`, `Transform` |
+| `component.py` | `Component`, the one base every slot component shares (registry name, `params()`, `describe()`). Each slot's own base class lives in its package: `bounds/base.py` (`Bound`, `CountBound`), `confidence/base.py` (`DeltaPolicy`, `PreparedCurve`, `NoDeltaCurve`), `rules/base.py` (`DecisionRule`), `search/base.py` (`CandidateSet`), `transforms/base.py` (`Transform`) |
 | `sample.py` | `ClassSample` (one class's sorted scores and which side of the boundary it sits on) and `ProjectedData` (both, oriented by mean). The successor of `data_info` |
 | `registry.py` | name → component; `register`, `get`, `resolve`, `available` |
 
-Flags on a `Bound` that the estimator reads:
+Flags on a `Bound` (`deltas/bounds/base.py`) that the estimator reads:
 
 | flag | meaning |
 |---|---|

@@ -7,6 +7,7 @@ consequential for any bound that assumes a shape).
     standardise   Standardise()     fitted - fit it on the fit split
     yeo_johnson   YeoJohnson()      fitted - fit it on the fit split
 '''
+from deltas.transforms.base import Transform
 from deltas.transforms.monotone import Identity, Logit, Standardise, YeoJohnson
 
-__all__ = ['Identity', 'Logit', 'Standardise', 'YeoJohnson']
+__all__ = ['Identity', 'Logit', 'Standardise', 'Transform', 'YeoJohnson']

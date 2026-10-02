@@ -15,7 +15,7 @@ import numpy as np
 from scipy import stats
 from scipy.special import expit, logit
 
-from deltas.core.components import Transform
+from deltas.transforms.base import Transform
 from deltas.core.registry import register
 
 

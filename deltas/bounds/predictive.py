@@ -18,7 +18,7 @@ StudentTPredictive
 import numpy as np
 from scipy import stats
 
-from deltas.core.components import Bound
+from deltas.bounds.base import Bound
 from deltas.core.registry import register
 
 
