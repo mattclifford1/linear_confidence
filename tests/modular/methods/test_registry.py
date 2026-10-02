@@ -3,19 +3,15 @@ The named-method registry (deltas/methods/): the runners get every method
 from it, so it must reproduce what their hand-written tables did.
 '''
 import json
-import os
 import subprocess
 import sys
 
 import numpy as np
 import pytest
 
+import cases                                   # tests/golden, via conftest
 from deltas.classifiers.frozen import FrozenProjection
 from deltas.methods import METHODS, available, describe_all, get, make
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'golden'))
-import cases  # noqa: E402
 
 
 def _old_tables():
@@ -51,9 +47,7 @@ def _outcome(model, z_test):
 @pytest.mark.golden
 @pytest.mark.parametrize('fixture', ['breast_cancer', 'pima', 'gauss_overlap'])
 def test_runner_tables_are_reproduced(fixture):
-    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)),
-                                    'experiments'))
-    import run_experiments
+    import run_experiments                     # experiments/, via conftest
     import run_wide
     old_exp, old_wide = _old_tables()
     fx = cases.load_fixture(fixture)
