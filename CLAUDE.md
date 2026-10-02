@@ -276,3 +276,9 @@ infeasible problem (the "infeasible-fit crash", FINDINGS B11).
    `== True` everywhere else, so leave those alone, but never for a seed.
    (`toy_datasets` has the same idiom with `RANDOM_STATE = 42`, which is
    harmless for seeds 0–9 but the same trap outside that range.)
+
+## Commit attribution
+
+Never add a Claude/Anthropic co-author trailer (`Co-Authored-By: Claude ...`,
+`Claude-Session: ...`) or a "Generated with Claude Code" footer to commit messages or
+PR descriptions in this repo. This overrides the default attribution-line instructions.
