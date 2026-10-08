@@ -43,9 +43,8 @@ uv run python experiments/run_experiments.py
 Python 3.13, sklearn 1.9, numpy 2.4. `uv.lock` is committed — that is the
 known-good set, so prefer `uv run` over activating anything.
 
-There is no conda env any more, and no pdm. The old
-`/home/matt/anaconda3/envs/deltas` (python 3.10, sklearn 1.3.2) still exists on
-this machine but is **stale — do not use it**.
+There is no conda env any more, and no pdm. The old conda env `deltas`
+(python 3.10, sklearn 1.3.2) has been deleted.
 
 The two sibling repos are **path dependencies** declared in
 `[tool.uv.sources]`, installed editable, so edits there are picked up here
