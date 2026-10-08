@@ -7,7 +7,7 @@
 > here are kept for provenance. See `experiments/README.md`.
 
 Experiments for the working draft
-`../../../Repos/Overleaf/deltas/deltas-non-separable/main.tex` (Dec 2024).
+`../../papers/deltas-non-separable/main.tex` (Dec 2024).
 Backed by `deltas/model/non_sep.py`.
 
 ## The idea being tested

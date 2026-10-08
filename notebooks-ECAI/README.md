@@ -8,7 +8,7 @@
 
 Everything here backs *Learning Confidence Bounds for Classification with
 Imbalanced Data* (ECAI 2024, arXiv:2407.11878). Paper source:
-`../../../Repos/Overleaf/deltas/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex`.
+`../../papers/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex`.
 
 ## Scripts
 

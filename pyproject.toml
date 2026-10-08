@@ -48,8 +48,8 @@ dev = [
 # The sibling repos are not on PyPI. They are checked out next to this one and
 # installed editable, so a change there is picked up here without reinstalling.
 [tool.uv.sources]
-toy-datasets = {path = "../../Repos/toy_datasets", editable = true}
-projection-models = {path = "../../Repos/projection_models", editable = true}
+toy-datasets = {path = "../../lib/toy_datasets", editable = true}
+projection-models = {path = "../../lib/projection_models", editable = true}
 
 [tool.hatch.build.targets.wheel]
 packages = ["deltas"]

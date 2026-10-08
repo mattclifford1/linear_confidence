@@ -3,9 +3,9 @@
 Written 2026-08-07 after a full read of the repo, the published ECAI paper, the
 non-separable draft and the review notes. This is the "where were we" document.
 
-- Published paper: `../../Repos/Overleaf/deltas/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex`
-- Non-separable draft: `../../Repos/Overleaf/deltas/deltas-non-separable/main.tex`
-- Review notes on the published paper: `../../Repos/Overleaf/deltas/claude-improvement-notes.md`
+- Published paper: `../papers/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex`
+- Non-separable draft: `../papers/deltas-non-separable/main.tex`
+- Review notes on the published paper: `../notes/claude-improvement-notes.md`
 
 ---
 
