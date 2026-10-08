@@ -497,6 +497,7 @@ fragile dependencies and none is needed to reproduce either paper's tables.
 | B8 | `model/downsample.py:73` | `max_trials = min(len(y)//2, max_trials)` silently caps the budget for support-based methods, so passing `max_trials=10000` does not do what it says. Undocumented. |
 | B9 | `data/utils.py:22,31` | ⚠️ **FIXED (§12.3)** — `if seed == True` also matched the integer seed **1** (python: `1 == True`), replacing it with `RANDOM_STATE = 0`. Seeds 0 and 1 produced *identical* data, so every `range(10)` experiment used nine distinct datasets with seed 0 double-counted. Affects the six-dataset tables and §10.6 coverage; not the wide grid. |
 | B10 | `data/loaders/MIMIC_IV.py` | `MIMIC-IV` fails to load: a categorical column ('M'/'F') is left in `X`, so the normaliser raises `could not convert string to float: 'M'`. Pre-existing, unrelated to the uv/numpy migration, and unused by either paper — but it means that loader has never worked in this state. |
+| B11 | `model/base.py:59` | `base_deltas.fit` **raises `TypeError`** on any infeasible problem instead of returning `is_fit=False`: `optimise_deltas.optimise` returns `None` and `fit` indexes into it. Infeasible is common — including cleanly separable data whose gap is narrower than the minimum margin `R̄ᵢ(1+4/√Nᵢ)` (golden fixture `gauss_sep`). `downsample_deltas` handles the same case, which is why the experiments never hit it; `reprojection_deltas` inherits the crash. Pinned by the golden tests (`tests/golden/`), not fixed. |
 
 ### 7.2 Smells worth cleaning
 
@@ -1351,3 +1352,105 @@ across, and it has no Beta quantile to avoid anyway (1.4s at N=50k).
 Verified that no dataset in the previous 32 crosses the threshold, and a
 re-run of Stroke Prediction/Linear reproduces the stored results **bit for
 bit across 220 rows** — so §11's numbers are untouched by this change.
+
+---
+
+## 15. The modular refactor (2026-09-25)
+
+Done on branch `modular-deltas` in six steps, each its own commit: a golden-test
+safety net first, then the modular core, the shape-aware components, the single
+method registry, the move of the frozen code, and the docs. The package layout
+is in `deltas/README.md`. What matters for the research record:
+
+- **No reported number moved.** `tests/golden/` pins the exact outputs of every
+  legacy estimator on five fixtures, under both `USE_TWO` settings, before any
+  code was touched. That covers the published method (serial/parallel,
+  binary/continuous slacks), the non-separable variants, CP/DKW, the
+  exploratory estimators and the pure functions. They pass unchanged after
+  every step. The fixtures are Breast Cancer and Pima from the published
+  pipeline, plus three synthetic sets. Mutation checks confirmed the tests
+  catch 10⁻⁶-sized changes. (The phase numbers in the commit messages are just
+the order of those six steps.)
+- **The frozen code moved verbatim** to `deltas/legacy/`. Only its own import
+  lines changed (checked file by file against the pre-move version). The old
+  paths are aliases (the same module objects), so the notebooks are
+  unaffected.
+- **The overlap methods are now compositions** of components
+  (`ClopperPearson`/`DKW` + `OptimisedDelta` + minimax/sum + data midpoints).
+  They are bit-identical to the original over 22 data sets × 2 bounds × 2
+  rules, with costs, and on the ternary-search path.
+  `deltas.model.overlap` is the shim.
+- **New components** from the other-concentration notes: Gaussian confidence
+  envelopes (exact, and a Monte Carlo simultaneous band), logistic/t/laplace
+  envelopes, the Student-t predictive curve, Saw–Yang–Mo, Cantelli, one-sided
+  VP, the published and k-th-point fences as curves (for ablations), and the
+  risk and Neyman–Pearson rules. Each is tested for coverage by simulation
+  where it makes a high-probability claim. The closed-form minimax boundary
+  (the notes' "closed-form minimax boundary") matches the numerical one to 10⁻⁹.
+- **One single method registry** (`deltas/methods/`) feeds both runners, with
+  the same names and options as before (tested against the old tables on real
+  fixtures).
+
+Found on the way:
+
+- **The infeasible-fit crash** (§7.1, B11): `base_deltas.fit` raises `TypeError` on any infeasible
+  problem. That includes separable data narrower than the minimum margin
+  `R̄ᵢ(1 + 4/√Nᵢ)`.
+- The published objective is **nearly flat** when the gap is wide (every
+  feasible boundary scores ≈ 1/(N₁+1) + 1/(N₂+1)). Its arg-min therefore
+  depends on the search: the legacy δ₁ grid stops at 10⁻⁴, and with the
+  paper's factor 1 on a wide synthetic gap the two searches pick boundaries
+  0.85 apart whose objective values differ by < 10⁻³.
+- The count-based **sum rule breaks ties by taking the first minimiser**, which
+  is not mirror-symmetric. Kept in the shim for exactness; new compositions
+  default to the plateau midpoint.
+
+### How the CP/DKW classes changed, for callers
+
+`deltas.model.overlap.binomial_deltas` / `dkw_deltas` give the same numbers
+bit for bit, but they are now sklearn estimators (a subclass of
+`DeltasEstimator`), which changes three small things:
+
+- `get_params()` returns the real constructor arguments (it returned `{}`), so
+  `sklearn.base.clone` and grid search work.
+- `set_params()` raises `ValueError` for a name that is not a constructor
+  argument (it used to `setattr` anything).
+- the private `_sparse_loss_table` helper is gone (it lives in
+  `deltas/confidence/optimised.py`); `_per_class_loss_table`, `_upper_bound`
+  and `_delta_correction` are kept.
+
+Also new in the runners: `config.json` records every method's full
+specification (`method_specs`). The Monte Carlo Gaussian band
+(`GaussianConfidence(band='mc')`) only works with a fixed δ.
+
+### What comes next (nothing run yet)
+
+The live, ordered to-do list (merge, clean-up, questions, experiments) is
+`NEXT_STEPS.md`; this subsection is the record as of the refactor.
+
+The working notes (*deltas-other-concentration*) plan six experiments, to run
+on a branch `envelope-deltas` once agreed:
+
+| name | question |
+|---|---|
+| **Projection shapes** | what do real projected class scores look like, before and after a logit or Yeo–Johnson map? Picks the default family and transform. |
+| **Certificate validity** | does each certificate hold at its nominal level when its shape assumption is right, and how badly does it fail when it is not (skewed, heavy-tailed, two-subgroup minorities)? |
+| **Boundary placement** | synthetic sweeps of separation × minority size × spread ratio × shape: where should the boundary go, and how cautious should it be? |
+| **Real-data grid** | all 238 cells of the 34-dataset grid, 10 seeds, naive and calibration split: ranks, coverage and tightness of both certificates |
+| **One-slot ablations** | swap one component at a time (rule, family, band, transform, δ handling, calibration fraction) |
+| **Costs and extensions** | the risk rule on the cost datasets, the Neyman–Pearson rule, cross-fitting, multi-class |
+
+Open questions for Matt, also in the notes:
+
+- **Average or guaranteed?** Optimise the boundary for average performance
+  (predictive), for guaranteed minority protection (envelope), or decide with
+  the first and certify with the second (recommended)?
+- **Is a shape assumption OK?** A stated Gaussian-after-transform headline,
+  with the assumption-free certificate always alongside?
+- **Fix δ or keep optimising it?**
+- **Tiny minorities:** always split, cross-fit, or split only the majority,
+  and what is the smallest minority that matters?
+- **Which score transform?** A per-model rule, or a fitted Yeo–Johnson?
+- **Which imbalances are in scope?** Size and spread for sure; shape, costs,
+  prior shift, multi-class?
+- **Extension or new paper?**

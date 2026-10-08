@@ -30,29 +30,25 @@ from imblearn.metrics import geometric_mean_score
 
 import deltas.misc.use_two as use_two_cfg
 from deltas.classifiers.frozen import FrozenProjection
-from deltas.model import downsample, non_sep, overlap
+from deltas.methods import METHODS, describe_all
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.join(HERE, 'projections')
 RESULTS = os.path.join(HERE, 'results')
 
+# the grid's default methods, from the single registry (deltas/methods/).
+# The slack method runs with a smaller budget and serially here: each grid
+# cell is already a joblib worker. Any other registered method can be named
+# with --methods.
 DELTAS_METHODS = {
-    'Slacks Deltas': lambda clf, X, y: downsample.downsample_deltas(clf).fit(
-        X, y, max_trials=2000, parallel=False),
-    'Min Deltas': lambda clf, X, y: non_sep.deltas(clf).fit(
-        X, y, loss_type='min'),
-    'F Deltas': lambda clf, X, y: non_sep.deltas(clf).fit(
-        X, y, only_furtherest_k=True),
-    'CP Sum': lambda clf, X, y: overlap.binomial_deltas(
-        clf, objective='sum').fit(X, y),
-    'CP Minimax': lambda clf, X, y: overlap.binomial_deltas(
-        clf, objective='minimax').fit(X, y),
-    'DKW Sum': lambda clf, X, y: overlap.dkw_deltas(
-        clf, objective='sum').fit(X, y),
-    'DKW Minimax': lambda clf, X, y: overlap.dkw_deltas(
-        clf, objective='minimax').fit(X, y),
+    'Slacks Deltas': METHODS['Slacks Deltas'].configured(max_trials=2000,
+                                                         parallel=False),
+    **{name: METHODS[name] for name in (
+        'Min Deltas', 'F Deltas', 'CP Sum', 'CP Minimax', 'DKW Sum',
+        'DKW Minimax')},
 }
+LOOKUP = {**METHODS, **DELTAS_METHODS}
 
 METRICS = {'Accuracy': accuracy_score,
            'G-Mean': geometric_mean_score,
@@ -202,7 +198,7 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
         t0 = time.time()
         try:
             with time_budget(timeout):
-                fitted = DELTAS_METHODS[name](clf, Xc, y_cert)
+                fitted = LOOKUP[name](clf, Xc, y_cert)
             if bool(getattr(fitted, 'is_fit', False)):
                 preds = np.asarray(fitted.predict(Xt)).squeeze().astype(int)
                 add(name, preds=preds, fitted=fitted)
@@ -266,6 +262,7 @@ def main():
     config = {'USE_TWO': use_two_cfg.USE_TWO,
               'USE_GLOBAL_R': use_two_cfg.USE_GLOBAL_R,
               'seeds': seeds, 'methods': args.methods,
+              'method_specs': {n: LOOKUP[n].describe() for n in args.methods},
               'n_files': len(files), 'n_rows': len(df),
               'timeout': args.timeout}
     with open(os.path.join(RESULTS, 'wide_config.json'), 'w') as fh:
