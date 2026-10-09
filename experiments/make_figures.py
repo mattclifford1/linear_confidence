@@ -25,7 +25,8 @@ from deltas.costcla_local.models import Thresholding
 
 OUT = os.environ.get(
     'DELTAS_FIG_OUT',
-    '/home/matt/Repos/Overleaf/deltas/deltas-non-separable')
+    os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                  '..', '..', 'papers', 'deltas-non-separable')))
 
 # categorical slots, fixed order, from the validated reference palette
 # (line charts use the adjacent pairlist, for which this order validates)

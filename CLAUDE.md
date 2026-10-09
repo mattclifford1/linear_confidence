@@ -12,9 +12,9 @@ Two papers live off this code:
 
 | Paper | Source | Status |
 |---|---|---|
-| *Learning Confidence Bounds for Classification with Imbalanced Data* (ECAI 2024, arXiv:2407.11878) | `../../Repos/Overleaf/deltas/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex` | Published |
-| *Deltas non-separable* (working draft) | `../../Repos/Overleaf/deltas/deltas-non-separable/main.tex` | Rough draft, Dec 2024 |
-| Review notes on the published paper | `../../Repos/Overleaf/deltas/claude-improvement-notes.md` | Notes only |
+| *Learning Confidence Bounds for Classification with Imbalanced Data* (ECAI 2024, arXiv:2407.11878) | `../papers/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex` | Published |
+| *Deltas non-separable* (working draft) | `../papers/deltas-non-separable/main.tex` | Rough draft, Dec 2024 |
+| Review notes on the published paper | `../notes/claude-improvement-notes.md` | Notes only |
 
 Read `FINDINGS.md` in this repo for the research state, known bugs and the
 open research directions. Read `deltas/README.md` for the package architecture.
@@ -29,7 +29,7 @@ Other docs in the tree: a README in each package folder (`deltas/core/`,
 `notebooks/README.md`, `notebooks-ECAI/README.md`, `notebooks-non-sep/README.md`.
 
 The shape-aware ("other concentration") direction is planned in the Overleaf
-working notes `../../Repos/Overleaf/deltas/deltas-other-concentration/main.tex`.
+working notes `../papers/deltas-other-concentration/main.tex`.
 
 ## Environment — **uv**
 
@@ -43,9 +43,8 @@ uv run python experiments/run_experiments.py
 Python 3.13, sklearn 1.9, numpy 2.4. `uv.lock` is committed — that is the
 known-good set, so prefer `uv run` over activating anything.
 
-There is no conda env any more, and no pdm. The old
-`/home/matt/anaconda3/envs/deltas` (python 3.10, sklearn 1.3.2) still exists on
-this machine but is **stale — do not use it**.
+There is no conda env any more, and no pdm. The old conda env `deltas`
+(python 3.10, sklearn 1.3.2) has been deleted.
 
 The two sibling repos are **path dependencies** declared in
 `[tool.uv.sources]`, installed editable, so edits there are picked up here
@@ -163,8 +162,8 @@ Inspect with `deltas.utils.cache.info()`, wipe with `cache.clear()`.
 
 ## The sibling repos (`toy_datasets`, `projection_models`) — prefer them
 
-`/home/matt/Repos/toy_datasets` (54 datasets) and
-`/home/matt/Repos/projection_models` (11 model families exposing
+`/home/matt/Repos/lib/toy_datasets` (54 datasets) and
+`/home/matt/Repos/lib/projection_models` (11 model families exposing
 `get_projection`) are now ordinary dependencies, and **new work should use them
 rather than the local loaders and models**:
 

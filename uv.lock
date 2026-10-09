@@ -721,13 +721,13 @@ requires-dist = [
     { name = "numba", specifier = ">=0.61" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "pandas", specifier = ">=2.2" },
-    { name = "projection-models", editable = "../../Repos/projection_models" },
+    { name = "projection-models", editable = "../../lib/projection_models" },
     { name = "pynndescent", specifier = ">=0.6" },
     { name = "scikit-learn", specifier = ">=1.6" },
     { name = "scipy", specifier = ">=1.14" },
     { name = "torch", marker = "extra == 'torch'", specifier = ">=2.0" },
     { name = "torchvision", marker = "extra == 'torch'", specifier = ">=0.15" },
-    { name = "toy-datasets", editable = "../../Repos/toy_datasets" },
+    { name = "toy-datasets", editable = "../../lib/toy_datasets" },
     { name = "tqdm", specifier = ">=4.67" },
 ]
 provides-extras = ["torch"]
@@ -2155,7 +2155,7 @@ wheels = [
 [[package]]
 name = "projection-models"
 version = "0.1.0"
-source = { editable = "../../Repos/projection_models" }
+source = { editable = "../../lib/projection_models" }
 dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
@@ -3105,7 +3105,7 @@ wheels = [
 [[package]]
 name = "toy-datasets"
 version = "0.1.0"
-source = { editable = "../../Repos/toy_datasets" }
+source = { editable = "../../lib/toy_datasets" }
 dependencies = [
     { name = "imbalanced-learn" },
     { name = "matplotlib" },

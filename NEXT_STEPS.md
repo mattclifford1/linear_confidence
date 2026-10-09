@@ -4,7 +4,7 @@ Where the deltas work stands, and what to do next, in order. Last updated
 2 October 2026.
 
 The research plan behind this list is in the Overleaf working notes,
-`../../Repos/Overleaf/deltas/deltas-other-concentration/main.tex` (16 pages).
+`../papers/deltas-other-concentration/main.tex` (16 pages).
 `FINDINGS.md` has the full research record, and `deltas/README.md` the code map.
 
 ## Where things stand
