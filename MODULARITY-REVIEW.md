@@ -39,7 +39,7 @@ Make `certifier` a sixth registered component kind with `certify(data, boundary)
 
 ### Policy and bound know about each other
 
-`OptimisedDelta.prepare` branches on `isinstance(bound, CountBound)` and `NoDeltaCurve` branches on `bound.self_resolving`. Adding a new bound family with its own fast path means editing `deltas/confidence/`. Let the bound build its prepared curve from a policy, `bound.prepare(policy)`, with `CountBound` implementing the table path and the fences ignoring the policy. The confidence package then defines what a policy is and nothing else.
+`OptimisedDelta.prepare` branches on `isinstance(bound, CountBound)` and `NoDeltaCurve` branches on `bound.self_resolving`. Adding a new bound family with its own fast path means editing `deltas/confidence/`. Let the bound build its prepared curve from a policy, `bound.prepare(policy)`, with `CountBound` implementing the table path and the tolerance limits ignoring the policy. The confidence package then defines what a policy is and nothing else.
 
 ### Moment bookkeeping copied across bounds
 
@@ -140,7 +140,7 @@ The torch networks under `deltas/classifiers/`, the vendored `costcla_local` pac
 ### One style, functions that take fitted objects
 
 - `deltas/plotting/style.py` with the palette and rcParams, imported by both figure scripts.
-- `plot_projection(ax, data, boundary=None)` for each class's projected points as a strip, `plot_curves(ax, estimator)` for the per-class curves, the objective and the chosen boundary, and `plot_envelope(ax, bound, delta)` for one bound's curve. Each takes an axis and returns it, with no `plt.show()` in library code.
+- `plot_projection(ax, data, boundary=None)` for each class's projected points as a strip, `plot_curves(ax, estimator)` for the per-class curves, the objective and the chosen boundary, and `plot_band(ax, bound, delta)` for one bound's curve. Each takes an axis and returns it, with no `plt.show()` in library code.
 - A public `curves_` attribute, or a `curves()` method, on the estimator holding the candidates, both per-class curves and the losses, so figure scripts stop reading underscored attributes.
 - The notes' figure script calls `deltas.bounds` for every curve it draws.
 
@@ -188,11 +188,11 @@ deltas/bounds/
   predictive/
     __init__.py
     student_t.py              StudentTPredictive
-  fences/
+  tolerance_limits/
     __init__.py
-    base.py                   _Fence
-    published.py              PublishedFence
-    kth_point.py              KthPointFence
+    base.py                   _ToleranceLimit
+    published.py              PublishedToleranceLimit
+    kth_point.py              KthPointToleranceLimit
 
 deltas/confidence/   base.py (DeltaPolicy, PreparedCurve), fixed.py, optimised.py
 deltas/rules/        base.py (DecisionRule), minimax.py, sum.py, risk.py, neyman_pearson.py
@@ -205,7 +205,7 @@ Each slot's base class moves out of `core/components.py` into the `base.py` of i
 
 ### Points the move surfaces
 
-- The registry name `location_scale` currently names one implementation, the Monte Carlo pivot version, while the package name covers every location-scale envelope. Renaming the registry entry to `location_scale_mc`, or the file to `monte_carlo.py` with the registry name to match, removes the clash.
+- The registry name `location_scale` currently names one implementation, the Monte Carlo pivot version, while the package name covers every location-scale band. Renaming the registry entry to `location_scale_mc`, or the file to `monte_carlo.py` with the registry name to match, removes the clash.
 - `moments/base.py` subclasses `_LocationScale`, so the moments package imports from the location-scale package. That dependency is real today, hidden in one import line, and the move makes it visible.
 - `methods/` stays one file per family. Each entry is five lines of configuration, and one file per method would be finer than useful.
 - `core/estimator.py` is not split by file size. Its length falls out of the result-object change in the first section.
