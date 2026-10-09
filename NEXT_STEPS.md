@@ -85,7 +85,7 @@ Each has a recommendation in the working notes ("Open questions" section).
 
 ## 4. Run the experiments
 
-On a new branch `envelope-deltas`, off `main` once the merge is done. In this
+On a new branch `band-experiments`, off `main` once the merge is done. In this
 order, because the first two can change the defaults. The first four reuse the
 238 cached projections in `experiments/projections/`, so no classifier is refitted.
 
