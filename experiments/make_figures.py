@@ -92,17 +92,15 @@ def fig_loss_landscape(N1=1000, N2=10, seed=0):
     ax.plot(b, L_low + L_high, color=C['aqua'], label='sum rule')
     ax.plot(b, np.maximum(L_low, L_high), color=C['violet'],
             label='minimax rule')
-    for xb, col, lab in [(m_sum.boundary, C['aqua'], 'sum'),
-                         (m_mmx.boundary, C['violet'], 'minimax'),
+    for xb, col, lab in [(m_sum.boundary, C['aqua'], '$b^*$, sum'),
+                         (m_mmx.boundary, C['violet'], '$b^*$, minimax'),
                          (best_b, INK2, 'test optimum')]:
-        ax.axvline(xb, color=col, linestyle=(0, (4, 3)), linewidth=1.4)
-        ax.annotate(lab, xy=(xb, ax.get_ylim()[1]), xytext=(2, -9),
-                    textcoords='offset points', fontsize=7.5, color=col,
-                    rotation=90, va='top')
+        ax.axvline(xb, color=col, linestyle=(0, (4, 3)), linewidth=1.4,
+                   label=lab)
     ax.set_ylabel('objective')
     ax.set_xlabel('boundary  $b$')
     ax.set_title('Decision rules', loc='left')
-    ax.legend(loc='upper left')
+    ax.legend(loc='upper right', fontsize=7)
 
     fig.tight_layout()
     path = os.path.join(OUT, 'groundup_loss_landscape.png')
