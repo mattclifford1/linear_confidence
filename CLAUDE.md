@@ -229,7 +229,7 @@ Watch out for two things found the hard way:
   own Eq. 4 keeps it. So don't "fix" HEAD back to `False`; it is the published
   numbers that used the loose bound.
   Only the legacy code reads it — new components take every setting (e.g. the
-  fence's `factor`) as an explicit parameter, and `deltas.methods` imports the
+  tolerance limit's `factor`) as an explicit parameter, and `deltas.methods` imports the
   legacy code lazily. To reproduce the paper, set it before any other `deltas`
   import (the legacy modules bind the value at import time):
   ```python

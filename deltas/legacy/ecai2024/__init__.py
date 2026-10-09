@@ -1,7 +1,7 @@
 '''
 FROZEN: the published method (Clifford et al., ECAI 2024) - moved verbatim.
 
-    base.py                base_deltas: separable case (fences meet)
+    base.py                base_deltas: separable case (tolerance limits meet)
     downsample.py          downsample_deltas: + binary/continuous slacks - THE
                            published method ('Slacks Deltas')
     equations.py           the paper's equations (loss, constraint, delta2(delta1))

@@ -1,11 +1,11 @@
 '''
-A fence is a self-resolving, average-case curve: for a boundary b it fixes
-the delta that puts the class's fence at b and reports the published loss.
+A tolerance limit is a self-resolving, average-case curve: for a boundary b it fixes
+the delta that puts the class's tolerance limit at b and reports the published loss.
 '''
 from deltas.bounds.base import Bound
 
 
-class _Fence(Bound):
+class _ToleranceLimit(Bound):
     guarantee = 'average_case'
     needs_delta = False
     self_resolving = True

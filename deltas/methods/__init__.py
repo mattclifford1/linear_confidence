@@ -7,7 +7,7 @@ Named deltas methods - the single place the experiment runners get them from.
 
 Families: published (ECAI 2024), non_separable (Dec 2024 draft), overlap
 (Clopper-Pearson / DKW), band (the shape-aware methods), ablation (the
-published fences as modular compositions).
+published tolerance limits as modular compositions).
 '''
 from deltas.methods import ablations, band, legacy, overlap
 from deltas.methods.base import Method

@@ -18,7 +18,7 @@ classifier is only ever used as a projection function (`get_projection(X) ->
 
 | slot | question it answers | folder | options |
 |---|---|---|---|
-| bound | how much of class *i* lies beyond *b*? | `bounds/` | Clopper–Pearson, DKW; Gaussian/logistic/*t* bands; Student-*t* predictive; Saw–Yang–Mo, Cantelli, VP; the published fences |
+| bound | how much of class *i* lies beyond *b*? | `bounds/` | Clopper–Pearson, DKW; Gaussian/logistic/*t* bands; Student-*t* predictive; Saw–Yang–Mo, Cantelli, VP; the published tolerance limits |
 | confidence | how is δ set? | `confidence/` | `FixedDelta(δ)`, `OptimisedDelta` (the published loss) |
 | rule | how do two curves give one *b*? | `rules/` | minimax, sum, risk, Neyman–Pearson |
 | search | which *b* are tried? | `search/` | data midpoints, grid, auto |
@@ -128,7 +128,7 @@ shim over `DeltasEstimator`, proven bit-identical to the original in
 `RANDOM_STATE`) read at import time by the legacy code only. To reproduce the
 paper, set `USE_TWO = False` before importing anything else from `deltas`.
 `deltas.methods` imports the legacy code lazily, so importing it first is
-safe. New components never read these flags: every setting (e.g. the fence's
+safe. New components never read these flags: every setting (e.g. the tolerance limit's
 `factor`) is an explicit parameter.
 
 ## `pipeline/`, `classifiers/`, `data/`

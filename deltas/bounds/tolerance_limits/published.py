@@ -1,15 +1,15 @@
 '''
-The published (ECAI 2024) fence as a per-class curve. See
-deltas/bounds/fences/__init__.py.
+The published (ECAI 2024) tolerance limit as a per-class curve. See
+deltas/bounds/tolerance_limits/__init__.py.
 '''
 import numpy as np
 
-from deltas.bounds.fences.base import _Fence
+from deltas.bounds.tolerance_limits.base import _ToleranceLimit
 from deltas.core.registry import register
 
 
-@register('bound', 'published_fence')
-class PublishedFence(_Fence):
+@register('bound', 'published_tolerance_limit')
+class PublishedToleranceLimit(_ToleranceLimit):
     def __init__(self, factor=2.0, radius='two_sided'):
         if radius not in ('two_sided', 'one_sided'):
             raise ValueError("radius must be 'two_sided' or 'one_sided'")
@@ -28,7 +28,7 @@ class PublishedFence(_Fence):
         return self
 
     def delta_at(self, b):
-        '''the delta putting this class's fence at b (nan where none does)'''
+        '''the delta putting this class's tolerance limit at b (nan where none does)'''
         d = self.sample.facing_distance(np.asarray(b, dtype=float))
         if not self.R > 0:
             return np.full(d.shape, np.nan)

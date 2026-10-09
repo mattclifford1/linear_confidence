@@ -1,16 +1,16 @@
 '''
-The k-th furthest point fence of the non-separable draft (Dec 2024) as a
-per-class curve. See deltas/bounds/fences/__init__.py.
+The k-th furthest point tolerance limit of the non-separable draft (Dec 2024) as a
+per-class curve. See deltas/bounds/tolerance_limits/__init__.py.
 '''
 import numpy as np
 
-from deltas.bounds.fences.base import _Fence
+from deltas.bounds.tolerance_limits.base import _ToleranceLimit
 from deltas.core.registry import register
 
 
-@register('bound', 'kth_point_fence')
-class KthPointFence(_Fence):
-    #: the loss jumps as b passes each training point's fence
+@register('bound', 'kth_point_tolerance_limit')
+class KthPointToleranceLimit(_ToleranceLimit):
+    #: the loss jumps as b passes each training point's tolerance limit
     smooth = False
 
     def __init__(self, factor=2.0, aggregate='min', loss_form='product'):

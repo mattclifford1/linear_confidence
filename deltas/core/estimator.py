@@ -175,7 +175,7 @@ class DeltasEstimator(BaseEstimator):
         self.certificates_ = self._certify(comp['certify'], comp['bound'],
                                            data, boundary)
 
-        # a curve that is infinite everywhere (e.g. the published fence on
+        # a curve that is infinite everywhere (e.g. the published tolerance limit on
         # data it cannot separate) means no boundary was admissible
         self.solution_possible = bool(np.isfinite(self.loss))
         self.solution_found = self.solution_possible

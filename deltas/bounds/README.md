@@ -18,13 +18,13 @@ confidence bands" and "The menu"):
 | 2 | + a Gaussian shape | `location_scale/gaussian.py` | `gaussian` (exact; `band='mc'` tighter, fixed δ only) | high-probability | keeps falling |
 | 2 | + a location–scale shape | `location_scale/monte_carlo.py` | `location_scale_mc` (logistic, *t*, laplace, gaussian) | high-probability | keeps falling |
 | 2 | + Gaussian shape | `predictive/student_t.py` | `predictive_t` | average-case | keeps falling |
-| — | the published fence | `fences/published.py` | `published_fence` | average-case | — (for ablations) |
-| — | the k-th point fence | `fences/kth_point.py` | `kth_point_fence` | average-case | — (for ablations) |
+| — | the published tolerance limit | `tolerance_limits/published.py` | `published_tolerance_limit` | average-case | — (for ablations) |
+| — | the k-th point tolerance limit | `tolerance_limits/kth_point.py` | `kth_point_tolerance_limit` | average-case | — (for ablations) |
 
 Shared machinery: `location_scale/base.py` (`_LocationScale`, the band
 and `closed_form_minimax`), `moments/base.py` (`_BoundedMoments`, which
 subclasses `_LocationScale`, so the moments package depends on the
-location-scale one), `fences/base.py` (`_Fence`).
+location-scale one), `tolerance_limits/base.py` (`_ToleranceLimit`).
 
 Rank-based bounds (level 0) are flat between data points and cannot certify
 below about ln(1/δ)/N (the notes' "flat" and "floor" results). To give a scarce class room that

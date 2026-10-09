@@ -43,7 +43,7 @@ class Sum(DecisionRule):
             return w_low * curve_low(b)['L'][0] + w_high * curve_high(b)['L'][0]
         lo, hi = bracket
         if not hi > lo or not (np.isfinite(total(lo)) and np.isfinite(total(hi))):
-            return None       # e.g. an infeasible stretch of a fence curve
+            return None       # e.g. an infeasible stretch of a tolerance limit curve
         res = minimize_scalar(total, bounds=(lo, hi), method='bounded',
                               options={'xatol': 1e-12})
         return float(res.x) if res.success else None

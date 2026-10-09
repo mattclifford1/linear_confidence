@@ -17,7 +17,7 @@ Flags on a `Bound` (`deltas/bounds/base.py`) that the estimator reads:
 | `needs_delta` | False for curves with no confidence level (predictive, Saw–Yang–Mo) |
 | `continuous` | False when the curve only changes at data points: the data midpoints then suffice, and no grid is needed |
 | `smooth` | False when the curve has flat steps anywhere: no root-finding refinement |
-| `self_resolving` | True when the bound fixes δ itself from b (the published fence) |
+| `self_resolving` | True when the bound fixes δ itself from b (the published tolerance limit) |
 
 The fit, in order: `ProjectedData` → `bound.fit(sample)` per class (deep copies)
 → `confidence.prepare(bound)` → `search.generate` → curves over the candidates

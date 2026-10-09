@@ -31,7 +31,7 @@ class Bound(Component):
     #: minimisation needs a curve without flat stretches
     smooth = True
     #: True for bounds that fix delta themselves from b (the published
-    #: fence); they implement resolve(b) -> {'L', 'delta', 'U'}
+    #: tolerance limit); they implement resolve(b) -> {'L', 'delta', 'U'}
     self_resolving = False
 
     def fit(self, sample):

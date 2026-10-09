@@ -8,7 +8,7 @@ under both settings of `deltas.misc.use_two.USE_TWO`.
 | folder | what | old import paths (still work, same module objects) |
 |---|---|---|
 | `ecai2024/` | the published method: `base.base_deltas` (separable), `downsample.downsample_deltas` (+ slacks — *the* published method), `equations`, `radius`, `optimise_deltas`, `optimise_contraint` | `deltas.model.base`, `deltas.model.downsample`, `deltas.utils.equations`, `deltas.utils.radius`, `deltas.optimisation.*` |
-| `non_separable/` | the Dec 2024 draft: `non_sep.deltas` (k-th point fences), `data_info` | `deltas.model.non_sep`, `deltas.model.data_info` |
+| `non_separable/` | the Dec 2024 draft: `non_sep.deltas` (k-th point tolerance limits), `data_info` | `deltas.model.non_sep`, `deltas.model.data_info` |
 | `exploratory/` | `SSL`, `reprojection`, `SVM_supports` — used by neither paper | `deltas.model.SSL`, `…reprojection`, `…SVM_supports` |
 | `overlap/` | the original Clopper–Pearson / DKW code | (none: `deltas.model.overlap` is now a shim over `DeltasEstimator`, proven bit-identical to this) |
 
@@ -41,5 +41,5 @@ Parallelised with `multiprocessing`; serial and parallel runs agree exactly.
 Generalises from the k-th furthest point and sweeps the bias.
 `loss_type ∈ {'min','max','mean'}`, or `only_furtherest_k=True`. Requires a
 `clf` with `get_projection` at construction. The loss it uses (δ·k/(N+1))
-bounds nothing; the modular `KthPointFence(loss_form='expected')` offers the
+bounds nothing; the modular `KthPointToleranceLimit(loss_form='expected')` offers the
 corrected form.
