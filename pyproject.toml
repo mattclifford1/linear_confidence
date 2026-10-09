@@ -24,9 +24,11 @@ dependencies = [
     # [tool.uv.sources] below and CLAUDE.md
     "toy-datasets",
     "projection-models",
-    # umap-learn (a toy_datasets dependency) has no lower bound on its own
-    # transitive numba/llvmlite stack, so the resolver happily picks
-    # llvmlite 0.36, which refuses to build on python >= 3.10. Pin the floor.
+    # deltas/pipeline/data.py imports umap; toy_datasets only offers it as an extra
+    "umap-learn>=0.5.9.post2",
+    # umap-learn has no lower bound on its own transitive numba/llvmlite stack,
+    # so the resolver happily picks llvmlite 0.36, which refuses to build on
+    # python >= 3.10. Pin the floor.
     "pynndescent>=0.6",
     "numba>=0.61",
     "llvmlite>=0.44",

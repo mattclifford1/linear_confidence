@@ -34,7 +34,7 @@ working notes `../papers/deltas-other-concentration/main.tex`.
 ## Environment — **uv**
 
 ```bash
-uv sync --group dev      # creates .venv, installs deltas + both siblings editable
+uv sync --extra torch    # creates .venv, installs deltas + both siblings editable; a sync without the extra uninstalls torch
 uv run pytest tests -q                  # everything (~2 min)
 uv run pytest tests -q -m "not golden"  # skip the golden tests while iterating
 uv run python experiments/run_experiments.py
@@ -51,8 +51,8 @@ The two sibling repos are **path dependencies** declared in
 immediately:
 
 ```toml
-toy-datasets      = {path = "../../Repos/toy_datasets", editable = true}
-projection-models = {path = "../../Repos/projection_models", editable = true}
+toy-datasets      = {path = "../../lib/toy_datasets", editable = true}
+projection-models = {path = "../../lib/projection_models", editable = true}
 ```
 
 ### The sklearn pin is gone
