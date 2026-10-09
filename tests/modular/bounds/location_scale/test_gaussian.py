@@ -1,7 +1,7 @@
 '''
 GaussianConfidence: the rectangle and the Monte Carlo band cover the true tail
 at every boundary at once (checked by simulation), the band needs a fixed
-delta, and the envelope has the right shape.
+delta, and the band has the right shape.
 '''
 import numpy as np
 import pytest
@@ -42,7 +42,7 @@ def test_mc_band_needs_a_fixed_delta():
 
 
 def test_fewer_points_mean_more_room():
-    '''same mean and s.d., smaller N -> larger envelope beyond the data'''
+    '''same mean and s.d., smaller N -> larger band beyond the data'''
     base = np.random.default_rng(6).normal(0, 1, 200)
     base = (base - base.mean()) / base.std(ddof=1)
     small = np.r_[-1.2, -0.6, 0.0, 0.6, 1.2]
@@ -54,7 +54,7 @@ def test_fewer_points_mean_more_room():
         assert small_U[0] > big_U[0]
 
 
-def test_envelope_shape():
+def test_band_shape():
     s = ClassSample(np.random.default_rng(7).normal(0, 1, 30), 0, 'low')
     g = GaussianConfidence().fit(s)
     b = np.linspace(-3, 6, 91)

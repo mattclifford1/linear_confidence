@@ -1,5 +1,5 @@
 '''
-Confidence envelope for any location-scale family (logistic, t, laplace,
+Confidence band for any location-scale family (logistic, t, laplace,
 gaussian) from Monte Carlo pivots. See deltas/bounds/location_scale/__init__.py
 for the model.
 '''
@@ -34,7 +34,7 @@ def _pivot_draws(family, df, N, draws, seed):
 @register('bound', 'location_scale_mc')
 class LocationScaleConfidence(_LocationScale):
     '''
-    confidence envelope for any location-scale family, from Monte Carlo
+    confidence band for any location-scale family, from Monte Carlo
     pivots. For a sample mu + sigma * eps, A = (xbar - mu)/s and B = s/sigma
     have a law free of (mu, sigma), so their quantiles, simulated once per
     (family, N), give exact (up to Monte Carlo error) confidence bounds:

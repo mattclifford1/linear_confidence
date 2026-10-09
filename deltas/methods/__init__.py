@@ -3,17 +3,17 @@ Named deltas methods - the single place the experiment runners get them from.
 
     from deltas.methods import METHODS, get, available
     fitted = METHODS['CP Minimax'](clf, X, y)
-    available('envelope')
+    available('band')
 
 Families: published (ECAI 2024), non_separable (Dec 2024 draft), overlap
-(Clopper-Pearson / DKW), envelope (the shape-aware methods), ablation (the
+(Clopper-Pearson / DKW), band (the shape-aware methods), ablation (the
 published fences as modular compositions).
 '''
-from deltas.methods import ablations, envelope, legacy, overlap
+from deltas.methods import ablations, band, legacy, overlap
 from deltas.methods.base import Method
 
 METHODS = {}
-for _module in (legacy, overlap, envelope, ablations):
+for _module in (legacy, overlap, band, ablations):
     for _m in _module.METHODS:
         if _m.name in METHODS:
             raise ValueError(f'duplicate method name {_m.name!r}')

@@ -1,10 +1,10 @@
 '''
-Level 2 of the assumption ladder: location-scale envelopes.
+Level 2 of the assumption ladder: location-scale bands.
 
 Model (after any fixed increasing transform of the score): the class-i scores
 are mu_i + sigma_i * eps with eps ~ F_0 known (Gaussian by default). A
 confidence region for (mu, sigma) gives, by the "uniform for free" lemma of the working notes, an
-envelope valid at every boundary at once:
+band valid at every boundary at once:
 
     U(b) = sup over the region of P(error at b)
          = psi((d(b) - shift) / sigma_up)   if that argument is >= 0, else 1
@@ -21,9 +21,9 @@ LocationScaleConfidence  any location-scale F_0 (logistic, t_nu, laplace,
                          gaussian) via Monte Carlo pivots
 
 Degenerate samples (N < 2, or no spread) carry no location-scale information:
-the envelope is 1 everywhere.
+the band is 1 everywhere.
 
-    base.py          _LocationScale: the shared envelope and closed_form_minimax
+    base.py          _LocationScale: the shared band and closed_form_minimax
     gaussian.py      GaussianConfidence (registry name 'gaussian')
     monte_carlo.py   LocationScaleConfidence (registry name 'location_scale_mc')
 '''

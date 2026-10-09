@@ -60,7 +60,7 @@ name from the single registry `deltas.methods.METHODS` (`deltas/methods/`).
 
 Add a method by adding a `Method` to `deltas/methods/` (see its README) and its
 name to the runner's list. `run_wide.py --methods` accepts any registered name,
-e.g. the shape-aware family `Gaussian Predictive`, `Gaussian Envelope`, ….
+e.g. the shape-aware family `Gaussian Predictive`, `Gaussian Band`, ….
 Each run stamps the full specification of every method into `config.json`
 (`method_specs`).
 

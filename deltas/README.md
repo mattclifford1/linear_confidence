@@ -18,7 +18,7 @@ classifier is only ever used as a projection function (`get_projection(X) ->
 
 | slot | question it answers | folder | options |
 |---|---|---|---|
-| bound | how much of class *i* lies beyond *b*? | `bounds/` | Clopper–Pearson, DKW; Gaussian/logistic/*t* envelopes; Student-*t* predictive; Saw–Yang–Mo, Cantelli, VP; the published fences |
+| bound | how much of class *i* lies beyond *b*? | `bounds/` | Clopper–Pearson, DKW; Gaussian/logistic/*t* bands; Student-*t* predictive; Saw–Yang–Mo, Cantelli, VP; the published fences |
 | confidence | how is δ set? | `confidence/` | `FixedDelta(δ)`, `OptimisedDelta` (the published loss) |
 | rule | how do two curves give one *b*? | `rules/` | minimax, sum, risk, Neyman–Pearson |
 | search | which *b* are tried? | `search/` | data midpoints, grid, auto |
@@ -84,7 +84,7 @@ fitted = METHODS['CP Minimax'](clf, X, y)
 
 Slots take a registered name (`'clopper_pearson'`), a `(name, kwargs)` pair
 (`('fixed', {'delta': 0.1})`) or a component object. `bound` may also be a dict
-by class label, e.g. counts for a large majority and a Gaussian envelope for a
+by class label, e.g. counts for a large majority and a Gaussian band for a
 scarce minority. `DeltasEstimator` is an sklearn `BaseEstimator`: `clone`,
 `get_params` and `set_params` work, and component objects passed in are never
 mutated. `model.describe()` gives a JSON-friendly spec for results files.
@@ -101,7 +101,7 @@ midpoints) is bit-for-bit `deltas.model.overlap.binomial_deltas(objective='minim
 | a decision rule | subclass `rules.base.DecisionRule` in its own file in `rules/` (override `bind` if it needs the data, `class_weights` if it reweights the classes) |
 | a search | subclass `search.base.CandidateSet` in its own file in `search/` |
 | a transform | subclass `transforms.base.Transform` in its own file in `transforms/` (set `requires_fit` if it learns from data) |
-| a named method | add a `Method` to `methods/envelope.py` (or a new module listed in `methods/__init__.py`) |
+| a named method | add a `Method` to `methods/band.py` (or a new module listed in `methods/__init__.py`) |
 
 Tests for a new component go in the matching folder of `tests/modular/`, one
 test file per module. Check coverage by simulation for any high-probability

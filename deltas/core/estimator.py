@@ -19,7 +19,7 @@ composition is Clopper-Pearson minimax, bit-for-bit the same as
 deltas.model.overlap.binomial_deltas(objective='minimax').
 
 Per-class bounds: `bound` may also be a dict {label: spec}, e.g. counts for a
-large majority and a location-scale envelope for a scarce minority.
+large majority and a location-scale band for a scarce minority.
 
 Certificates: certify='decision' reports the (U, delta) of the deciding
 curves at the chosen boundary, as the overlap methods always have. Pass a

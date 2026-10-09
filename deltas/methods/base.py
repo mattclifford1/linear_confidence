@@ -19,7 +19,7 @@ class Method:
     name         the name used in results tables
     build        callable(clf) -> an unfitted estimator
     fit_kwargs   extra keyword arguments for .fit (legacy options)
-    family       'published', 'non_separable', 'overlap', 'envelope',
+    family       'published', 'non_separable', 'overlap', 'band',
                  'ablation'
     reference    where the method is described
     description  one line

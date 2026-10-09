@@ -23,7 +23,7 @@ REPS = 1500
 
 
 def _coverage(make_bound, draw, true_tail, N, delta, side, seed):
-    '''fraction of samples whose envelope covers the truth on a whole grid'''
+    '''fraction of samples whose band covers the truth on a whole grid'''
     rng = np.random.default_rng(seed)
     grid = np.linspace(-6, 6, 241)
     ok = 0

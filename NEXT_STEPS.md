@@ -15,7 +15,7 @@ The research plan behind this list is in the Overleaf working notes,
   behind the published numbers is frozen in `deltas/legacy/`, and golden tests
   pin its exact outputs. Nothing reported has moved.
 - **No experiments have been run** with the new shape-aware methods (Gaussian
-  envelopes, the Student-*t* predictive curve and so on). They exist and are
+  bands, the Student-*t* predictive curve and so on). They exist and are
   tested, but have not been tried on real data.
 - **The research questions below are still open.** The experiments can start
   without answers, but the answers decide the headline method.
@@ -75,7 +75,7 @@ Each has a recommendation in the working notes ("Open questions" section).
 
 | question | the choice | recommendation |
 |---|---|---|
-| **Average or guaranteed?** | place the boundary for best average performance (Student-*t* predictive), for guaranteed minority protection (confidence envelope), or decide with the first and certify with the second | both: decide average-case, certify high-probability |
+| **Average or guaranteed?** | place the boundary for best average performance (Student-*t* predictive), for guaranteed minority protection (confidence band), or decide with the first and certify with the second | both: decide average-case, certify high-probability |
 | **Is a shape assumption OK?** | a stated "Gaussian after a monotone transform" headline method, with the assumption-free Clopper–Pearson certificate always reported next to it | yes |
 | **Fix δ or keep optimising it?** | optimising δ on the same data makes the reported confidence invalid; fixed, δ becomes a reported confidence or a caution dial | fix it |
 | **Calibration for tiny minorities** | always split off calibration data (costs about a third of the minority), cross-fit, or split only the majority; and what is the smallest minority that matters | always split for the main tables; cross-fitting later |
@@ -102,7 +102,7 @@ order, because the first two can change the defaults. The first four reuse the
 4. **Real-data grid.** All 238 cells × 10 seeds, with and without the calibration
    split: average ranks with significance tests, coverage and tightness of both
    certificates, fit time. `run_wide.py --methods` already accepts the new names
-   (`Gaussian Predictive`, `Gaussian Envelope`, …).
+   (`Gaussian Predictive`, `Gaussian Band`, …).
 5. **One-slot ablations.** Swap one component at a time: rule, family, Monte Carlo
    band or rectangle, transform, fixed or optimised δ, calibration fraction.
 6. **Costs and extensions.** The risk rule on the cost datasets (does it fix the

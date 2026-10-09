@@ -1,5 +1,5 @@
 '''
-Gaussian confidence envelope: exact t / chi^2 pivots (Bonferroni rectangle),
+Gaussian confidence band: exact t / chi^2 pivots (Bonferroni rectangle),
 or a Monte Carlo calibrated simultaneous band. See
 deltas/bounds/location_scale/__init__.py for the model.
 '''
@@ -51,14 +51,14 @@ def _gaussian_band(N, delta, p_min, n_p, draws, seed):
 @register('bound', 'gaussian')
 class GaussianConfidence(_LocationScale):
     '''
-    Gaussian confidence envelope.
+    Gaussian confidence band.
 
     band='rectangle'  mu and sigma bounded separately at delta/2 each by the
                       exact t and chi^2 pivots; valid for all b and all delta
                       (works with any delta policy)
     band='mc'         a simultaneous band over tail levels [p_min, 0.5],
                       calibrated by Monte Carlo: about half the cost of the
-                      rectangle (working notes, "Level 2: location-scale envelopes"). Fixed delta only;
+                      rectangle (working notes, "Level 2: location-scale bands"). Fixed delta only;
                       beyond the p_min level it reports p_min.
     '''
 

@@ -1,5 +1,5 @@
 '''
-The machinery every location-scale envelope shares: fit the sample moments,
+The machinery every location-scale band shares: fit the sample moments,
 turn (shift, sigma_up) at a confidence delta into the curve
     U(b) = psi((d(b) - shift) / sigma_up),
 and the closed-form minimax boundary of the working notes. Subclasses supply

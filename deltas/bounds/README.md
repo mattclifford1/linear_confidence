@@ -6,7 +6,7 @@ per file; `base.py` holds the slot's base classes `Bound` and `CountBound`,
 and each family is a package with its shared machinery in its own `base.py`.
 Ordered by what they assume, which is also what they can say beyond the data
 (see the working notes, *deltas-other-concentration*, sections "A framework:
-tail envelopes" and "The menu"):
+confidence bands" and "The menu"):
 
 | level | assumption | file | registry name | guarantee | beyond the data |
 |---|---|---|---|---|---|
@@ -21,7 +21,7 @@ tail envelopes" and "The menu"):
 | — | the published fence | `fences/published.py` | `published_fence` | average-case | — (for ablations) |
 | — | the k-th point fence | `fences/kth_point.py` | `kth_point_fence` | average-case | — (for ablations) |
 
-Shared machinery: `location_scale/base.py` (`_LocationScale`, the envelope
+Shared machinery: `location_scale/base.py` (`_LocationScale`, the band
 and `closed_form_minimax`), `moments/base.py` (`_BoundedMoments`, which
 subclasses `_LocationScale`, so the moments package depends on the
 location-scale one), `fences/base.py` (`_Fence`).

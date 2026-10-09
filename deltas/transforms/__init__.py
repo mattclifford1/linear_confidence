@@ -10,7 +10,7 @@ consequential for any bound that assumes a shape).
 A threshold rule does not see these: {z > b} = {g(z) > g(b)}, so every count
 and every error is unchanged. What changes is the *shape* the class
 distributions have, which matters to any bound that assumes one (the
-location-scale envelopes). So the choice is free for the classifier and
+location-scale bands). So the choice is free for the classifier and
 consequential for the bound.
 
 A transform with parameters learnt from data (Yeo-Johnson) must be fitted on

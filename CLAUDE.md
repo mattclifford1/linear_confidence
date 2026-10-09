@@ -122,7 +122,7 @@ registered name, a `(name, kwargs)` pair or a component object.
   `@register('bound', 'name')`. Test its coverage by simulation in the matching
   folder of `tests/modular/`.
 - A new rule, δ policy, search or transform goes in its folder the same way.
-- A new named method is a `Method` in `deltas/methods/` (`envelope.py` for the
+- A new named method is a `Method` in `deltas/methods/` (`band.py` for the
   shape-aware family). The runners pick methods from `deltas.methods.METHODS`.
   `run_wide.py --methods` accepts any registered name.
 

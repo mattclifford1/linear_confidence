@@ -9,7 +9,7 @@ The single place the experiment runners get their methods from. Each is a
 | published | `legacy.py` | Slacks Deltas, Slacks Deltas (continuous) |
 | non_separable | `legacy.py` | Min / Max / Avg / F Deltas |
 | overlap | `overlap.py` | CP Sum, CP Minimax, DKW Sum, DKW Minimax |
-| envelope | `envelope.py` | Gaussian Predictive, Gaussian Envelope, Gaussian Envelope (MC band), Logistic Envelope, Gaussian Neyman-Pearson, Saw-Yang-Mo Minimax |
+| band | `band.py` | Gaussian Predictive, Gaussian Band, Gaussian Band (MC), Logistic Band, Gaussian Neyman-Pearson, Saw-Yang-Mo Minimax |
 | ablation | `ablations.py` | ECAI Fence (modular), ECAI Fence (one-sided radius), k-th Point Fence (min, expected loss) |
 
 The legacy entries import their code lazily: the legacy modules read `USE_TWO`
@@ -19,5 +19,5 @@ caller sets it.
 ```python
 from deltas.methods import METHODS, available
 METHODS['Slacks Deltas'].configured(max_trials=2000, parallel=False)   # as run_wide does
-available('envelope')
+available('band')
 ```

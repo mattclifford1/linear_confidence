@@ -71,8 +71,8 @@ def test_every_method_fits(name):
     assert (preds == fx['y_test']).mean() > 0.95
 
 
-@pytest.mark.parametrize('name', available('envelope'))
-def test_envelope_methods_always_report_the_assumption_free_certificate(name):
+@pytest.mark.parametrize('name', available('band'))
+def test_band_methods_always_report_the_assumption_free_certificate(name):
     fx = cases.load_fixture('breast_cancer')
     m = METHODS[name](None, fx['z_train'][:, None], fx['y_train'])
     assert 'clopper_pearson' in m.certificates_
