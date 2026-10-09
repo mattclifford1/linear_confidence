@@ -125,6 +125,9 @@ modes), then `results/wide.csv`, `results/wide_coverage.csv`,
   ICU sets (MIMIC-III Mortality at 8.5:1, MIMIC-IV Ready for Discharge at
   212:1 — by far the most imbalanced in the grid, and the only one whose
   minority is large enough for the certificate to be informative).
+- **Class pairs**: `--datasets "MNIST: 4 vs 9"` picks a binary task from an image
+  dataset by class name (`+` joins classes, `vs rest` or no `vs` gives one-vs-rest).
+  The named positive class is always class 1.
 - **Hyperparameters are left at defaults**, unlike `run_experiments.py` which
   grid-searches the SVM. The claim under test is about post-hoc bias
   correction, not tuning, and a 5-fold search over 63 parameter settings per

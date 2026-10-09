@@ -226,7 +226,9 @@ def main():
 
     files = sorted(glob.glob(os.path.join(PROJ, '*.npz')))
     if args.datasets:
-        want = {d.replace(' ', '-') for d in args.datasets}
+        # the file-name form written by export_projections._slug
+        want = {d.replace(':', '').replace(' ', '-').replace('/', '-')
+                for d in args.datasets}
         files = [f for f in files
                  if os.path.basename(f).split('__')[0] in want]
     if args.models:

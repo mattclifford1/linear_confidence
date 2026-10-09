@@ -91,6 +91,39 @@ def test_unknown_dataset_names_are_reported_usefully():
     assert 'toy_datasets' in str(exc.value)
 
 
+def test_loader_kwargs_reach_the_loader():
+    train, test = data_sibling.get_sibling_dataset(
+        'Gaussian', seed=0, num_samples=[300, 60])
+    total = np.bincount(train['y'], minlength=2) + np.bincount(test['y'], minlength=2)
+    assert total.tolist() == [300, 60]
+
+
+def test_a_named_pair_keeps_its_positive_class_as_class_1():
+    '''MNIST has more 1s than 7s; naming 1 as positive must not flip it'''
+    pytest.importorskip('torchvision')
+    from projection_models.datasets import binary_pair
+    train, test = data_sibling.get_sibling_dataset(
+        'MNIST', seed=0, **binary_pair('MNIST', '1', '7'))
+    total = np.bincount(train['y'], minlength=2) + np.bincount(test['y'], minlength=2)
+    assert total[1] > total[0]
+
+
+def test_pair_specs_resolve_to_loader_kwargs():
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'experiments'))
+    from export_projections import resolve_dataset, _slug
+
+    assert resolve_dataset('Hepatitis') == ('Hepatitis', {})
+    name, kw = resolve_dataset('MNIST: 4 vs 9')
+    assert name == 'MNIST' and kw['minority_id'] == [4]
+    assert kw['classes_remove'] == [0, 1, 2, 3, 5, 6, 7, 8]
+    _, kw = resolve_dataset('MNIST: 3+5 vs rest')
+    assert kw['minority_id'] == [3, 5] and kw['classes_remove'] == []
+    assert _slug('Fashion-MNIST: Shirt vs T-shirt/top') == \
+        'Fashion-MNIST-Shirt-vs-T-shirt-top'
+
+
 # ---------------------------------------------------------------- models ---
 MODELS = ['Linear', 'LDA', 'SVM-rbf', 'MLP', 'RandomForest',
           'GradientBoosting', 'NearestClassMean']

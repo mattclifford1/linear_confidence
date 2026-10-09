@@ -23,6 +23,7 @@ The step is kept because it is still worth having:
 
     uv run python export_projections.py
     ... --datasets Hepatitis "Heart Disease"     # subset
+    ... --datasets "MNIST: 4 vs 9" "CIFAR-100: fish vs rest" "MNIST: 3+5 vs rest"
     ... --models Linear LDA                      # subset
     ... --seeds 10 --jobs 8
     ... --force                                  # ignore existing outputs
@@ -47,6 +48,7 @@ from sklearn.model_selection import train_test_split       # noqa: E402
 from imblearn.over_sampling import SMOTE                   # noqa: E402
 
 import projection_models as pm                             # noqa: E402
+from projection_models.datasets import binary_pair         # noqa: E402
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -102,13 +104,32 @@ MODELS = {
 
 
 # ------------------------------------------------------------------ data ---
-def _as_minority_class_1(X, y):
+def resolve_dataset(spec):
+    '''
+    (toy_datasets name, loader kwargs) for a plain name or a class-pair spec
+    "<name>: <positive> vs <negative>", where `+` joins classes and a missing
+    or `rest` negative means positive-vs-rest.
+    '''
+    if ':' not in spec:
+        return spec, {}
+    name, task = (part.strip() for part in spec.split(':', 1))
+    positive, _, negative = (part.strip() for part in task.partition(' vs '))
+
+    def classes(text):
+        names = tuple(c.strip() for c in text.split('+'))
+        return names[0] if len(names) == 1 else names
+
+    negative = None if negative in ('', 'rest') else classes(negative)
+    return name, binary_pair(name, classes(positive), negative)
+
+
+def _as_minority_class_1(X, y, flip=True):
     '''deltas convention: class 1 is always the minority / positive class'''
     y = np.asarray(y).squeeze().astype(int)
     classes, counts = np.unique(y, return_counts=True)
     if len(classes) != 2:
         raise ValueError(f'not binary: {dict(zip(classes.tolist(), counts.tolist()))}')
-    if counts[1] > counts[0]:
+    if flip == True and counts[1] > counts[0]:
         y = 1 - y
     return np.asarray(X, dtype=float), y
 
@@ -125,9 +146,14 @@ def load_split(name, seed):
     split. Asking for more minority training points than exist leaves that
     class with an empty test index list, which makes proportional_split's
     np.concatenate return a float array and blow up downstream.
+
+    `name` may be a class-pair spec (see resolve_dataset); its positive class
+    stays class 1 even when it is the larger one.
     '''
-    loader = get_dataset(name)
-    X, y = _as_minority_class_1(loader.get_X(), loader.get_y())
+    base, loader_kwargs = resolve_dataset(name)
+    loader = get_dataset(base, **loader_kwargs)
+    X, y = _as_minority_class_1(loader.get_X(), loader.get_y(),
+                                flip=not loader_kwargs)
     if X.ndim > 2:                                  # images -> flat vectors
         X = X.reshape(len(X), -1)
 
@@ -168,6 +194,7 @@ def load_split(name, seed):
         raise ValueError(f'only {int((train["y"] == 1).sum())} minority train '
                          f'points (need {MIN_MINORITY_TRAIN})')
     return train, test, {'natural_ratio': float(natural),
+                         'loader_kwargs': loader_kwargs,
                          'majority_max': majority_max,
                          'scaler': float(scaler),
                          'train_ratio': float(
@@ -321,7 +348,8 @@ def run_pair(dataset, model_name, seeds, force=False):
 
 
 def _slug(name):
-    return name.replace(' ', '-').replace('/', '-')
+    '''file-name form of a dataset name'''
+    return name.replace(':', '').replace(' ', '-').replace('/', '-')
 
 
 def main():

@@ -44,7 +44,7 @@ def available():
     return list(AVAILABLE_DATASETS)
 
 
-def _minority_is_class_1(X, y):
+def _minority_is_class_1(X, y, flip=True):
     '''repo-wide convention: class 1 is the minority / positive class'''
     y = np.asarray(y).squeeze().astype(int)
     classes, counts = np.unique(y, return_counts=True)
@@ -52,7 +52,7 @@ def _minority_is_class_1(X, y):
         raise ValueError(
             f'{len(classes)}-class dataset; deltas is binary only '
             f'(counts {dict(zip(classes.tolist(), counts.tolist()))})')
-    if counts[1] > counts[0]:
+    if flip == True and counts[1] > counts[0]:
         y = 1 - y
     return np.asarray(X, dtype=float), y
 
@@ -66,11 +66,15 @@ def get_sibling_dataset(name, seed=True, train_size=0.5, ratio=None,
                  None keeps the dataset's natural balance.
     equal_test:  balance the test set by subsampling the majority.
     flatten:     reshape image datasets to one row per sample.
+    kwargs:      passed to the toy_datasets loader, e.g. a class pair from
+                 `projection_models.datasets.binary_pair`. An explicit
+                 `minority_id` stays class 1 even when it is the larger class.
     '''
     get_dataset, proportional_split = _import_sibling()
 
-    loader = get_dataset(name)
-    X, y = _minority_is_class_1(loader.get_X(), loader.get_y())
+    loader = get_dataset(name, **kwargs)
+    X, y = _minority_is_class_1(loader.get_X(), loader.get_y(),
+                                flip='minority_id' not in kwargs)
     if flatten == True and X.ndim > 2:
         X = X.reshape(len(X), -1)
 
