@@ -1381,9 +1381,9 @@ the order of those six steps.)
   rules, with costs, and on the ternary-search path.
   `deltas.model.overlap` is the shim.
 - **New components** from the other-concentration notes: Gaussian confidence
-  envelopes (exact, and a Monte Carlo simultaneous band), logistic/t/laplace
-  envelopes, the Student-t predictive curve, Saw–Yang–Mo, Cantelli, one-sided
-  VP, the published and k-th-point fences as curves (for ablations), and the
+  bands (exact, and a Monte Carlo simultaneous band), logistic/t/laplace
+  bands, the Student-t predictive curve, Saw–Yang–Mo, Cantelli, one-sided
+  VP, the published and k-th-point tolerance limits as curves (for ablations), and the
   risk and Neyman–Pearson rules. Each is tested for coverage by simulation
   where it makes a high-probability claim. The closed-form minimax boundary
   (the notes' "closed-form minimax boundary") matches the numerical one to 10⁻⁹.
@@ -1443,7 +1443,7 @@ on a branch `band-experiments` once agreed:
 Open questions for Matt, also in the notes:
 
 - **Average or guaranteed?** Optimise the boundary for average performance
-  (predictive), for guaranteed minority protection (envelope), or decide with
+  (predictive), for guaranteed minority protection (confidence band), or decide with
   the first and certify with the second (recommended)?
 - **Is a shape assumption OK?** A stated Gaussian-after-transform headline,
   with the assumption-free certificate always alongside?
