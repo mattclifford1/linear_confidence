@@ -11,6 +11,7 @@ import pytest
 
 import cases
 from deltas.bounds import PublishedToleranceLimit
+from deltas.core import ClassSample
 from deltas.classifiers.frozen import FrozenProjection
 from deltas.core import DeltasEstimator
 
@@ -83,3 +84,33 @@ def test_tolerance_limit_certificate_is_average_case(golden_xy):
     m = DeltasEstimator(bound='published_tolerance_limit', rule='sum').fit(X, y)
     assert m.certificates_['decision']['guarantee'] == 'average_case'
     assert 0 < m.delta1 < 1 and 0 < m.delta2 < 1
+
+
+def test_a_known_range_of_twice_the_radius_matches_the_sample_radius():
+    s = ClassSample(np.random.default_rng(0).normal(size=30), 0, 'low')
+    b = s.mean + np.linspace(0.5, 6, 50)
+    plug_in = PublishedToleranceLimit().fit(s).delta_at(b)
+    known = PublishedToleranceLimit(
+        score_range=(s.mean - s.radius, s.mean + s.radius)).fit(s).delta_at(b)
+    assert np.allclose(plug_in, known, equal_nan=True)
+
+
+@pytest.mark.parametrize('N', [5, 20, 100])
+def test_known_range_certificate_holds_on_average(N):
+    '''
+    scores from a skewed Beta(2, 5) on [-1, 1], the class below the boundary:
+    at a fixed delta, the true error beyond the tolerance limit averages at
+    most 1/(N+1) + delta
+    '''
+    from scipy import stats
+    truth = stats.beta(2, 5, loc=-1, scale=2)
+    rng = np.random.default_rng(N)
+    delta, errs = 0.05, []
+    for _ in range(2000):
+        s = ClassSample(truth.rvs(N, random_state=rng), 0, 'low')
+        bound = PublishedToleranceLimit(score_range=(-1, 1)).fit(s)
+        b = s.mean + np.linspace(0, 8, 8001)
+        d = bound.delta_at(b)
+        b_at = b[np.nanargmax(np.where(d <= delta, 1, np.nan))]
+        errs.append(truth.sf(b_at))
+    assert np.mean(errs) <= 1 / (N + 1) + delta

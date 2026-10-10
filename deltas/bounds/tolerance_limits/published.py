@@ -10,11 +10,19 @@ from deltas.core.registry import register
 
 @register('bound', 'published_tolerance_limit')
 class PublishedToleranceLimit(_ToleranceLimit):
-    def __init__(self, factor=2.0, radius='two_sided'):
+    def __init__(self, factor=2.0, radius='two_sided', score_range=None):
+        '''
+        score_range: (lo, hi) known bounds on the score. Theorem 2 then uses the
+        fixed R = (hi - lo) / 2 for the mean's concentration, as its proof needs,
+        instead of the sample radius; the support term keeps the sample radius.
+        '''
         if radius not in ('two_sided', 'one_sided'):
             raise ValueError("radius must be 'two_sided' or 'one_sided'")
+        if score_range is not None and not score_range[1] > score_range[0]:
+            raise ValueError('score_range must be (lo, hi) with hi > lo')
         self.factor = factor
         self.radius = radius
+        self.score_range = score_range
 
     def fit(self, sample):
         super().fit(sample)
@@ -25,6 +33,8 @@ class PublishedToleranceLimit(_ToleranceLimit):
             far = sample.z[-1] - sample.mean if sample.side == 'low' \
                 else sample.mean - sample.z[0]
             self.R = float(max(far, 0.0))
+        self.R_conc = self.R if self.score_range is None else \
+            0.5 * (self.score_range[1] - self.score_range[0])
         return self
 
     def delta_at(self, b):
@@ -32,7 +42,7 @@ class PublishedToleranceLimit(_ToleranceLimit):
         d = self.sample.facing_distance(np.asarray(b, dtype=float))
         if not self.R > 0:
             return np.full(d.shape, np.nan)
-        unit = self.factor * self.R / np.sqrt(self.N)
+        unit = self.factor * self.R_conc / np.sqrt(self.N)
         q = (d - self.R) / unit - 2.0
         return np.where(q >= 0, np.exp(-0.5 * np.maximum(q, 0.0) ** 2), np.nan)
 
