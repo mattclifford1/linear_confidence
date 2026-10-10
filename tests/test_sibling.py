@@ -122,6 +122,22 @@ def test_pair_specs_resolve_to_loader_kwargs():
     assert kw['minority_id'] == [3, 5] and kw['classes_remove'] == []
     assert _slug('Fashion-MNIST: Shirt vs T-shirt/top') == \
         'Fashion-MNIST-Shirt-vs-T-shirt-top'
+    _, kw = resolve_dataset('MNIST: 3 vs rest except 5+8')
+    assert kw['minority_id'] == [3] and kw['classes_remove'] == [5, 8]
+
+
+def test_shift_tasks_train_without_the_test_class():
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'experiments'))
+    from export_projections import source_specs, split_options
+
+    assert split_options('MNIST: 3 vs rest @n25 @test 5') == \
+        ('MNIST: 3 vs rest', 25, 10, '5')
+    assert source_specs('MNIST: 3 vs rest @test 5') == \
+        ['MNIST: 3 vs rest except 5', 'MNIST: 5 vs 3']
+    assert source_specs('MNIST: 3 vs 8 [resnet18] @test 5') == \
+        ['MNIST: 3 vs 8 [resnet18]', 'MNIST: 5 vs 3 [resnet18]']
 
 
 # ---------------------------------------------------------------- models ---
