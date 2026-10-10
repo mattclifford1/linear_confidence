@@ -34,10 +34,12 @@ to measure.
 
     uv run python run_costs.py
     uv run python run_costs.py --datasets "Costcla Direct Marketing"
+    uv run python run_costs.py --models Linear --seeds 2 --out costs-try.csv
 '''
 import argparse
 import json
 import os
+import pickle
 import warnings
 
 import numpy as np
@@ -49,7 +51,7 @@ from data_loaders import get_dataset                       # noqa: E402
 from data_loaders.utils import proportional_split          # noqa: E402
 from sklearn.model_selection import train_test_split       # noqa: E402
 
-import projection_models as pm                             # noqa: E402
+from export_projections import MODELS, fit_model           # noqa: E402
 from deltas.classifiers.frozen import FrozenProjection     # noqa: E402
 from deltas.model import overlap                           # noqa: E402
 
@@ -59,14 +61,11 @@ RESULTS = os.path.join(HERE, 'results')
 
 DATASETS = ['Costcla Direct Marketing',
             'Costcla Credit Scoring Kaggle 2011',
-            'Costcla Credit Scoring PAKDD 2009']
+            'Costcla Credit Scoring PAKDD 2009',
+            'German Credit']
 
-MODELS = {
-    'Linear': lambda: pm.Linear(max_iter=2000),
-    'LDA': lambda: pm.LDA(),
-    'RandomForest': lambda: pm.RandomForest(n_estimators=200),
-    'GradientBoosting': lambda: pm.GradientBoosting(),
-}
+#: Statlog's published cost matrix [FP, FN, TP, TN]: a bad risk passed as good costs 5
+GERMAN_COSTS = [1.0, 5.0, 0.0, 0.0]
 
 CAL_FRAC = 0.35
 TARGET_RATIO = 10.0
@@ -125,7 +124,8 @@ def load(name, seed):
     dd = loader.get_data_dict()
     X = np.asarray(dd['X'], dtype=float)
     y = np.asarray(dd['y']).squeeze().astype(int)
-    cm = np.asarray(dd['cost_matrix'], dtype=float)
+    cm = (np.asarray(dd['cost_matrix'], dtype=float) if 'cost_matrix' in dd
+          else np.tile(GERMAN_COSTS, (len(y), 1)))
     if np.bincount(y, minlength=2)[1] > np.bincount(y, minlength=2)[0]:
         y = 1 - y
         cm = cm[:, [1, 0, 3, 2]]        # swapping labels swaps the columns
@@ -165,7 +165,7 @@ def run_cell(name, model_name, seed):
                 Xtr, ytr, cmtr, test_size=CAL_FRAC, stratify=ytr,
                 random_state=seed)
 
-        clf = MODELS[model_name]().fit(X_fit, y_fit)
+        clf = fit_model(model_name, X_fit, y_fit, seed)
         z_fit = np.asarray(clf.get_projection(X_fit)).reshape(-1)
         z_cert = np.asarray(clf.get_projection(X_cert)).reshape(-1)
         z_test = np.asarray(clf.get_projection(Xte)).reshape(-1)
@@ -222,22 +222,38 @@ def main():
     ap.add_argument('--datasets', nargs='*', default=DATASETS)
     ap.add_argument('--models', nargs='*', default=list(MODELS))
     ap.add_argument('--seeds', type=int, default=10)
+    ap.add_argument('--jobs', type=int, default=1)
+    ap.add_argument('--out', default='costs.csv', help='results/<out>')
     args = ap.parse_args()
 
-    rows = []
-    for name in args.datasets:
-        for model_name in args.models:
-            for seed in range(args.seeds):
-                try:
-                    rows += run_cell(name, model_name, seed)
-                except Exception as exc:
-                    print(f'  ! {name} / {model_name} / {seed}: '
-                          f'{type(exc).__name__}: {exc}', flush=True)
-            print(f'  done {name} / {model_name}', flush=True)
+    # finished cells are kept here, so a stopped run resumes
+    parts = os.path.join(RESULTS, '.parts', 'costs-' + os.path.basename(args.out)[:-4])
+    os.makedirs(parts, exist_ok=True)
 
-    df = pd.DataFrame(rows)
+    def cell(name, model_name, seed):
+        path = os.path.join(parts, f'{name}__{model_name}__{seed}.pkl')
+        if os.path.exists(path):
+            with open(path, 'rb') as fh:
+                return pickle.load(fh)
+        try:
+            rows = run_cell(name, model_name, seed)
+        except Exception as exc:
+            print(f'  ! {name} / {model_name} / {seed}: '
+                  f'{type(exc).__name__}: {exc}', flush=True)
+            return []
+        with open(path + '.tmp', 'wb') as fh:
+            pickle.dump(rows, fh)
+        os.replace(path + '.tmp', path)
+        return rows
+
+    from joblib import Parallel, delayed
+    chunks = Parallel(n_jobs=args.jobs, verbose=5)(
+        delayed(cell)(name, model_name, seed) for name in args.datasets
+        for model_name in args.models for seed in range(args.seeds))
+    df = pd.DataFrame([r for c in chunks for r in c])
+    out = os.path.join(RESULTS, args.out)
     os.makedirs(RESULTS, exist_ok=True)
-    df.to_csv(os.path.join(RESULTS, 'costs.csv'), index=False)
+    df.to_csv(out, index=False)
 
     # cost relative to the oracle, per (dataset, model, seed, mode)
     key = ['dataset', 'model', 'seed', 'mode']
@@ -257,8 +273,8 @@ def main():
     piv2.columns = [c.replace('Costcla ', '') for c in piv2.columns]
     print(piv2.round(3).to_string())
 
-    print(f'\nwrote {os.path.join(RESULTS, "costs.csv")} ({len(df)} rows)')
-    with open(os.path.join(RESULTS, 'costs_config.json'), 'w') as f:
+    print(f'\nwrote {out} ({len(df)} rows)')
+    with open(out[:-len('.csv')] + '_config.json', 'w') as f:
         json.dump({'datasets': args.datasets, 'models': args.models,
                    'seeds': args.seeds, 'cal_frac': CAL_FRAC}, f, indent=2)
 

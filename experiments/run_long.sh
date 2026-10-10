@@ -10,7 +10,9 @@ set -u
 cd "$(dirname "$0")"
 mkdir -p logs
 echo $$ > logs/long.pid
-STAGES=${*:-L1 L2 L3 L4 L5 L6}
+# CPUS=0-5,16-21 limits every child to those vCPUs
+[ -n "${CPUS:-}" ] && taskset -cp "$CPUS" $$ > /dev/null
+STAGES=${*:-L1 L2 L3 L4 L5 L6 L7}
 METHODS=("Slacks Deltas" "Min Deltas" "F Deltas" "CP Sum" "CP Minimax" "DKW Sum"
          "DKW Minimax" "Gaussian Predictive" "Gaussian Band" "Logistic Band")
 
@@ -39,6 +41,8 @@ cpu_chain() {
     want L6 && stage linearsvm uv run python extra_grid.py image-fast \
         --models LinearSVM --seeds 3 --jobs 12
     stage tabular uv run python extra_grid.py tabular --seeds 10 --jobs 24
+    want L7 && stage costs uv run python run_costs.py --seeds 10 --jobs 24 \
+        --out costs-extra.csv
 }
 
 gpu_chain & GPU=$!
