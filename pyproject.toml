@@ -35,9 +35,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# the torch nets under deltas/classifiers (MNIST, MIMIC, large-margin loss).
+# the torch nets, the image and MedMNIST loaders, and pretrained backbones.
 # Not needed for the tabular pipeline or any of the papers' headline results.
-torch = ["torch>=2.0", "torchvision>=0.15"]
+torch = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "toy-datasets[image,medmnist]",
+    "projection-models[pretrained]",
+]
 
 [dependency-groups]
 dev = [
