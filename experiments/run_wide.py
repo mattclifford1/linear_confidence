@@ -18,6 +18,7 @@ bounds and whether those bounds actually held.
 import argparse
 import contextlib
 import glob
+import hashlib
 import json
 import os
 import signal
@@ -118,12 +119,24 @@ def _best_balanced_threshold(z, y):
     z0, z1 = z[y == 0], z[y == 1]
     if len(z0) == 0 or len(z1) == 0:
         return float(np.median(z))
-    err = 0.5 * (((z0[:, None] > mids[None, :]).mean(axis=0)) +
-                 ((z1[:, None] <= mids[None, :]).mean(axis=0)))
+    above_0 = len(z0) - np.searchsorted(np.sort(z0), mids, side='right')
+    below_1 = np.searchsorted(np.sort(z1), mids, side='right')
+    err = 0.5 * (above_0 / len(z0) + below_1 / len(z1))
     return float(mids[int(np.argmin(err))])
 
 
-def run_file(path, methods, seeds, timeout=0):
+def run_file_cached(path, methods, seeds, timeout, parts, max_n=None):
+    '''run_file, memoised as one pickle per exported file under `parts`'''
+    part = os.path.join(parts, os.path.basename(path)[:-4] + '.pkl')
+    if os.path.exists(part) and os.path.getmtime(part) > os.path.getmtime(path):
+        return pd.read_pickle(part).to_dict('records')
+    rows = run_file(path, methods, seeds, timeout, max_n)
+    pd.DataFrame(rows).to_pickle(part + '.tmp')
+    os.replace(part + '.tmp', part)
+    return rows
+
+
+def run_file(path, methods, seeds, timeout=0, max_n=None):
     rows = []
     with np.load(path, allow_pickle=False) as f:
         meta = json.loads(str(f['meta'][0]))
@@ -139,12 +152,12 @@ def run_file(path, methods, seeds, timeout=0):
                 thr = float(f[p + 'threshold'][0])
                 rows += _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit,
                              z_test, y_test, thr, f, p, keys, methods,
-                             timeout)
+                             timeout, max_n or {})
     return rows
 
 
 def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
-         f, p, keys, methods, timeout):
+         f, p, keys, methods, timeout, max_n):
     # how optimistic is this classifier on the points it was fitted to? This
     # is the quantity the calibration split exists to neutralise, so record it
     # per row: the coverage shortfall should track it.
@@ -196,6 +209,10 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
     Xc, Xt = z_cert[:, None], z_test[:, None]
     for name in methods:
         t0 = time.time()
+        if len(y_cert) > max_n.get(name, np.inf):
+            add(name, ok=False, reason='too large')
+            rows[-1]['seconds'] = np.nan
+            continue
         try:
             with time_budget(timeout):
                 fitted = LOOKUP[name](clf, Xc, y_cert)
@@ -221,10 +238,15 @@ def main():
     ap.add_argument('--jobs', type=int, default=1)
     ap.add_argument('--timeout', type=float, default=0,
                     help='per-fit seconds budget; 0 disables. A fit that\n                          overruns is recorded as unsolved (reason=timeout).')
-    ap.add_argument('--out', default='wide.csv')
+    ap.add_argument('--max-n', nargs='*', default=[], metavar='METHOD=N',
+                    help='skip a method on certificate sets larger than N '
+                         '(reason=too large)')
+    ap.add_argument('--out', default='wide.csv',
+                    help='results/<out>; the config goes beside it')
+    ap.add_argument('--proj', default=PROJ, help='folder of exported .npz files')
     args = ap.parse_args()
 
-    files = sorted(glob.glob(os.path.join(PROJ, '*.npz')))
+    files = sorted(glob.glob(os.path.join(args.proj, '*.npz')))
     if args.datasets:
         # the file-name form written by export_projections._slug
         want = {d.replace(':', '').replace(' ', '-').replace('/', '-')
@@ -235,24 +257,38 @@ def main():
         files = [f for f in files
                  if os.path.basename(f).split('__')[1][:-4] in args.models]
     if not files:
-        raise SystemExit(f'no exported projections in {PROJ} - run '
+        raise SystemExit(f'no exported projections in {args.proj} - run '
                          f'export_projections.py first (with the '
                          f'projection_models venv)')
 
     seeds = list(range(args.seeds))
+    max_n = {m: int(n) for m, n in (a.rsplit('=', 1) for a in args.max_n)}
+    if unknown := set(max_n) - set(args.methods):
+        raise SystemExit(f'--max-n names methods not run: {sorted(unknown)}')
+    # finished files are kept here, shared by runs with the same settings, so an
+    # interrupted run resumes and a later one only redoes files exported since
+    spec = json.dumps([os.path.abspath(args.proj), args.methods, seeds,
+                       args.timeout] + ([max_n] if max_n else []))
+    parts = os.path.join(RESULTS, '.parts',
+                         hashlib.sha1(spec.encode()).hexdigest()[:12])
+    os.makedirs(parts, exist_ok=True)
+    done = sum(os.path.exists(os.path.join(parts, os.path.basename(f)[:-4]
+                                           + '.pkl')) for f in files)
     print(f'{len(files)} exported (dataset, model) files, {len(seeds)} seeds, '
-          f'{len(args.methods)} deltas methods', flush=True)
+          f'{len(args.methods)} deltas methods, {done} already done', flush=True)
     t0 = time.time()
 
     if args.jobs > 1:
         from joblib import Parallel, delayed
         chunks = Parallel(n_jobs=args.jobs, verbose=5)(
-            delayed(run_file)(f, args.methods, seeds, args.timeout)
+            delayed(run_file_cached)(f, args.methods, seeds, args.timeout, parts,
+                                     max_n)
             for f in files)
     else:
         chunks = []
         for i, f in enumerate(files):
-            chunks.append(run_file(f, args.methods, seeds, args.timeout))
+            chunks.append(run_file_cached(f, args.methods, seeds, args.timeout,
+                                          parts, max_n))
             print(f'  [{i + 1}/{len(files)}] {os.path.basename(f)[:-4]} '
                   f'({time.time() - t0:.0f}s)', flush=True)
 
@@ -266,8 +302,8 @@ def main():
               'seeds': seeds, 'methods': args.methods,
               'method_specs': {n: LOOKUP[n].describe() for n in args.methods},
               'n_files': len(files), 'n_rows': len(df),
-              'timeout': args.timeout}
-    with open(os.path.join(RESULTS, 'wide_config.json'), 'w') as fh:
+              'timeout': args.timeout, 'max_n': max_n}
+    with open(out[:-len('.csv')] + '_config.json', 'w') as fh:
         json.dump(config, fh, indent=2)
 
     print(f'\nwrote {out}  ({len(df)} rows, {time.time() - t0:.0f}s)')
