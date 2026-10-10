@@ -1454,3 +1454,38 @@ Open questions for Matt, also in the notes:
 - **Which imbalances are in scope?** Size and spread for sure; shape, costs,
   prior shift, multi-class?
 - **Extension or new paper?**
+
+---
+
+## 16. Extra-experiments grid: setup and two reproducibility bugs (2026-10-09)
+
+The plan is `../papers/ecai-extra-experiments/main.tex`; the stages, datasets and
+methods are in `experiments/extra_grid.py`, writing to `experiments/projections-extra/`.
+
+### 16.1 ⚠️ The wide grid's MLP and RandomForest fits were unseeded
+
+`export_projections.fit_model` passed `random_state=seed`, but every
+`projection_models` model takes `seed=` and sets `random_state` itself. The
+duplicate keyword raised `TypeError`, and the fallback refitted **without any
+seed**. MLP and RandomForest projections in `projections/` are therefore not
+reproducible; the other five models are deterministic, so unaffected. Fixed by
+passing `seed=seed`. All 13 models now give identical exports on a re-run.
+
+### 16.2 Seed 1 of the stored grid is toy_datasets' old `RANDOM_STATE`
+
+`toy_datasets` commit `e1b0f41` (2026-09-19) stopped treating seed 1 as `True`.
+The stored grid (exported 2026-08-10) predates it, so its seed 1 was split with
+`RANDOM_STATE = 42`. Every other seed is reproduced bit for bit by HEAD (checked
+on five datasets with NearestClassMean). Not a duplication like §12.3, but the
+grid needs re-exporting before its numbers are reused, which §16.1 requires anyway.
+
+### 16.3 Also found
+
+- `toy_datasets`' CIFAR-10N loader named the 40%-noise label set `worst_label`;
+  the file's key is `worse_label`. Fixed there.
+- `GaussianGenerator(class_separation=s)` puts the means `s·√d` apart, not `s`.
+  The extra grid passes explicit means instead.
+- `medmnist` was not in this environment, so the MedMNIST rows could not be
+  re-exported. It is now in the `torch` extra.
+- The `Threshold` baseline in `run_wide.py` is the balanced-error threshold on
+  the fit scores, not Sheng's cost-proportional one used in the paper's tables.
