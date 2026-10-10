@@ -146,3 +146,7 @@ experiments/*.log
 
 # wide-grid exported projections (regenerate with experiments/export_projections.py)
 experiments/projections/
+experiments/projections-extra/
+experiments/projections-pilot/
+experiments/results/.parts/
+experiments/features/

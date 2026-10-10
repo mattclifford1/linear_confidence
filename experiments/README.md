@@ -147,6 +147,28 @@ Each cell is run twice:
 See `CALIBRATION.md` for what this fixes and why it cannot live inside the
 estimator.
 
+## The extra-experiments grid (`extra_grid.py`)
+
+The grid for `../../papers/ecai-extra-experiments`: 55 datasets, about 40 image
+tasks and the synthetic sweeps, in stages (`uv run python extra_grid.py --list`).
+It exports to `projections-extra/`; evaluate with
+`run_wide.py --proj projections-extra --methods ...` (`EXTRA_METHODS`).
+`run_initial.sh` (about 4 h) and `run_long.sh` (about 20 h, resumable) run the
+stages in order; `run_wide.py` resumes too and takes `--max-n METHOD=N` to skip a
+method on large certificate sets.
+
+- **Minority size**: a name suffix `@n25` gives exactly 25 minority training
+  points, `@r100` thins towards 100:1; `export_projections.py --minority-train`
+  and `--ratio` add them.
+- **Shift**: `@test <class>` tests on a class left out of training, and
+  `vs rest except <class>` drops classes from a task.
+- **Named variants** (`VARIANTS` in `export_projections.py`): disease-positive
+  relabels, CIFAR-10N label noise, the Gaussian separation × spread grid.
+- **Models**: 13 (`MODELS`); the original seven stay the `--models` default.
+- **Frozen features**: a name suffix ` [resnet18]` fits the models on ImageNet
+  embeddings cached by `export_torch.py features` (the `features` stage).
+- **Large image tasks** cap the training majority at 10,000 (`MAJORITY_MAX_DEFAULT`).
+
 ## Caveat on the `Slacks Deltas` rows
 
 With `USE_TWO=True` the published slack method frequently finds no solution on
