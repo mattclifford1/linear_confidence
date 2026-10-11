@@ -203,6 +203,9 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
             add(name, preds=f[p + f'pred_{label}'].astype(int))
         else:
             add(name, ok=False)
+    for label, name in (('focal', 'Focal'), ('ldam', 'LDAM')):   # deep nets only
+        if p + f'pred_{label}' in keys:
+            add(name, preds=f[p + f'pred_{label}'].astype(int))
 
     # ---- deltas methods --------------------------------------------------
     clf = FrozenProjection(thr, name=meta['model'])
