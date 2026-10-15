@@ -36,6 +36,10 @@ OTHER_TABULAR = ['Abalone Gender', 'Banknote Authentication', 'Ionosphere',
                  'Sonar Rocks vs Mines', 'Wheat Seeds', 'Iris', 'Wine']
 COST = ['German Credit', 'Costcla Credit Scoring Kaggle 2011',
         'Costcla Credit Scoring PAKDD 2009', 'Costcla Direct Marketing']
+OPENML = ['Spambase', 'Phoneme', 'MAGIC Gamma Telescope', 'EEG Eye State',
+          'Default of Credit Card Clients', 'QSAR Biodegradation', 'Bioresponse',
+          'Hill-Valley', 'Steel Plates Fault', 'KC1 Software Defects',
+          'Blood Transfusion', 'Ozone Level 8hr']
 
 MEDICAL_IMAGE = [
     'PneumoniaMNIST: pneumonia vs normal',
@@ -99,7 +103,8 @@ EXTRA_METHODS = ['Slacks Deltas', 'Min Deltas', 'F Deltas', 'CP Sum',
                  'CP Minimax', 'DKW Sum', 'DKW Minimax', 'Gaussian Predictive',
                  'Gaussian Band', 'Logistic Band']
 
-TABULAR = (MEDICAL_TABULAR + DISEASE_POSITIVE + CLINICAL + OTHER_TABULAR + COST)
+TABULAR = (MEDICAL_TABULAR + DISEASE_POSITIVE + CLINICAL + OTHER_TABULAR + COST
+           + OPENML)
 
 def with_backbone(task, backbone):
     '''the task on frozen embeddings: the [backbone] tag goes before any @ option'''

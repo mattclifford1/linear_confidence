@@ -3,6 +3,7 @@ Size up every toy_datasets dataset for the extra-experiments paper.
 
     uv run --with medmnist python dataset_inventory.py
     uv run python dataset_inventory.py --tables   # tables from the saved CSV
+    uv run python dataset_inventory.py --fresh    # size up every dataset again
 
 Writes results/dataset_inventory.csv and a LaTeX table into the paper
 (override the folder with EXTRA_PAPER_OUT).
@@ -32,7 +33,7 @@ OUT_TEX = os.environ.get('EXTRA_PAPER_OUT', os.path.join(
 #: group -> datasets, in table order
 GROUPS = {
     'Synthetic': ['Gaussian', 'Moons', 'Circles', 'Blobs', 'XOR',
-                  'Sklearn Normal'],
+                  'Sklearn Normal', 'Truncated Normal', 'Madelon'],
     'Medical tabular': [
         'Arrhythmia', 'Breast Cancer', 'Breast Cancer Coimbra',
         'Breast Cancer Prognostic', 'Breast Cancer Wisconsin',
@@ -49,6 +50,10 @@ GROUPS = {
     'Cost-sensitive': ['German Credit', 'Costcla Credit Scoring Kaggle 2011',
                        'Costcla Credit Scoring PAKDD 2009',
                        'Costcla Direct Marketing'],
+    'OpenML': ['Spambase', 'Phoneme', 'MAGIC Gamma Telescope', 'EEG Eye State',
+               'Default of Credit Card Clients', 'QSAR Biodegradation',
+               'Bioresponse', 'Hill-Valley', 'Steel Plates Fault',
+               'KC1 Software Defects', 'Blood Transfusion', 'Ozone Level 8hr'],
     'Medical image': ['PneumoniaMNIST', 'BreastMNIST', 'DermaMNIST',
                       'BloodMNIST', 'PathMNIST', 'OCTMNIST'],
     'Natural image': ['MNIST', 'Fashion-MNIST', 'SVHN', 'EuroSAT', 'CIFAR-10',
@@ -176,9 +181,14 @@ def main():
     if missing:
         raise SystemExit(f'datasets with no group: {missing}')
 
+    done = {} if '--fresh' in sys.argv or not os.path.exists(OUT_CSV) else {
+        r['dataset']: r for r in pd.read_csv(OUT_CSV).to_dict('records')}
     rows = []
     for group, names in GROUPS.items():
         for name in names:
+            if name in done:
+                rows.append({**done[name], 'group': group})
+                continue
             try:
                 rows.append(size_up(name, group))
                 print(f'{name:40s} ok  {rows[-1]["seconds"]}s', flush=True)

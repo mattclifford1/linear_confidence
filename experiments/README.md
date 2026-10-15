@@ -149,7 +149,7 @@ estimator.
 
 ## The extra-experiments grid (`extra_grid.py`)
 
-The grid for `../../papers/ecai-extra-experiments`: 55 datasets, about 40 image
+The grid for `../../papers/ecai-extra-experiments`: 69 datasets, about 40 image
 tasks and the synthetic sweeps, in stages (`uv run python extra_grid.py --list`).
 It exports to `projections-extra/`; evaluate with
 `run_wide.py --proj projections-extra --methods ...` (`EXTRA_METHODS`).
