@@ -5,7 +5,7 @@ non-separable draft and the review notes. This is the "where were we" document.
 
 - Published paper: `../papers/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex`
 - Non-separable draft: `../papers/deltas-non-separable/main.tex`
-- Review notes on the published paper: `../notes/claude-improvement-notes.md`
+- Review notes on the published paper: `../notes/ecai_review.md`
 
 ---
 

@@ -14,7 +14,7 @@ Two papers live off this code:
 |---|---|---|
 | *Learning Confidence Bounds for Classification with Imbalanced Data* (ECAI 2024, arXiv:2407.11878) | `../papers/ecai-2024-deltas-arxiv-3-sup-mat/m598.tex` | Published |
 | *Deltas non-separable* (working draft) | `../papers/deltas-non-separable/main.tex` | Rough draft, Dec 2024 |
-| Review notes on the published paper | `../notes/claude-improvement-notes.md` | Notes only |
+| Review notes on the published paper | `../notes/ecai_review.md` | Notes only |
 
 Read `FINDINGS.md` in this repo for the research state, known bugs and the
 open research directions. Read `deltas/README.md` for the package architecture.
