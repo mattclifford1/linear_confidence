@@ -42,6 +42,8 @@ import os
 import pickle
 import warnings
 
+import fingerprint as fp
+
 import numpy as np
 import pandas as pd
 
@@ -145,8 +147,8 @@ def load(name, seed):
 
 
 # ------------------------------------------------------------------- runs ---
-def run_cell(name, model_name, seed):
-    train, test, prior_1 = load(name, seed)
+def run_cell(name, model_name, seed, split=None):
+    train, test, prior_1 = split or load(name, seed)
     Xtr, ytr, cmtr = train['X'], train['y'], train['cost_matrix']
     Xte, yte, cmte = test['X'], test['y'], test['cost_matrix']
     c1, c2 = net_costs(cmtr)
@@ -226,17 +228,26 @@ def main():
     ap.add_argument('--out', default='costs.csv', help='results/<out>')
     args = ap.parse_args()
 
-    # finished cells are kept here, so a stopped run resumes
-    parts = os.path.join(RESULTS, '.parts', 'costs-' + os.path.basename(args.out)[:-4])
-    os.makedirs(parts, exist_ok=True)
+    # finished cells are kept here and reused only while their code, model
+    # and data are unchanged, so a stopped run resumes
+    cache = os.path.join(RESULTS, '.cache', 'costs')
+    os.makedirs(cache, exist_ok=True)
+    deltas_dir = os.path.dirname(os.path.dirname(overlap.__file__))
+    code = fp.digest([fp.package_hash(deltas_dir, skip=('plotting',)),
+                      fp.code_hash(run_cell, load, net_costs, total_cost,
+                                   best_threshold_by_cost, fit_model, skip=('MODELS',))])
 
     def cell(name, model_name, seed):
-        path = os.path.join(parts, f'{name}__{model_name}__{seed}.pkl')
-        if os.path.exists(path):
-            with open(path, 'rb') as fh:
-                return pickle.load(fh)
         try:
-            rows = run_cell(name, model_name, seed)
+            split = load(name, seed)
+            key = fp.digest([code, fp.stable(MODELS[model_name][0]),
+                             fp.arrays_hash(*(d[k] for d in split[:2]
+                                              for k in ('X', 'y', 'cost_matrix')))])
+            path = os.path.join(cache, f'{name}__{model_name}__{seed}__{key}.pkl')
+            if os.path.exists(path):
+                with open(path, 'rb') as fh:
+                    return pickle.load(fh)
+            rows = run_cell(name, model_name, seed, split)
         except Exception as exc:
             print(f'  ! {name} / {model_name} / {seed}: '
                   f'{type(exc).__name__}: {exc}', flush=True)

@@ -153,9 +153,19 @@ The grid for `../../papers/ecai-extra-experiments`: 55 datasets, about 40 image
 tasks and the synthetic sweeps, in stages (`uv run python extra_grid.py --list`).
 It exports to `projections-extra/`; evaluate with
 `run_wide.py --proj projections-extra --methods ...` (`EXTRA_METHODS`).
-`run_initial.sh` (about 4 h) and `run_long.sh` (about 20 h, resumable) run the
-stages in order; `run_wide.py` resumes too and takes `--max-n METHOD=N` to skip a
-method on large certificate sets.
+`run_initial.sh` (about 4 h) and `run_long.sh` (several days, resumable) run the
+stages in order; `run_wide.py` takes `--max-n METHOD=N` to skip a method on large
+certificate sets.
+
+**Caching.** Rerunning any step only does what is missing or changed:
+
+- Exports add missing seeds, and refuse (status `stale`) when a file's recorded
+  settings (model, task, protocol code) or a seed's data no longer match; use
+  `--force` or a new `--out` then.
+- `run_wide.py` reuses each (seed, mode, method) result while its data, the
+  method's settings and the deltas code are unchanged (`results/.cache/`); bump
+  `CACHE_VERSION` there for a change the hashes cannot see.
+- `run_costs.py` reuses a (dataset, model, seed) cell on the same terms.
 
 - **Minority size**: a name suffix `@n25` gives exactly 25 minority training
   points, `@r100` thins towards 100:1; `export_projections.py --minority-train`

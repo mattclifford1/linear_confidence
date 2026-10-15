@@ -31,8 +31,9 @@ The step is kept because it is still worth having:
     ... --force                                  # ignore existing outputs
 
 Output: one .npz per (dataset, model) in experiments/projections/, holding
-every seed and both calibration modes. Resumable - an existing, loadable file
-is skipped unless --force.
+every seed and both calibration modes. Resumable: only missing seeds are
+exported, and a file whose recorded settings or data no longer match is
+reported as stale and left alone (rerun with --force or a new --out).
 '''
 import argparse
 import functools
@@ -43,6 +44,8 @@ import time
 import warnings
 
 import numpy as np
+
+import fingerprint as fp
 
 warnings.filterwarnings('ignore')
 
@@ -423,7 +426,7 @@ def one_case(dataset, model_name, seed):
     Xtr, ytr = train['X'], train['y']
     Xte, yte = test['X'], test['y']
 
-    out = {}
+    out = {f's{seed}_data': np.array([data_hash(dataset, seed, (train, test))])}
     for mode in ('naive', 'split'):
         if mode == 'naive':
             X_fit, y_fit = Xtr, ytr
@@ -483,13 +486,62 @@ def _write_npz(path, arrays):
     os.replace(path + '.part', path)
 
 
-def run_pair(dataset, model_name, seeds, force=False, out_dir=OUT):
+def export_settings(dataset, model_name, code_of=None):
+    '''what a pair's export depends on besides the seed'''
+    code_of = code_of or (load_split, scale_to_train, one_case, fit_model,
+                          fit_weighted, fit_smote, split_options, resolve_dataset,
+                          shift_specs, source_specs, _load_xy, _as_minority_class_1,
+                          _proj, _thresh)
+    return {'task': [[s, fp.stable(VARIANTS.get(s))] for s in source_specs(dataset)],
+            'model': fp.stable(MODELS[model_name][0]) if model_name in MODELS else model_name,
+            'code': fp.code_hash(*code_of, skip=('MODELS', 'VARIANTS'))}
+
+
+def data_hash(dataset, seed, split=None):
+    '''the scaled train and test data of one seed'''
+    train, test = split or scale_to_train(*load_split(dataset, seed)[:2])
+    if isinstance(test, list):
+        test = test[0]
+    return fp.arrays_hash(train['X'], train['y'], test['X'], test['y'])
+
+
+def check_existing(merged, settings, seeds_present, data_fn):
+    '''
+    None if an existing export can be extended, else why not. Files written
+    before settings were recorded take the current ones, on trust.
+    '''
+    if 'settings' in merged:
+        old = json.loads(str(merged['settings'][0]))
+        if old != settings:
+            changed = sorted(k for k in set(old) | set(settings) if old.get(k) != settings.get(k))
+            return f'stale: {", ".join(changed)} changed since export'
+    checked = [s for s in seeds_present if f's{s}_data' in merged]
+    if checked:
+        s = checked[0]
+        if str(merged[f's{s}_data'][0]) != data_fn(s):
+            return f'stale: the data for seed {s} changed since export'
+    return None
+
+
+def run_pair(dataset, model_name, seeds, force=False, out_dir=OUT, settings=None):
     '''export the seeds not already in the pair's file, keeping those that are'''
     path = os.path.join(out_dir, f'{_slug(dataset)}__{model_name}.npz')
     merged = {} if force else _read_npz(path)
-    todo = [s for s in seeds if f's{s}_naive_z_test' not in merged]
+    settings = settings or export_settings(dataset, model_name)
+    present = sorted(int(k[1:].split('_')[0]) for k in merged if k.endswith('_naive_z_test'))
+    todo = [s for s in seeds if s not in present]
+    if 'settings' in merged and not todo:
+        why = check_existing(merged, settings, [], None)
+        return (path, 'stale', why) if why else (path, 'cached', None)
     if not todo:
+        merged['settings'] = np.array([json.dumps(settings)])
+        _write_npz(path, merged)                     # adopt, on trust
         return path, 'cached', None
+    why = check_existing(merged, settings, present,
+                         lambda s: data_hash(dataset, s)) if present else None
+    if why:
+        return path, 'stale', why
+    merged['settings'] = np.array([json.dumps(settings)])
 
     errors, done = [], False
     for seed in todo:
@@ -553,8 +605,8 @@ def main():
             n_ok += 1
         elif status == 'cached':
             n_cached += 1
-        if status == 'failed':
-            print(f'  FAILED  {d} / {m}: {err}', flush=True)
+        if status in ('failed', 'stale'):
+            print(f'  {status.upper()}  {d} / {m}: {err}', flush=True)
         elif err:
             print(f'  partial {d} / {m}: {err}', flush=True)
     print(f'\n{n_ok} written, {n_cached} already present, '

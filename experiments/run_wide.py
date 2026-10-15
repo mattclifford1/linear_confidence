@@ -18,7 +18,6 @@ bounds and whether those bounds actually held.
 import argparse
 import contextlib
 import glob
-import hashlib
 import json
 import os
 import signal
@@ -30,6 +29,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from imblearn.metrics import geometric_mean_score
 
 import deltas.misc.use_two as use_two_cfg
+import fingerprint as fp
 from deltas.classifiers.frozen import FrozenProjection
 from deltas.methods import METHODS, describe_all
 
@@ -37,6 +37,9 @@ from deltas.methods import METHODS, describe_all
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.join(HERE, 'projections')
 RESULTS = os.path.join(HERE, 'results')
+CACHE = os.path.join(RESULTS, '.cache')
+#: bump to recompute every cached method result after a change the hashes miss
+CACHE_VERSION = 1
 
 # the grid's default methods, from the single registry (deltas/methods/).
 # The slack method runs with a smaller budget and serially here: each grid
@@ -125,19 +128,38 @@ def _best_balanced_threshold(z, y):
     return float(mids[int(np.argmin(err))])
 
 
-def run_file_cached(path, methods, seeds, timeout, parts, max_n=None):
-    '''run_file, memoised as one pickle per exported file under `parts`'''
-    part = os.path.join(parts, os.path.basename(path)[:-4] + '.pkl')
-    if os.path.exists(part) and os.path.getmtime(part) > os.path.getmtime(path):
-        return pd.read_pickle(part).to_dict('records')
-    rows = run_file(path, methods, seeds, timeout, max_n)
-    pd.DataFrame(rows).to_pickle(part + '.tmp')
-    os.replace(part + '.tmp', part)
-    return rows
+def method_code():
+    '''every input of a method result other than its data and its own settings'''
+    deltas_dir = os.path.dirname(os.path.dirname(use_two_cfg.__file__))
+    return fp.digest([CACHE_VERSION, fp.package_hash(deltas_dir, skip=('plotting',)),
+                      fp.code_hash(_method_row, _row, _scores, time_budget),
+                      use_two_cfg.USE_TWO, use_two_cfg.USE_GLOBAL_R])
 
 
-def run_file(path, methods, seeds, timeout=0, max_n=None):
-    rows = []
+def _read_store(path):
+    try:
+        return pd.read_pickle(path)
+    except Exception:
+        return {}
+
+
+def _add_to_store(path, new):
+    '''merge into what is on disk, so two runs sharing a store lose nothing'''
+    store = {**_read_store(path), **new}
+    pd.to_pickle(store, path + '.tmp')
+    os.replace(path + '.tmp', path)
+
+
+def run_file(path, methods, seeds, timeout=0, max_n=None, code=None, cache=None):
+    '''
+    rows for one exported file; with `cache`, method results are reused per
+    (seed, mode, method) when the data, the method's settings and `code` match
+    '''
+    max_n = max_n or {}
+    specs = {name: fp.digest(LOOKUP[name].describe()) for name in methods}
+    store_path = cache and os.path.join(cache, os.path.basename(path)[:-4] + '.pkl')
+    store = _read_store(store_path) if cache else {}
+    rows, n_new = [], 0
     with np.load(path, allow_pickle=False) as f:
         meta = json.loads(str(f['meta'][0]))
         keys = set(f.files)
@@ -146,18 +168,29 @@ def run_file(path, methods, seeds, timeout=0, max_n=None):
                 p = f's{seed}_{mode}_'
                 if p + 'z_cert' not in keys:
                     continue
-                z_cert, y_cert = f[p + 'z_cert'], f[p + 'y_cert'].astype(int)
-                z_test, y_test = f[p + 'z_test'], f[p + 'y_test'].astype(int)
-                z_fit, y_fit = f[p + 'z_fit'], f[p + 'y_fit'].astype(int)
-                thr = float(f[p + 'threshold'][0])
-                rows += _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit,
-                             z_test, y_test, thr, f, p, keys, methods,
-                             timeout, max_n or {})
-    return rows
+                arrays = {k: f[k] for k in sorted(keys) if k.startswith(p)}
+                cell = fp.digest([fp.arrays_hash(*arrays.values()), sorted(arrays),
+                                  [meta.get(k) for k in ('dataset', 'model',
+                                                         'train_ratio', 'n_features')]])
+                base, clf = _cell(meta, seed, mode, arrays, p)
+                rows += _baselines(base, arrays, p)
+                new = {}
+                for name in methods:
+                    key = fp.digest([code, cell, name, specs[name], timeout,
+                                     max_n.get(name)])
+                    if key not in store:
+                        new[key] = _method_row(name, base, clf, arrays, p,
+                                               timeout, max_n)
+                    rows.append(dict(store.get(key) or new[key]))
+                if new and cache:
+                    _add_to_store(store_path, new)
+                    store.update(new)
+                n_new += len(new)
+    return rows, n_new
 
 
-def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
-         f, p, keys, methods, timeout, max_n):
+def _cell(meta, seed, mode, a, p):
+    '''the fields every row of this (seed, mode) shares, and the frozen classifier'''
     # how optimistic is this classifier on the points it was fitted to? This
     # is the quantity the calibration split exists to neutralise, so record it
     # per row: the coverage shortfall should track it.
@@ -166,9 +199,9 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
             return np.nan
         return 0.5 * ((z[yy == 0] > t).mean() + (z[yy == 1] <= t).mean())
 
-    fit_err = _bal_err(z_fit, y_fit, thr)
-    test_err = _bal_err(z_test, y_test, thr)
-
+    y_cert, thr = a[p + 'y_cert'].astype(int), float(a[p + 'threshold'][0])
+    fit_err = _bal_err(a[p + 'z_fit'], a[p + 'y_fit'].astype(int), thr)
+    test_err = _bal_err(a[p + 'z_test'], a[p + 'y_test'].astype(int), thr)
     base = {'dataset': meta['dataset'], 'model': meta['model'],
             'seed': seed, 'mode': mode,
             'n_cert': int(len(y_cert)),
@@ -178,58 +211,61 @@ def _one(meta, seed, mode, z_cert, y_cert, z_fit, y_fit, z_test, y_test, thr,
             'clf_fit_err': fit_err,
             'clf_test_err': test_err,
             'optimism': test_err - fit_err}
-    rows = []
+    return base, FrozenProjection(thr, name=meta['model'])
 
-    def add(method, preds=None, fitted=None, ok=True, reason=''):
-        rec = {**base, 'method': method, 'fit': ok, 'reason': reason}
-        rec.update(_scores(y_test, preds) if ok else _nan_scores())
-        rec.update({'U_0': np.nan, 'U_1': np.nan, 'delta_0': np.nan,
-                    'delta_1': np.nan, 'covered_0': np.nan,
-                    'covered_1': np.nan})
-        if ok and fitted is not None and hasattr(fitted, 'certified_error'):
-            ce = fitted.certified_error()
-            rec['U_0'], rec['U_1'] = ce['class 1'], ce['class 2']
-            rec['delta_0'], rec['delta_1'] = ce['delta1'], ce['delta2']
-            rec['covered_0'] = bool(rec['err_0'] <= ce['class 1'])
-            rec['covered_1'] = bool(rec['err_1'] <= ce['class 2'])
-        rows.append(rec)
 
-    # ---- baselines ------------------------------------------------------
-    add('Baseline', preds=(z_test > thr).astype(int))
-    t_star = _best_balanced_threshold(z_fit, y_fit)
-    add('Threshold', preds=(z_test > t_star).astype(int))
+def _row(base, y_test, method, preds=None, fitted=None, ok=True, reason=''):
+    rec = {**base, 'method': method, 'fit': ok, 'reason': reason}
+    rec.update(_scores(y_test, preds) if ok else _nan_scores())
+    rec.update({'U_0': np.nan, 'U_1': np.nan, 'delta_0': np.nan,
+                'delta_1': np.nan, 'covered_0': np.nan,
+                'covered_1': np.nan})
+    if ok and fitted is not None and hasattr(fitted, 'certified_error'):
+        ce = fitted.certified_error()
+        rec['U_0'], rec['U_1'] = ce['class 1'], ce['class 2']
+        rec['delta_0'], rec['delta_1'] = ce['delta1'], ce['delta2']
+        rec['covered_0'] = bool(rec['err_0'] <= ce['class 1'])
+        rec['covered_1'] = bool(rec['err_1'] <= ce['class 2'])
+    return rec
+
+
+def _baselines(base, a, p):
+    z_test, y_test = a[p + 'z_test'], a[p + 'y_test'].astype(int)
+    thr = float(a[p + 'threshold'][0])
+    rows = [_row(base, y_test, 'Baseline', preds=(z_test > thr).astype(int))]
+    t_star = _best_balanced_threshold(a[p + 'z_fit'], a[p + 'y_fit'].astype(int))
+    rows.append(_row(base, y_test, 'Threshold', preds=(z_test > t_star).astype(int)))
     for label, name in (('smote', 'SMOTE'), ('bw', 'Balanced Weights')):
-        if p + f'pred_{label}' in keys:
-            add(name, preds=f[p + f'pred_{label}'].astype(int))
+        if p + f'pred_{label}' in a:
+            rows.append(_row(base, y_test, name, preds=a[p + f'pred_{label}'].astype(int)))
         else:
-            add(name, ok=False)
+            rows.append(_row(base, y_test, name, ok=False))
     for label, name in (('focal', 'Focal'), ('ldam', 'LDAM')):   # deep nets only
-        if p + f'pred_{label}' in keys:
-            add(name, preds=f[p + f'pred_{label}'].astype(int))
-
-    # ---- deltas methods --------------------------------------------------
-    clf = FrozenProjection(thr, name=meta['model'])
-    Xc, Xt = z_cert[:, None], z_test[:, None]
-    for name in methods:
-        t0 = time.time()
-        if len(y_cert) > max_n.get(name, np.inf):
-            add(name, ok=False, reason='too large')
-            rows[-1]['seconds'] = np.nan
-            continue
-        try:
-            with time_budget(timeout):
-                fitted = LOOKUP[name](clf, Xc, y_cert)
-            if bool(getattr(fitted, 'is_fit', False)):
-                preds = np.asarray(fitted.predict(Xt)).squeeze().astype(int)
-                add(name, preds=preds, fitted=fitted)
-            else:
-                add(name, ok=False)
-        except _Timeout:
-            add(name, ok=False, reason='timeout')
-        except Exception:
-            add(name, ok=False, reason='error')
-        rows[-1]['seconds'] = round(time.time() - t0, 3)
+        if p + f'pred_{label}' in a:
+            rows.append(_row(base, y_test, name, preds=a[p + f'pred_{label}'].astype(int)))
     return rows
+
+
+def _method_row(name, base, clf, a, p, timeout, max_n):
+    y_cert, y_test = a[p + 'y_cert'].astype(int), a[p + 'y_test'].astype(int)
+    Xc, Xt = a[p + 'z_cert'][:, None], a[p + 'z_test'][:, None]
+    t0 = time.time()
+    if len(y_cert) > max_n.get(name, np.inf):
+        return {**_row(base, y_test, name, ok=False, reason='too large'),
+                'seconds': np.nan}
+    try:
+        with time_budget(timeout):
+            fitted = LOOKUP[name](clf, Xc, y_cert)
+        if bool(getattr(fitted, 'is_fit', False)):
+            preds = np.asarray(fitted.predict(Xt)).squeeze().astype(int)
+            rec = _row(base, y_test, name, preds=preds, fitted=fitted)
+        else:
+            rec = _row(base, y_test, name, ok=False)
+    except _Timeout:
+        rec = _row(base, y_test, name, ok=False, reason='timeout')
+    except Exception:
+        rec = _row(base, y_test, name, ok=False, reason='error')
+    return {**rec, 'seconds': round(time.time() - t0, 3)}
 
 
 def main():
@@ -268,32 +304,31 @@ def main():
     max_n = {m: int(n) for m, n in (a.rsplit('=', 1) for a in args.max_n)}
     if unknown := set(max_n) - set(args.methods):
         raise SystemExit(f'--max-n names methods not run: {sorted(unknown)}')
-    # finished files are kept here, shared by runs with the same settings, so an
-    # interrupted run resumes and a later one only redoes files exported since
-    spec = json.dumps([os.path.abspath(args.proj), args.methods, seeds,
-                       args.timeout] + ([max_n] if max_n else []))
-    parts = os.path.join(RESULTS, '.parts',
-                         hashlib.sha1(spec.encode()).hexdigest()[:12])
-    os.makedirs(parts, exist_ok=True)
-    done = sum(os.path.exists(os.path.join(parts, os.path.basename(f)[:-4]
-                                           + '.pkl')) for f in files)
+    # method results are kept per (file, seed, mode, method) and reused only
+    # when the data, the method's settings and its code are unchanged
+    code = method_code()
+    cache = os.path.join(CACHE, os.path.basename(os.path.abspath(args.proj)))
+    os.makedirs(cache, exist_ok=True)
     print(f'{len(files)} exported (dataset, model) files, {len(seeds)} seeds, '
-          f'{len(args.methods)} deltas methods, {done} already done', flush=True)
+          f'{len(args.methods)} deltas methods, method code {code}', flush=True)
     t0 = time.time()
 
     if args.jobs > 1:
         from joblib import Parallel, delayed
         chunks = Parallel(n_jobs=args.jobs, verbose=5)(
-            delayed(run_file_cached)(f, args.methods, seeds, args.timeout, parts,
-                                     max_n)
+            delayed(run_file)(f, args.methods, seeds, args.timeout, max_n,
+                              code, cache)
             for f in files)
     else:
         chunks = []
         for i, f in enumerate(files):
-            chunks.append(run_file_cached(f, args.methods, seeds, args.timeout,
-                                          parts, max_n))
-            print(f'  [{i + 1}/{len(files)}] {os.path.basename(f)[:-4]} '
-                  f'({time.time() - t0:.0f}s)', flush=True)
+            chunks.append(run_file(f, args.methods, seeds, args.timeout, max_n,
+                                   code, cache))
+            print(f'  [{i + 1}/{len(files)}] {os.path.basename(f)[:-4]}: '
+                  f'{chunks[-1][1]} new ({time.time() - t0:.0f}s)', flush=True)
+    n_new = sum(n for _, n in chunks)
+    chunks = [rows for rows, _ in chunks]
+    print(f'{n_new} method results computed, the rest reused', flush=True)
 
     df = pd.DataFrame([r for c in chunks for r in c])
     os.makedirs(RESULTS, exist_ok=True)
@@ -305,7 +340,7 @@ def main():
               'seeds': seeds, 'methods': args.methods,
               'method_specs': {n: LOOKUP[n].describe() for n in args.methods},
               'n_files': len(files), 'n_rows': len(df),
-              'timeout': args.timeout, 'max_n': max_n}
+              'timeout': args.timeout, 'max_n': max_n, 'method_code': code}
     with open(out[:-len('.csv')] + '_config.json', 'w') as fh:
         json.dump(config, fh, indent=2)
 

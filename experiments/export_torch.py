@@ -21,6 +21,8 @@ import warnings
 
 import numpy as np
 
+import fingerprint as fp
+
 warnings.filterwarnings('ignore')
 
 from sklearn.model_selection import train_test_split       # noqa: E402
@@ -95,7 +97,8 @@ def one_case(spec, net, seed):
     Xtr, ytr = train['X'].astype(np.float32), train['y']
     Xte, yte = test['X'].astype(np.float32), test['y']
 
-    out = {space: {} for space in ('prob', 'logit')}
+    data = np.array([data_hash(spec, seed, (train, test))])
+    out = {space: {f's{seed}_data': data} for space in ('prob', 'logit')}
     for mode in ('naive', 'split'):
         if mode == 'naive':
             X_fit, y_fit, X_cert, y_cert = Xtr, ytr, Xtr, ytr
@@ -137,14 +140,44 @@ def one_case(spec, net, seed):
     return out
 
 
+def data_hash(spec, seed, split=None):
+    train, test = split or ep.load_split(spec, seed)[:2]
+    return fp.arrays_hash(train['X'], train['y'], test['X'], test['y'])
+
+
+def export_settings(spec, net):
+    '''what a (task, net) export depends on besides the seed'''
+    base = base_name(spec)
+    out = ep.export_settings(spec, net, code_of=(
+        one_case, _fit, data_hash, ep.load_split, ep.split_options, ep.resolve_dataset,
+        ep.shift_specs, ep.source_specs, ep._load_xy, ep._as_minority_class_1,
+        ep._proj, ep._thresh))
+    return {**out, 'net': fp.stable(NETS[family(base)][net]),
+            'trainer': fp.stable(trainer_kwargs(base)), 'baselines': BASELINES}
+
+
 def run_pair(spec, net, seeds, force, out_dir):
     paths = {space: os.path.join(out_dir, f'{ep._slug(spec)}__{net}-{space}.npz')
              for space in ('prob', 'logit')}
     merged = {space: {} if force else ep._read_npz(p) for space, p in paths.items()}
+    settings = export_settings(spec, net)
+    present = sorted(int(k[1:].split('_')[0]) for k in merged['prob']
+                     if k.endswith('_naive_z_test'))
     todo = [s for s in seeds
             if not all(f's{s}_naive_z_test' in m for m in merged.values())]
+    for m in merged.values():
+        why = ep.check_existing(m, settings, present if todo else [],
+                                lambda s: data_hash(spec, s))
+        if why:
+            return 'stale', why
     if not todo:
+        for space, m in merged.items():
+            if m and 'settings' not in m:            # adopt, on trust
+                m['settings'] = np.array([json.dumps(settings)])
+                ep._write_npz(paths[space], m)
         return 'cached', None
+    for m in merged.values():
+        m['settings'] = np.array([json.dumps(settings)])
     errors = []
     for seed in todo:
         try:
