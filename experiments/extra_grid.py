@@ -103,6 +103,15 @@ EXTRA_METHODS = ['Slacks Deltas', 'Min Deltas', 'F Deltas', 'CP Sum',
                  'CP Minimax', 'DKW Sum', 'DKW Minimax', 'Gaussian Predictive',
                  'Gaussian Band', 'Logistic Band']
 
+#: (task, model) -> the seed whose fit never converged (SVC's linear kernel has no
+#: iteration cap); that seed is recorded as failed and later seeds are not run
+NO_CONVERGENCE = {
+    ('CIFAR-100: apple vs rest', 'SVM-linear'): 0,
+    ('PathMNIST: colorectal adenocarcinoma epithelium vs rest', 'SVM-linear'): 0,
+    ('EuroSAT: AnnualCrop vs PermanentCrop', 'SVM-linear'): 2,
+    ('Hill-Valley', 'SVM-linear'): 8,
+}
+
 TABULAR = (MEDICAL_TABULAR + DISEASE_POSITIVE + CLINICAL + OTHER_TABULAR + COST
            + OPENML)
 
@@ -154,6 +163,12 @@ def main():
     models = [m for m in (args.models or models) if m not in args.skip_models]
     seeds = list(range(args.seeds))
     pairs = [(d, m) for d in datasets for m in models]
+    seeds_of = {p: seeds[:NO_CONVERGENCE.get(p, len(seeds))] for p in pairs}
+    for (d, m), s in seeds_of.items():
+        if len(s) < len(seeds):
+            print(f'  {d} / {m}: seed {len(s)} did not converge; not run from there',
+                  flush=True)
+    pairs = [p for p in pairs if seeds_of[p]]
     print(f'{args.stage}: {len(pairs)} pairs x {len(seeds)} seeds -> {args.out}',
           flush=True)
 
@@ -161,10 +176,10 @@ def main():
     if args.jobs > 1:
         from joblib import Parallel, delayed
         results = Parallel(n_jobs=args.jobs, verbose=5)(
-            delayed(run_pair)(d, m, seeds, args.force, args.out)
+            delayed(run_pair)(d, m, seeds_of[d, m], args.force, args.out)
             for d, m in pairs)
     else:
-        results = [run_pair(d, m, seeds, args.force, args.out)
+        results = [run_pair(d, m, seeds_of[d, m], args.force, args.out)
                    for d, m in pairs]
     failed = [(d, m, err) for (d, m), (_, status, err) in zip(pairs, results)
               if status == 'failed' or err]
