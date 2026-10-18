@@ -150,6 +150,31 @@ def _add_to_store(path, new):
     os.replace(path + '.tmp', path)
 
 
+def _store_path(path, cache):
+    return os.path.join(cache, os.path.basename(path)[:-4] + '.pkl')
+
+
+def _cells(f, seeds):
+    '''(seed, mode, key prefix, arrays, fingerprint) for each exported (seed, mode)'''
+    meta = json.loads(str(f['meta'][0]))
+    keys = set(f.files)
+    for seed in seeds:
+        for mode in ('naive', 'split'):
+            p = f's{seed}_{mode}_'
+            if p + 'z_cert' not in keys:
+                continue
+            arrays = {k: f[k] for k in sorted(keys) if k.startswith(p)}
+            cell = fp.digest([fp.arrays_hash(*arrays.values()), sorted(arrays),
+                              [meta.get(k) for k in ('dataset', 'model',
+                                                     'train_ratio', 'n_features')]])
+            yield meta, seed, mode, p, arrays, cell
+
+
+def _method_keys(cell, methods, specs, timeout, max_n, code):
+    return {name: fp.digest([code, cell, name, specs[name], timeout, max_n.get(name)])
+            for name in methods}
+
+
 def run_file(path, methods, seeds, timeout=0, max_n=None, code=None, cache=None):
     '''
     rows for one exported file; with `cache`, method results are reused per
@@ -157,36 +182,41 @@ def run_file(path, methods, seeds, timeout=0, max_n=None, code=None, cache=None)
     '''
     max_n = max_n or {}
     specs = {name: fp.digest(LOOKUP[name].describe()) for name in methods}
-    store_path = cache and os.path.join(cache, os.path.basename(path)[:-4] + '.pkl')
+    store_path = cache and _store_path(path, cache)
     store = _read_store(store_path) if cache else {}
     rows, n_new = [], 0
     with np.load(path, allow_pickle=False) as f:
-        meta = json.loads(str(f['meta'][0]))
-        keys = set(f.files)
-        for seed in seeds:
-            for mode in ('naive', 'split'):
-                p = f's{seed}_{mode}_'
-                if p + 'z_cert' not in keys:
-                    continue
-                arrays = {k: f[k] for k in sorted(keys) if k.startswith(p)}
-                cell = fp.digest([fp.arrays_hash(*arrays.values()), sorted(arrays),
-                                  [meta.get(k) for k in ('dataset', 'model',
-                                                         'train_ratio', 'n_features')]])
-                base, clf = _cell(meta, seed, mode, arrays, p)
-                rows += _baselines(base, arrays, p)
-                new = {}
-                for name in methods:
-                    key = fp.digest([code, cell, name, specs[name], timeout,
-                                     max_n.get(name)])
-                    if key not in store:
-                        new[key] = _method_row(name, base, clf, arrays, p,
-                                               timeout, max_n)
-                    rows.append(dict(store.get(key) or new[key]))
-                if new and cache:
-                    _add_to_store(store_path, new)
-                    store.update(new)
-                n_new += len(new)
+        for meta, seed, mode, p, arrays, cell in _cells(f, seeds):
+            base, clf = _cell(meta, seed, mode, arrays, p)
+            rows += _baselines(base, arrays, p)
+            new = {}
+            for name, key in _method_keys(cell, methods, specs, timeout, max_n,
+                                          code).items():
+                if key not in store:
+                    new[key] = _method_row(name, base, clf, arrays, p,
+                                           timeout, max_n)
+                rows.append(dict(store.get(key) or new[key]))
+            if new and cache:
+                _add_to_store(store_path, new)
+                store.update(new)
+            n_new += len(new)
     return rows, n_new
+
+
+def prune_file(path, methods, seeds, timeout, max_n, code, cache):
+    '''drop the cached results of `path` this run would not reuse; returns how many'''
+    store_path = _store_path(path, cache)
+    store = _read_store(store_path)
+    specs = {name: fp.digest(LOOKUP[name].describe()) for name in methods}
+    with np.load(path, allow_pickle=False) as f:
+        keep = {key for *_, cell in _cells(f, seeds)
+                for key in _method_keys(cell, methods, specs, timeout, max_n,
+                                        code).values()}
+    kept = {k: v for k, v in store.items() if k in keep}
+    if len(kept) < len(store):
+        pd.to_pickle(kept, store_path + '.tmp')
+        os.replace(store_path + '.tmp', store_path)
+    return len(store) - len(kept)
 
 
 def _cell(meta, seed, mode, a, p):
@@ -283,6 +313,9 @@ def main():
     ap.add_argument('--out', default='wide.csv',
                     help='results/<out>; the config goes beside it')
     ap.add_argument('--proj', default=PROJ, help='folder of exported .npz files')
+    ap.add_argument('--prune', action='store_true',
+                    help='drop the cached method results this command would not '
+                         'reuse, then stop')
     args = ap.parse_args()
 
     files = sorted(glob.glob(os.path.join(args.proj, '*.npz')))
@@ -312,6 +345,15 @@ def main():
     print(f'{len(files)} exported (dataset, model) files, {len(seeds)} seeds, '
           f'{len(args.methods)} deltas methods, method code {code}', flush=True)
     t0 = time.time()
+
+    if args.prune:
+        from joblib import Parallel, delayed
+        dropped = Parallel(n_jobs=args.jobs)(
+            delayed(prune_file)(f, args.methods, seeds, args.timeout, max_n,
+                                code, cache)
+            for f in files if os.path.exists(_store_path(f, cache)))
+        print(f'dropped {sum(dropped)} cached method results', flush=True)
+        return
 
     if args.jobs > 1:
         from joblib import Parallel, delayed

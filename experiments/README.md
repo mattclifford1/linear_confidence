@@ -164,7 +164,8 @@ certificate sets.
   `--force` or a new `--out` then.
 - `run_wide.py` reuses each (seed, mode, method) result while its data, the
   method's settings and the deltas code are unchanged (`results/.cache/`); bump
-  `CACHE_VERSION` there for a change the hashes cannot see.
+  `CACHE_VERSION` there for a change the hashes cannot see. `--prune` with the same
+  arguments drops cached results that run would not reuse.
 - `run_costs.py` reuses a (dataset, model, seed) cell on the same terms.
 
 - **Minority size**: a name suffix `@n25` gives exactly 25 minority training

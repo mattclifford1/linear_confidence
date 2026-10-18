@@ -149,5 +149,9 @@ experiments/projections/
 experiments/projections-extra/
 experiments/projections-pilot/
 experiments/results/.parts/
+# too large for git; their _config.json files are tracked
+experiments/results/initial.csv
+experiments/results/extra.csv
+experiments/results/costs-extra.csv
 experiments/features/
 experiments/logs/

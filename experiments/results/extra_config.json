@@ -1,0 +1,297 @@
+{
+  "USE_TWO": true,
+  "USE_GLOBAL_R": false,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "methods": [
+    "Slacks Deltas",
+    "Min Deltas",
+    "F Deltas",
+    "CP Sum",
+    "CP Minimax",
+    "DKW Sum",
+    "DKW Minimax",
+    "Gaussian Predictive",
+    "Gaussian Band",
+    "Logistic Band"
+  ],
+  "method_specs": {
+    "Slacks Deltas": {
+      "name": "Slacks Deltas",
+      "family": "published",
+      "reference": "Clifford et al., ECAI 2024",
+      "fit_kwargs": {
+        "max_trials": 2000,
+        "parallel": false
+      },
+      "estimator": "deltas.model.downsample:downsample_deltas"
+    },
+    "Min Deltas": {
+      "name": "Min Deltas",
+      "family": "non_separable",
+      "reference": "deltas-non-separable draft, Dec 2024",
+      "fit_kwargs": {
+        "loss_type": "min"
+      },
+      "estimator": "deltas.model.non_sep:deltas"
+    },
+    "F Deltas": {
+      "name": "F Deltas",
+      "family": "non_separable",
+      "reference": "deltas-non-separable draft, Dec 2024",
+      "fit_kwargs": {
+        "only_furtherest_k": true
+      },
+      "estimator": "deltas.model.non_sep:deltas"
+    },
+    "CP Sum": {
+      "name": "CP Sum",
+      "family": "overlap",
+      "reference": "deltas-non-separable draft, Sec. \"Overlap from the ground up\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "binomial_deltas",
+        "bound": {
+          "component": "ClopperPearson",
+          "name": "clopper_pearson",
+          "union_bound": true,
+          "dense_table_limit": 5000000
+        },
+        "confidence": {
+          "component": "OptimisedDelta",
+          "name": "optimised",
+          "resolution": 2000,
+          "form": "expected"
+        },
+        "rule": {
+          "component": "Sum",
+          "name": "sum",
+          "tie_break": "first"
+        },
+        "search": {
+          "component": "DataMidpoints",
+          "name": "data_midpoints"
+        },
+        "transform": null,
+        "certify": "'decision'",
+        "delta_report": 0.05
+      }
+    },
+    "CP Minimax": {
+      "name": "CP Minimax",
+      "family": "overlap",
+      "reference": "deltas-non-separable draft, Sec. \"Overlap from the ground up\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "binomial_deltas",
+        "bound": {
+          "component": "ClopperPearson",
+          "name": "clopper_pearson",
+          "union_bound": true,
+          "dense_table_limit": 5000000
+        },
+        "confidence": {
+          "component": "OptimisedDelta",
+          "name": "optimised",
+          "resolution": 2000,
+          "form": "expected"
+        },
+        "rule": {
+          "component": "Minimax",
+          "name": "minimax"
+        },
+        "search": {
+          "component": "DataMidpoints",
+          "name": "data_midpoints"
+        },
+        "transform": null,
+        "certify": "'decision'",
+        "delta_report": 0.05
+      }
+    },
+    "DKW Sum": {
+      "name": "DKW Sum",
+      "family": "overlap",
+      "reference": "deltas-non-separable draft, Sec. \"Overlap from the ground up\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "dkw_deltas",
+        "bound": {
+          "component": "DKW",
+          "name": "dkw",
+          "dense_table_limit": Infinity
+        },
+        "confidence": {
+          "component": "OptimisedDelta",
+          "name": "optimised",
+          "resolution": 2000,
+          "form": "expected"
+        },
+        "rule": {
+          "component": "Sum",
+          "name": "sum",
+          "tie_break": "first"
+        },
+        "search": {
+          "component": "DataMidpoints",
+          "name": "data_midpoints"
+        },
+        "transform": null,
+        "certify": "'decision'",
+        "delta_report": 0.05
+      }
+    },
+    "DKW Minimax": {
+      "name": "DKW Minimax",
+      "family": "overlap",
+      "reference": "deltas-non-separable draft, Sec. \"Overlap from the ground up\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "dkw_deltas",
+        "bound": {
+          "component": "DKW",
+          "name": "dkw",
+          "dense_table_limit": Infinity
+        },
+        "confidence": {
+          "component": "OptimisedDelta",
+          "name": "optimised",
+          "resolution": 2000,
+          "form": "expected"
+        },
+        "rule": {
+          "component": "Minimax",
+          "name": "minimax"
+        },
+        "search": {
+          "component": "DataMidpoints",
+          "name": "data_midpoints"
+        },
+        "transform": null,
+        "certify": "'decision'",
+        "delta_report": 0.05
+      }
+    },
+    "Gaussian Predictive": {
+      "name": "Gaussian Predictive",
+      "family": "band",
+      "reference": "deltas-other-concentration working notes, \"The menu\" and \"How the band responds to imbalance\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "DeltasEstimator",
+        "bound": {
+          "component": "StudentTPredictive",
+          "name": "predictive_t"
+        },
+        "confidence": {
+          "component": "OptimisedDelta",
+          "name": "optimised",
+          "resolution": 2000,
+          "form": "expected"
+        },
+        "rule": {
+          "component": "Minimax",
+          "name": "minimax"
+        },
+        "search": {
+          "component": "Auto",
+          "name": "auto",
+          "n": 2001,
+          "margin": 0.25
+        },
+        "transform": null,
+        "certify": "[GaussianConfidence(band='rectangle', p_min=1e-06, n_p=200, draws=40000, seed=0), 'clopper_pearson']",
+        "delta_report": 0.05
+      }
+    },
+    "Gaussian Band": {
+      "name": "Gaussian Band",
+      "family": "band",
+      "reference": "deltas-other-concentration working notes, \"The menu\" and \"How the band responds to imbalance\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "DeltasEstimator",
+        "bound": {
+          "component": "GaussianConfidence",
+          "name": "gaussian",
+          "band": "rectangle",
+          "p_min": 1e-06,
+          "n_p": 200,
+          "draws": 40000,
+          "seed": 0
+        },
+        "confidence": {
+          "component": "FixedDelta",
+          "name": "fixed",
+          "delta": 0.05
+        },
+        "rule": {
+          "component": "Minimax",
+          "name": "minimax"
+        },
+        "search": {
+          "component": "Auto",
+          "name": "auto",
+          "n": 2001,
+          "margin": 0.25
+        },
+        "transform": null,
+        "certify": "[GaussianConfidence(band='rectangle', p_min=1e-06, n_p=200, draws=40000, seed=0), 'clopper_pearson']",
+        "delta_report": 0.05
+      }
+    },
+    "Logistic Band": {
+      "name": "Logistic Band",
+      "family": "band",
+      "reference": "deltas-other-concentration working notes, \"The menu\" and \"How the band responds to imbalance\"",
+      "fit_kwargs": {},
+      "estimator": {
+        "estimator": "DeltasEstimator",
+        "bound": {
+          "component": "LocationScaleConfidence",
+          "name": "location_scale_mc",
+          "family": "logistic",
+          "df": 5,
+          "draws": 20000,
+          "seed": 0
+        },
+        "confidence": {
+          "component": "FixedDelta",
+          "name": "fixed",
+          "delta": 0.05
+        },
+        "rule": {
+          "component": "Minimax",
+          "name": "minimax"
+        },
+        "search": {
+          "component": "Auto",
+          "name": "auto",
+          "n": 2001,
+          "margin": 0.25
+        },
+        "transform": null,
+        "certify": "[LocationScaleConfidence(family='logistic', df=5, draws=20000, seed=0), 'clopper_pearson']",
+        "delta_report": 0.05
+      }
+    }
+  },
+  "n_files": 2309,
+  "n_rows": 616864,
+  "timeout": 300.0,
+  "max_n": {
+    "Slacks Deltas": 2000,
+    "Min Deltas": 12000
+  },
+  "method_code": "e1735b4f734f"
+}

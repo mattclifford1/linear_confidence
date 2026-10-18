@@ -1,0 +1,25 @@
+{
+  "datasets": [
+    "Costcla Direct Marketing",
+    "Costcla Credit Scoring Kaggle 2011",
+    "Costcla Credit Scoring PAKDD 2009",
+    "German Credit"
+  ],
+  "models": [
+    "Linear",
+    "LDA",
+    "SVM-rbf",
+    "MLP",
+    "RandomForest",
+    "GradientBoosting",
+    "NearestClassMean",
+    "SVM-linear",
+    "LinearSVM",
+    "DecisionTree",
+    "HistGradientBoosting",
+    "MLP-small",
+    "MLP-deep"
+  ],
+  "seeds": 10,
+  "cal_frac": 0.35
+}

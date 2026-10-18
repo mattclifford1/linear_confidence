@@ -76,3 +76,16 @@ def test_method_results_are_reused_per_seed_and_method(ep, tmp_path):
     assert new(['CP Minimax', 'DKW Minimax'], [0, 1]) == 4   # only the new method
     assert new(['CP Minimax'], [0, 1], code='changed') == 4
     assert new(['CP Minimax'], [0, 1], timeout=60) == 4
+
+
+def test_prune_keeps_only_what_the_run_would_reuse(ep, tmp_path):
+    import run_wide
+    proj, cache = str(tmp_path / 'proj'), str(tmp_path / 'cache')
+    os.makedirs(cache)
+    ep.run_pair('Gaussian', 'Linear', [0], out_dir=proj)
+    path = os.path.join(proj, 'Gaussian__Linear.npz')
+    for code in ('old', 'new'):
+        run_wide.run_file(path, ['CP Minimax'], [0], 0, None, code, cache)
+    assert run_wide.prune_file(path, ['CP Minimax'], [0], 0, {}, 'new', cache) == 2
+    assert run_wide.run_file(path, ['CP Minimax'], [0], 0, None, 'new', cache)[1] == 0
+    assert run_wide.run_file(path, ['CP Minimax'], [0], 0, None, 'old', cache)[1] == 2
