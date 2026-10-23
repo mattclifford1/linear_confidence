@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import json
 import os
+import sys
 import textwrap
 import types
 
@@ -76,6 +77,30 @@ def package_hash(root, skip=()):
                     h.update(os.path.relpath(path, root).encode())
                     h.update(source_hash(fh.read()).encode())
     return h.hexdigest()[:12]
+
+
+def executed_files(fn, root):
+    '''the .py files under root with a function that ran during fn(), and fn's result'''
+    root, ran = os.path.abspath(root) + os.sep, set()
+
+    def profile(frame, event, arg):
+        co = frame.f_code
+        # CO_NEWLOCALS marks a function, not a module or class body run on import
+        if event == 'call' and co.co_flags & inspect.CO_NEWLOCALS:
+            ran.add(co.co_filename)
+
+    old = sys.getprofile()
+    sys.setprofile(profile)
+    try:
+        out = fn()
+    finally:
+        sys.setprofile(old)
+    return {f for f in ran if os.path.abspath(f).startswith(root)}, out
+
+
+def files_hash(paths, root):
+    return digest({os.path.relpath(p, root): source_hash(open(p, encoding='utf-8').read())
+                   for p in sorted(paths)})
 
 
 def stable(obj):

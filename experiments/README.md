@@ -163,7 +163,8 @@ certificate sets.
   settings (model, task, protocol code) or a seed's data no longer match; use
   `--force` or a new `--out` then.
 - `run_wide.py` reuses each (seed, mode, method) result while its data, the
-  method's settings and the deltas code are unchanged (`results/.cache/`); bump
+  method's settings and the `deltas/` files that method runs are unchanged
+  (`results/.cache/`), so adding a method leaves the others' results cached; bump
   `CACHE_VERSION` there for a change the hashes cannot see. `--prune` with the same
   arguments drops cached results that run would not reuse.
 - `run_costs.py` reuses a (dataset, model, seed) cell on the same terms.

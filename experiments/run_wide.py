@@ -128,12 +128,41 @@ def _best_balanced_threshold(z, y):
     return float(mids[int(np.argmin(err))])
 
 
-def method_code():
-    '''every input of a method result other than its data and its own settings'''
+def _probes():
+    '''small score sets, overlapping, separable and with few minority points'''
+    rng = np.random.default_rng(0)
+    for n0, n1, gap in ((80, 10, 1.0), (80, 10, 8.0), (40, 4, 2.0)):
+        z = np.concatenate([rng.normal(0, 1, n0), rng.normal(gap, 1, n1)])
+        yield z[:, None], np.r_[np.zeros(n0, int), np.ones(n1, int)]
+
+
+def _run_probes(name):
+    with open(os.devnull, 'w') as quiet:
+        for X, y in _probes():
+            try:
+                with contextlib.redirect_stdout(quiet), contextlib.redirect_stderr(quiet):
+                    fitted = LOOKUP[name](FrozenProjection(0.0), X, y)
+                    if bool(getattr(fitted, 'is_fit', False)):
+                        fitted.predict(X)
+                        if hasattr(fitted, 'certified_error'):
+                            fitted.certified_error()
+            except Exception:
+                pass
+
+
+def method_code(methods):
+    '''
+    per method, every input of its results other than its data and settings;
+    of the deltas package, only the files whose functions it runs on `_probes`
+    '''
     deltas_dir = os.path.dirname(os.path.dirname(use_two_cfg.__file__))
-    return fp.digest([CACHE_VERSION, fp.package_hash(deltas_dir, skip=('plotting',)),
-                      fp.code_hash(_method_row, _row, _scores, time_budget),
-                      use_two_cfg.USE_TWO, use_two_cfg.USE_GLOBAL_R])
+    shared = [CACHE_VERSION, fp.code_hash(_method_row, _row, _scores, time_budget),
+              use_two_cfg.USE_TWO, use_two_cfg.USE_GLOBAL_R]
+    code = {}
+    for name in methods:
+        files, _ = fp.executed_files(lambda: _run_probes(name), deltas_dir)
+        code[name] = fp.digest([shared, fp.files_hash(files, deltas_dir)])
+    return code
 
 
 def _read_store(path):
@@ -171,14 +200,15 @@ def _cells(f, seeds):
 
 
 def _method_keys(cell, methods, specs, timeout, max_n, code):
-    return {name: fp.digest([code, cell, name, specs[name], timeout, max_n.get(name)])
+    return {name: fp.digest([code[name], cell, name, specs[name], timeout,
+                             max_n.get(name)])
             for name in methods}
 
 
 def run_file(path, methods, seeds, timeout=0, max_n=None, code=None, cache=None):
     '''
     rows for one exported file; with `cache`, method results are reused per
-    (seed, mode, method) when the data, the method's settings and `code` match
+    (seed, mode, method) when the data, the method's settings and `code[method]` match
     '''
     max_n = max_n or {}
     specs = {name: fp.digest(LOOKUP[name].describe()) for name in methods}
@@ -339,11 +369,13 @@ def main():
         raise SystemExit(f'--max-n names methods not run: {sorted(unknown)}')
     # method results are kept per (file, seed, mode, method) and reused only
     # when the data, the method's settings and its code are unchanged
-    code = method_code()
+    code = method_code(args.methods)
     cache = os.path.join(CACHE, os.path.basename(os.path.abspath(args.proj)))
     os.makedirs(cache, exist_ok=True)
     print(f'{len(files)} exported (dataset, model) files, {len(seeds)} seeds, '
-          f'{len(args.methods)} deltas methods, method code {code}', flush=True)
+          f'{len(args.methods)} deltas methods', flush=True)
+    for name, digest in code.items():
+        print(f'  method code {digest}  {name}', flush=True)
     t0 = time.time()
 
     if args.prune:
