@@ -1,6 +1,7 @@
 '''
 Tables and figures for the extra-experiments paper (../papers/ecai-extra-experiments),
-from results/extra.csv, results/costs-extra.csv and results/simulate_truth.csv.
+from the results/ CSVs of run_wide.py, run_costs.py, simulate_truth.py and
+run_slots.py; F2 also reads the synthetic exports for the test-set oracle.
 
     uv run python make_extra_figures.py
 
@@ -17,6 +18,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import extra_grid as eg
+import run_slots as rs
+import run_wide as rw
+from deltas.methods import METHODS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS = os.path.join(HERE, 'results')
@@ -302,10 +306,207 @@ def fig_nsweep(d):
             b.plot(y.index, y, color=col, ls=ls, label=f'{m}, {mode}')
     b.set(xscale='log', xlabel='$N_1$', ylabel='coverage (both classes)', ylim=(0, 1.02))
     b.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    _savefig(fig, 'f3_nsweep')
+
+
+def _savefig(fig, name):
     fig.tight_layout()
     os.makedirs(os.path.join(OUT, 'figs'), exist_ok=True)
-    fig.savefig(os.path.join(OUT, 'figs', 'f3_nsweep.pdf'))
+    fig.savefig(os.path.join(OUT, 'figs', name + '.pdf'))
     plt.close(fig)
+
+
+def fig_simulation():
+    """F1: the true error at each limit against what the published loss promises (delta = 0.05)"""
+    s = pd.read_csv(os.path.join(RESULTS, 'simulate_truth.csv'))
+    s = s[s.delta == 0.05]
+    shapes = ['normal', 'skewed', 'heavy', 'two subgroups', 'bounded']
+    fig, axes = plt.subplots(1, len(shapes), figsize=(7.6, 2.3), sharey=True)
+    for ax, sh in zip(axes, shapes):
+        x = s[s['shape'] == sh]
+        fp_ = x[x.bound == 'furthest point'].sort_values('N')
+        ax.plot(fp_.N, fp_.mean_err, color=C['blue'], label='furthest point, mean')
+        ax.plot(fp_.N, fp_.p95_err, color=C['blue'], ls='--', lw=1.2,
+                label='furthest point, 95th pct.')
+        for b, col in (('published (eps)', C['orange']), ('published (2 eps)', C['aqua'])):
+            y = x[x.bound == b].sort_values('N')
+            ax.plot(y.N, y.p95_err, color=col, lw=1.2,
+                    label=b.replace('eps', r'$\epsilon$') + ', 95th pct.')
+        ax.plot(fp_.N, 1 / (fp_.N + 1) + 0.05, color=INK, lw=1, ls=':',
+                label=r'promised $1/(N+1)+\delta$')
+        ax.set(xscale='log', yscale='log', title=sh, xlabel='$N$')
+    axes[0].set_ylabel('true error $e$')
+    axes[-1].legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    _savefig(fig, 'f1_simulation')
+
+
+def _oracle(dataset, model):
+    """balanced error of the best test-set threshold, per split seed"""
+    path = os.path.join(rs.PROJ, f'{rs.ep._slug(dataset)}__{model}.npz')
+    out = {}
+    with np.load(path, allow_pickle=False) as f:
+        for _, seed, mode, p, a, _ in rw._cells(f, range(10)):
+            if mode == 'split':
+                z, y = a[p + 'z_test'], a[p + 'y_test'].astype(int)
+                t = rw._best_balanced_threshold(z, y)
+                out[seed] = 0.5 * ((z[y == 0] > t).mean() + (z[y == 1] <= t).mean())
+    return out
+
+
+def _excess(split, mask):
+    """rows of `split` under `mask` with their balanced error above the test-set oracle"""
+    x = split[mask & split.ok].copy()
+    oracle = {(d, m, s): v for d, m in x[['dataset', 'model']].drop_duplicates().values
+              for s, v in _oracle(d, m).items()}
+    x['excess'] = 0.5 * (x.err_0 + x.err_1) - [oracle.get(k, np.nan) for k in
+                                               zip(x.dataset, x.model, x.seed)]
+    return x
+
+
+def fig_synthetic(split):
+    """F2: excess balanced error over the best test-set threshold on the Gaussian grid"""
+    x = _excess(split, split.group == 'gauss')
+    x['sep'] = x.dataset.str.extract(r'sep(\d+)', expand=False).astype(int)
+    seps = sorted(x.sep.unique())
+    fig, axes = plt.subplots(1, len(seps), figsize=(7.6, 2.4), sharey=True)
+    for ax, sep in zip(axes, seps):
+        y = x[x.sep == sep]
+        for m, col, ls in (('Baseline', INK2, ':'), ('Threshold', INK2, '-'),
+                           ('SMOTE', C['violet'], '-'), ('CP Minimax', C['blue'], '-'),
+                           ('Gaussian Predictive', C['orange'], '-')):
+            e = y[y.method == m].groupby('N1').excess.mean()
+            ax.plot(e.index, e, color=col, ls=ls, label=m)
+        ax.set(xscale='log', title=f'separation {sep}', xlabel='$N_1$')
+    axes[0].set_ylabel('excess balanced error')
+    axes[-1].legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    _savefig(fig, 'f2_gaussian')
+
+
+def table_synthetic(split):
+    """E2: the other synthetic sets at N1 = 10 and 100"""
+    names = {d: d.replace(' (20k)', '') for d in eg.SYNTHETIC_SWEEP}
+    base = split.dataset.str.replace(r' @n\d+$', '', regex=True)
+    x = _excess(split, base.isin(list(names)))
+    x['base'] = x.dataset.str.replace(r' @n\d+$', '', regex=True)
+    e = x.pivot_table(index=['base', 'N1'], columns='method', values='excess')
+    c = x.pivot_table(index=['base', 'N1'], columns='method', values='covered')
+    show = ['CP Minimax', 'Threshold', 'Gaussian Predictive']
+    rows = [[names[b]] + [f2(e.loc[(b, n), m]) for n in (10, 100) for m in show]
+            + [f2(c.loc[(b, n), 'CP Minimax']) for n in (10, 100)]
+            for b in names if (b, 10) in e.index]
+    write('e2_synthetic', tabular('l' + 'r' * 8,
+                                  r' & \multicolumn{3}{c}{excess error, $N_1=10$} & '
+                                  r'\multicolumn{3}{c}{excess error, $N_1=100$} & '
+                                  r'\multicolumn{2}{c}{CP coverage} \\ '
+                                  r'\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(l){8-9} '
+                                  r'& CP Min. & Thresh. & G. Pred. & CP Min. & Thresh. '
+                                  r'& G. Pred. & 10 & 100', rows))
+
+
+def _slots(experiment):
+    s = pd.read_csv(os.path.join(RESULTS, 'slots.csv'), low_memory=False)
+    s = s[s.experiment == experiment].copy()
+    s['ok'] = s.fit.astype(str) == 'True'
+    s['covered'] = (pd.to_numeric(s.covered_0, errors='coerce')
+                    * pd.to_numeric(s.covered_1, errors='coerce'))
+    return s
+
+
+def table_r(split):
+    """T6: the choice of R, bounded against unbounded scores, beside the published method"""
+    s = _slots('E6')
+    files = s[['dataset', 'model']].drop_duplicates()
+    main = split.merge(files, on=['dataset', 'model'])
+    main = main[main.method == 'Slacks Deltas'].assign(
+        variant='published with slacks (main run)')
+    x = pd.concat([s, main], ignore_index=True)
+    x['bounded'] = x.model.isin(list(rs.SCORE_RANGE))
+    cp = x[(x.variant == 'counts (CP)') & x.ok].set_index(
+        ['dataset', 'model', 'seed'])['G-Mean']
+    order = [v for _, slot, v, _, _ in rs.VARIANTS if slot == 'R'] + [
+        'published with slacks (main run)']
+    rows = []
+    for v in order:
+        y = x[x.variant == v]
+        solved = y.groupby('bounded').ok.mean()
+        ok = y[y.ok]
+        same = cp.reindex(list(zip(ok.dataset, ok.model, ok.seed)))
+        rows.append([v, pct(solved.get(True)), pct(solved.get(False)),
+                     f2(ok.covered.mean()), f2(ok['G-Mean'].mean()), f2(same.mean())])
+    write('t6_r', tabular('lrrrrr', r' & \multicolumn{2}{c}{solved, \%} & & '
+                          r'\multicolumn{2}{c}{G-Mean} \\ \cmidrule(lr){2-3}'
+                          r'\cmidrule(l){5-6} $R$ & bounded & unbounded & coverage & '
+                          r'own & CP, same cells', rows, mids=(3, 6, 8)))
+
+
+def fig_margins():
+    """F4: the published limit's distance from the minority mean, as a share of the score range"""
+    m = pd.read_csv(os.path.join(RESULTS, 'margins.csv'))
+    fig, ax = plt.subplots(figsize=(4.2, 2.6))
+    for v, col in (('R-bar, two-sided', C['blue']), ('R-bar, one-sided', C['aqua']),
+                   ('known range', C['orange'])):
+        y = m[m.variant == v].groupby('N').distance
+        ax.plot(y.median().index, y.median(), color=col, label=v)
+        ax.fill_between(y.median().index, y.quantile(0.25), y.quantile(0.75),
+                        color=col, alpha=0.15, lw=0)
+    ax.axhline(1, color=INK2, lw=1, ls=':')
+    ax.set(xscale='log', ylim=(0, None), xlabel='$N_1$ (minority points subsampled)',
+           ylabel='limit distance / score range')
+    ax.legend()
+    _savefig(fig, 'f4_margins')
+
+
+def table_ablations():
+    """T10: one slot swapped at a time; metrics over the cells every value of the slot solved"""
+    s = _slots('E10')
+    key = ['slot', 'dataset', 'model', 'seed']
+    n_values = s.groupby('slot').variant.nunique()
+
+    def common(x):
+        n = x.groupby(key).variant.nunique().reset_index()
+        return x.merge(n[n.variant == n.slot.map(n_values)][key], on=key)
+    s = common(s)
+    solved = common(s[s.ok])
+    rows, mids, last = [], [], None
+    for _, slot, v, _, _ in [r for r in rs.VARIANTS if r[0] == 'E10']:
+        if slot != last:
+            mids.append(len(rows))
+            last = slot
+        y = s[(s.slot == slot) & (s.variant == v)]
+        ok = solved[(solved.slot == slot) & (solved.variant == v)]
+        g = ok.groupby('model')['G-Mean'].mean()
+        rows.append([f'{slot}: {v}', pct(y.ok.mean()), f2(g.get('Linear')),
+                     f2(g.get('HistGradientBoosting')), f2(ok.covered.mean()),
+                     f2(ok.U_1.mean()), f2(ok.err_1.mean())])
+    write('t10_ablations', tabular('lrrrrrr', r' & & \multicolumn{2}{c}{G-Mean} & & '
+                                   r'\multicolumn{2}{c}{minority} \\ \cmidrule(lr){3-4}'
+                                   r'\cmidrule(l){6-7} Slot: value & solved, \% & Linear & '
+                                   r'HGB & coverage & $U_1$ & error', rows,
+                                   mids=tuple(mids[1:])))
+
+
+def fig_mixed():
+    """F5: a mixed minority's scores, with the Gaussian fit and the two boundaries (log density)"""
+    dataset, model, seed = 'MNIST: 3+5 vs rest [resnet18]', 'Linear', 0
+    with np.load(os.path.join(rs.PROJ, f'{rs.ep._slug(dataset)}__{model}.npz')) as f:
+        p = f's{seed}_split_'
+        zc, yc = f[p + 'z_cert'], f[p + 'y_cert'].astype(int)
+        zt, yt = f[p + 'z_test'], f[p + 'y_test'].astype(int)
+    fig, ax = plt.subplots(figsize=(5.2, 2.6))
+    bins = np.linspace(min(zt.min(), zc.min()), max(zt.max(), zc.max()), 80)
+    ax.hist(zt[yt == 0], bins, density=True, color=INK2, alpha=0.35, label='majority (test)')
+    ax.hist(zt[yt == 1], bins, density=True, color=C['blue'], alpha=0.45,
+            label='minority 3+5 (test)')
+    z1 = zc[yc == 1]
+    grid = np.linspace(bins[0], bins[-1], 400)
+    pdf = np.exp(-0.5 * ((grid - z1.mean()) / z1.std()) ** 2) / (z1.std() * np.sqrt(2 * np.pi))
+    ax.plot(grid, pdf, color=C['blue'], lw=1.2, label='Gaussian fit (certificate set)')
+    for m, col in (('CP Minimax', INK), ('Gaussian Predictive', C['orange'])):
+        est = METHODS[m](rw.FrozenProjection(0.0), zc[:, None], yc)
+        ax.axvline(est.boundary, color=col, ls='--', lw=1.2, label=f'{m} boundary')
+    ax.set(xlabel='projected score', ylabel='density', yscale='log', ylim=(1e-3, None))
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    _savefig(fig, 'f5_mixed')
 
 
 def main():
@@ -320,6 +521,14 @@ def main():
     table_limits(split)
     table_costs()
     fig_nsweep(d)
+    fig_simulation()
+    fig_synthetic(split)
+    table_synthetic(split)
+    fig_mixed()
+    if os.path.exists(os.path.join(RESULTS, 'slots.csv')):
+        table_r(split)
+        fig_margins()
+        table_ablations()
     print(f'wrote tables and figures to {OUT}')
 
 

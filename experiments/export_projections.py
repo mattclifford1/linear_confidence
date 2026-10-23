@@ -105,6 +105,7 @@ MAJORITY_MAX_DEFAULT = 10_000
 #: class 1). The disease-positive sets keep the disease as class 1 where it is
 #: the larger class. The Gaussians are E2's grid (sep is the distance between
 #: the means in class-0 s.d.s): 10^5 points per class, N_1 set by an @n suffix.
+#: The (20k) toy sets are big enough for E2's @n100.
 VARIANTS = {
     **{f'{d} (disease-positive)': (d, {}, False) for d in (
         'Breast Cancer Coimbra', 'Indian Liver Patient', 'Parkinsons',
@@ -119,6 +120,8 @@ VARIANTS = {
                      'means': [[0.0, 0.0], [float(sep), 0.0]],
                      'cov1_scaler': float(spread) ** 2}, True)
        for sep in (1, 2, 3, 5) for spread in (0.5, 1, 2)},
+    **{f'{d} (20k)': (d, {'num_samples': 20_000}, True)
+       for d in ('Moons', 'Circles', 'Blobs', 'XOR', 'Sklearn Normal')},
 }
 
 #: model name -> (factory, supports_class_weight)

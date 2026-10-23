@@ -80,6 +80,9 @@ SHIFT = ['CIFAR-100: leopard vs rest except tiger @test tiger',
 SHIFT += [t.split(' @')[0] for t in SHIFT[:2]]
 IMAGE = MEDICAL_IMAGE + NATURAL_IMAGE + LABEL_NOISE + SHIFT
 GAUSSIAN_GRID = [v for v in VARIANTS if v.startswith('Gaussian sep')]
+#: E2's other synthetic sets, each run at N_1 in {10, 100}
+SYNTHETIC_SWEEP = [v for v in VARIANTS if v.endswith(' (20k)')] + ['Truncated Normal',
+                                                                  'Madelon']
 
 #: models cheap enough for tens of thousands of rows of hundreds of features
 FAST_MODELS = ['Linear', 'LDA', 'NearestClassMean', 'HistGradientBoosting',
@@ -131,6 +134,8 @@ STAGES = {
     'gaussian': ([f'{g} @n{n}' for g in GAUSSIAN_GRID
                   for n in (5, 10, 25, 50, 100, 250, 1000)],
                  ['Linear', 'NearestClassMean', 'SVM-rbf']),
+    'synthetic': ([f'{d} @n{n}' for d in SYNTHETIC_SWEEP for n in (10, 100)],
+                  ['Linear', 'NearestClassMean', 'SVM-rbf']),
     'n-sweep': ([f'{t} @n{n}' for t in N_SWEEP_TASKS for n in N_SWEEP],
                 ['Linear', 'HistGradientBoosting', 'NearestClassMean']),
 }

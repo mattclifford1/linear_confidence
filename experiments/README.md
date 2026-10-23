@@ -168,13 +168,19 @@ certificate sets.
   arguments drops cached results that run would not reuse.
 - `run_costs.py` reuses a (dataset, model, seed) cell on the same terms.
 
+`run_slots.py` runs E6 and E10: one `DeltasEstimator` slot swapped at a time on the
+exported projections, into `results/slots.csv` and `results/margins.csv`. It
+recomputes everything on each run (about half an hour). `make_extra_figures.py` writes the
+paper's tables and figures.
+
 - **Minority size**: a name suffix `@n25` gives exactly 25 minority training
   points, `@r100` thins towards 100:1; `export_projections.py --minority-train`
   and `--ratio` add them.
 - **Shift**: `@test <class>` tests on a class left out of training, and
   `vs rest except <class>` drops classes from a task.
 - **Named variants** (`VARIANTS` in `export_projections.py`): disease-positive
-  relabels, CIFAR-10N label noise, the Gaussian separation × spread grid.
+  relabels, CIFAR-10N label noise, the Gaussian separation × spread grid, and
+  20,000-point toy sets for E2 (the `synthetic` stage).
 - **Models**: 13 (`MODELS`); the original seven stay the `--models` default.
 - **Frozen features**: a name suffix ` [resnet18]` fits the models on ImageNet
   embeddings cached by `export_torch.py features` (the `features` stage).
