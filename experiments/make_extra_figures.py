@@ -28,7 +28,7 @@ OUT = os.environ.get('EXTRA_PAPER_OUT', os.path.normpath(os.path.join(
     HERE, '..', '..', 'papers', 'ecai-extra-experiments')))
 
 GROUPS = {'tabular': 'Tabular', 'image': 'Pixels', 'frozen': 'Frozen', 'deep': 'Deep',
-          'nsweep': '$N$-sweep', 'gauss': 'Gauss.'}
+          'nsweep': '$N$-sweep', 'gauss': 'Gauss.', 'synth': 'Synth.'}
 CERT = ['CP Sum', 'CP Minimax', 'DKW Sum', 'DKW Minimax', 'Gaussian Predictive',
         'Gaussian Band', 'Logistic Band']
 PUBLISHED = ['Slacks Deltas', 'Min Deltas', 'F Deltas']
@@ -56,6 +56,8 @@ def group(dataset, model):
         return 'frozen'
     if dataset.startswith('Gaussian sep'):
         return 'gauss'
+    if ' @n' in dataset and dataset.split(' @')[0] in eg.SYNTHETIC_SWEEP:
+        return 'synth'
     if ' @n' in dataset:
         return 'nsweep'
     return 'image' if dataset in eg.IMAGE else 'tabular'
