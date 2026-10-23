@@ -6,7 +6,7 @@ Size up every toy_datasets dataset for the extra-experiments paper.
     uv run python dataset_inventory.py --fresh    # size up every dataset again
 
 Writes results/dataset_inventory.csv and a LaTeX table into the paper
-(override the folder with EXTRA_PAPER_OUT).
+(override the paper folder with EXTRA_PAPER_OUT).
 '''
 import json
 import os
@@ -27,8 +27,8 @@ from export_projections import (MIN_MINORITY_TEST, MIN_MINORITY_TRAIN,  # noqa: 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_CSV = os.path.join(HERE, 'results', 'dataset_inventory.csv')
-OUT_TEX = os.environ.get('EXTRA_PAPER_OUT', os.path.join(
-    HERE, '..', '..', 'papers', 'ecai-extra-experiments', 'tables'))
+OUT_TEX = os.path.join(os.environ.get('EXTRA_PAPER_OUT', os.path.join(
+    HERE, '..', '..', 'papers', 'ecai-extra-experiments')), 'tables')
 
 #: group -> datasets, in table order
 GROUPS = {
