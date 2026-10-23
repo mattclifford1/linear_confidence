@@ -187,6 +187,22 @@ paper's tables and figures.
   embeddings cached by `export_torch.py features` (the `features` stage).
 - **Large image tasks** cap the training majority at 10,000 (`MAJORITY_MAX_DEFAULT`).
 
+## Evaluating a new method on the extra grid
+
+1. Add a `Method` to `deltas/methods/` (see its README). A method outside
+   `DeltasEstimator` needs only `.fit(X, y)`, `.is_fit`, `.predict(X)` and,
+   for certificate columns, `certified_error()`.
+2. Add its name to `METHODS` in `run_long.sh`, `EXTRA_METHODS` in `extra_grid.py`
+   and `CERT` or `PUBLISHED` in `make_extra_figures.py`.
+3. Rerun the `run_wide.py` command at the end of `run_long.sh`, with the new name
+   in `--methods`.
+   Only the new method is computed; the other methods and the baselines come
+   from the cache and the exported projections, with no classifier refitted.
+4. `uv run python make_extra_figures.py` rebuilds the paper's tables and figures.
+
+The cache tracks the `deltas/` files a method runs on small probe data
+(`run_wide.py::_probes`). Bump `CACHE_VERSION` after editing a file only reached on real data.
+
 ## Caveat on the `Slacks Deltas` rows
 
 With `USE_TWO=True` the published slack method frequently finds no solution on

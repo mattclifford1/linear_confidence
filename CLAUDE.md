@@ -125,6 +125,8 @@ registered name, a `(name, kwargs)` pair or a component object.
 - A new named method is a `Method` in `deltas/methods/` (`band.py` for the
   shape-aware family). The runners pick methods from `deltas.methods.METHODS`.
   `run_wide.py --methods` accepts any registered name.
+- To evaluate it against the grid, follow "Evaluating a new method on the
+  extra grid" in `experiments/README.md`.
 
 **Never edit `deltas/legacy/` to change behaviour.** It produced the published
 numbers and the 34-dataset grid. `tests/golden/` pins its exact outputs under
