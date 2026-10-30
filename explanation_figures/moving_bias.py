@@ -17,8 +17,8 @@ def make():
     s = synthetic.separated()
     fig, ax = plt.subplots(figsize=style.figsize(WIDTH, 1.0))
     draw.classes(ax, s['X'], s['y'])
-    draw.line(ax, (1, 1), C_B, (C_B - 6, 6), color=style.INK, lw=2)
-    draw.line(ax, (1, 1), C_B_PRIME, (-6, C_B_PRIME + 6), color=style.INK, lw=2, ls='--')
+    draw.line(ax, (1, 1), C_B, (C_B - 6, 6), **style.LINES['trained'] | {'lw': 2})
+    draw.line(ax, (1, 1), C_B_PRIME, (-6, C_B_PRIME + 6), **style.LINES['adjusted'] | {'lw': 2})
     mid, mid_p = C_B / 2, C_B_PRIME / 2
     ax.annotate('', xy=(mid_p + 0.4, mid_p + 0.4), xytext=(mid - 0.4, mid - 0.4),
                 arrowprops=dict(arrowstyle='-|>', color=style.INK, lw=1.5, mutation_scale=12))

@@ -18,7 +18,7 @@ def make():
         draw.regions(ax, s['clfs'][name].predict, X)
         draw.classes(ax, X, y, size=6, alpha=0.35)
         # Bayes optimal for equal priors and covariances at means -/+[1, 1]
-        draw.line(ax, (1, 1), 0, ax.get_xlim(), color=style.INK, lw=1.2, ls='--')
+        draw.line(ax, (1, 1), 0, ax.get_xlim(), **style.LINES['optimal'])
         draw.feature_axes(ax)
         ax.set_title(name)
     for ax in axes[:, 1]:

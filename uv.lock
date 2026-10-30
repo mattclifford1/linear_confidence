@@ -694,6 +694,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "thesis-figures" },
     { name = "toy-datasets" },
     { name = "tqdm" },
     { name = "umap-learn" },
@@ -729,6 +730,7 @@ requires-dist = [
     { name = "pynndescent", specifier = ">=0.6" },
     { name = "scikit-learn", specifier = ">=1.6" },
     { name = "scipy", specifier = ">=1.14" },
+    { name = "thesis-figures", editable = "../../lib/thesis_figures" },
     { name = "torch", marker = "extra == 'torch'", specifier = ">=2.0" },
     { name = "torchvision", marker = "extra == 'torch'", specifier = ">=0.15" },
     { name = "toy-datasets", editable = "../../lib/toy_datasets" },
@@ -3081,6 +3083,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/8a/11/965c6fd8e5cc254f1
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/9e/2064975477fdc887e47ad42157e214526dcad8f317a948dee17e1659a62f/terminado-0.18.1-py3-none-any.whl", hash = "sha256:a4468e1b37bb318f8a86514f65814e1afc977cf29b3992a4500d9dd305dcceb0", size = 14154, upload-time = "2024-03-12T14:34:36.569Z" },
 ]
+
+[[package]]
+name = "thesis-figures"
+version = "0.1.0"
+source = { editable = "../../lib/thesis_figures" }
+dependencies = [
+    { name = "matplotlib" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "matplotlib" }]
 
 [[package]]
 name = "threadpoolctl"

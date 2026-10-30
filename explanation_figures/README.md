@@ -1,6 +1,6 @@
 # `explanation_figures` — thesis figures in one style
 
-Thesis explanation figures, regenerated from code in one shared style.
+Thesis explanation figures, regenerated from code in the shared thesis style (`~/Repos/lib/thesis_figures`).
 
 ```bash
 uv run python explanation_figures/make_all.py              # all figures
@@ -22,7 +22,7 @@ PDFs go to `out/<chapter>/...`, mirroring the thesis's `chapters/<chapter>/figur
 | `gaussian_eval.py` | `deltas/synthetic/Gaussian_eval` | `deltas:fig:sythetic-test` |
 | `follow_up.py` | `deltas/follow-up/f1_simulation`, `deltas/follow-up/f4_margins` | `deltas:fig:f1`, `deltas:fig:f4` |
 
-Change the shared look in `style.py` and the shared drawing pieces in `draw.py`.
+Change what classes, query points and model lines look like in every chapter in `thesis_figures/roles.py`, and the shared drawing pieces in `draw.py`.
 Figures are drawn at printed size, so include each at the `WIDTH` set in its module
 (`\includegraphics[width=<WIDTH>\textwidth]{...}`).
 

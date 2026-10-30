@@ -37,7 +37,7 @@ def optimised():
     R2 = synthetic.R_hat(info['empirical R2'], info, info['N2'], m.delta2)
     draw.bar(ax, m1, m1 + R1, ROW_R, r'$\hat{R}_1$', style.MAJ)
     draw.bar(ax, m2 - R2, m2, ROW_R, r'$\hat{R}_2$', style.MIN)
-    ax.axvline(-m.get_bias(), color=style.INK2, lw=0.8, ls=':', zorder=1)
+    ax.axvline(-m.get_bias(), **style.LINES['adjusted'] | {'lw': 0.8}, zorder=1)
     ax.set_ylim(ROW_R - 0.2, 0.5)
     draw.strip_axes(ax)
     style.save(fig, NAMES['optimised'])

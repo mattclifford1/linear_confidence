@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 from sklearn.linear_model import LogisticRegression
+from thesis_figures import plot
 
 import draw
 import style
@@ -61,8 +62,7 @@ def _thumb_axes(ax):
 def data_thumb(ax):
     X, y, smote, *_ = toy()
     draw.classes(ax, X, y, size=8)
-    ax.scatter(smote[:, 0], smote[:, 1], s=8, facecolors='none', edgecolors=style.MIN,
-               linewidths=0.8, zorder=3)
+    plot.points(ax, smote, style.MINORITY, size=8, alpha=1.0, hollow=True, zorder=3)
     _scatter_lims(ax)
     _thumb_axes(ax)
 
@@ -72,8 +72,8 @@ def training_thumb(ax):
     draw.classes(ax, X, y, size=8)
     _scatter_lims(ax)
     lim = ax.get_xlim()
-    for m, ls in ((plain, '--'), (weighted, '-')):
-        draw.line(ax, m.coef_[0], -m.intercept_[0], lim, color=style.INK, lw=1.0, ls=ls)
+    for m, role in ((plain, 'trained'), (weighted, 'adjusted')):
+        draw.line(ax, m.coef_[0], -m.intercept_[0], lim, **style.LINES[role] | {'lw': 1.0})
     _scatter_lims(ax)
     _thumb_axes(ax)
 
@@ -84,8 +84,8 @@ def adjustment_thumb(ax):
     draw.scores(ax, z[y == 0], z[y == 1], size=6)
     # b' at the midpoint of the class score means, as a minimum-distance rule would put it
     b, b_new = 0.0, (z[y == 0].mean() + z[y == 1].mean()) / 2
-    for t, ls, lab in ((b, '--', '$b$'), (b_new, '-', "$b'$")):
-        ax.plot([t, t], [-0.35, 0.35], color=style.INK, lw=1.0, ls=ls)
+    for t, role, lab in ((b, 'trained', '$b$'), (b_new, 'adjusted', "$b'$")):
+        ax.plot([t, t], [-0.35, 0.35], **style.LINES[role] | {'lw': 1.0})
         ax.text(t, 0.42, lab, ha='center', va='bottom', fontsize=8)
     ax.annotate('', xy=(b_new, -0.5), xytext=(b, -0.5),
                 arrowprops=dict(arrowstyle='-|>', color=style.INK, lw=0.8, mutation_scale=7))
