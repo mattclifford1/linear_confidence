@@ -293,5 +293,16 @@
     "Slacks Deltas": 2000,
     "Min Deltas": 12000
   },
-  "method_code": "e1735b4f734f"
+  "method_code": {
+    "Slacks Deltas": "f97da70d8c98",
+    "Min Deltas": "a0f977536a87",
+    "F Deltas": "a0f977536a87",
+    "CP Sum": "cc663b1e0cf3",
+    "CP Minimax": "36d00bb46e84",
+    "DKW Sum": "30d4e2d2ddf0",
+    "DKW Minimax": "5d5035e3a651",
+    "Gaussian Predictive": "b2a701693d99",
+    "Gaussian Band": "e04522fb193e",
+    "Logistic Band": "073b6d8e47d7"
+  }
 }
