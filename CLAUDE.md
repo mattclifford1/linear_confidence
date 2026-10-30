@@ -97,6 +97,7 @@ deltas/              the package (see deltas/README.md)
 experiments/         ⭐ the current runner — start here for new experiments
   export_projections.py  fits models under the SIBLING venv (see below)
   run_wide.py            the 32-dataset x 7-model x 2-calibration-mode grid
+explanation_figures/ thesis figures in one shared style (see its README)
 notebooks-ECAI/      experiments + figures for the published paper (legacy)
 notebooks-non-sep/   experiments for the non-separable follow-up (legacy)
 notebooks/           scratch/dev notebooks
